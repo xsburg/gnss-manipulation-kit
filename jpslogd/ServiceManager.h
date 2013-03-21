@@ -5,6 +5,7 @@
 #include "EControlCommand.h"
 #include "EServiceLogSeverity.h"
 #include "ProjectBase\IniSettings.h"
+#include <QtCore/QDataStream>
 
 using namespace ProjectBase;
 
@@ -75,6 +76,26 @@ namespace jpslogd
 					IsPausedFlag = false;
 					addLogMessage(QString("The service has received the resume command and is getting back active."), EServiceLogSeverity::Info);
 					break;
+				case EControlCommand::UpdateConfigInfo:
+					{
+						_connection->DbHelper()->ExecuteQuery("DELETE FROM `configinfo`");
+						QString insertQuery = "INSERT INTO `configinfo` (`name`, `value`) VALUES (?, ?)";
+						QSqlQuery query = _connection->DbHelper()->ExecuteQuery("");
+						query.prepare(insertQuery);
+						DatabaseHelper::ThrowIfError(query);
+						QVariantList keys;
+						QVariantList values;
+						foreach (auto& k, sIniSettings.settings()->allKeys())
+						{
+							keys.push_back(k);
+							values.push_back(sIniSettings.value(k));
+						}
+						query.addBindValue(keys);
+						query.addBindValue(values);
+						query.execBatch();
+						DatabaseHelper::ThrowIfError(query);
+					}
+					break;
 				}
 
 				_connection->DbHelper()->ExecuteQuery(QString("DELETE FROM COMMANDQUEUE WHERE id = %1;").arg(id));
@@ -103,7 +124,7 @@ namespace jpslogd
 			}
 
 			QSqlQuery query = _connection->DbHelper()->ExecuteQuery("");
-			QString insertQuery = "INSERT INTO `servicelog` (`timeStamp`, `message`, `severity_id`) VALUES (?, ?, ?)";
+			QString insertQuery = "INSERT INTO `servicelog` (`timeStamp`, `message`, `severity_id`) VALUES (?, ?, ?, ?)";
 			query.prepare(insertQuery);
 			DatabaseHelper::ThrowIfError(query);
 			query.addBindValue(QDateTime::currentDateTimeUtc());

@@ -45,7 +45,8 @@ namespace jpslogd
 			int dataChunkSize = sIniSettings.value("dataChunkSize", 250).toInt();
 
 			serialPort = std::make_shared<SerialPortBinaryStream>(portName, baudRate);
-			serialPort->write("\nem,,def\n");
+			serialPort->write("\nem,,dm\n");
+			serialPort->write("\nem,,def,/msg/jps/AZ,/msg/jps/r1,/msg/jps/r2\n");
 
 			/*auto file = ProjectBase::File::CreateBinary("serialPortData.jps");
 			while (serialPort->serialPort().is_open())

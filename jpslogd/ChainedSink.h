@@ -72,7 +72,7 @@ public:
                     _sink->AddMessage(msgIt->get());
                 }
             }
-
+			_sink->Flush(); //Added for testing purposes 19032013 Keir
             _connection->Database().commit();
         }
         catch (Exception& e)
