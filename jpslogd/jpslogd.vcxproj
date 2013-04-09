@@ -58,7 +58,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(BOOST_DIR)\lib;$(LOG4CXX)\lib\$(PlatformToolset)\$(Configuration);$(QTDIR)\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(BOOST_DIR)\stage\lib;$(BOOST_DIR)\lib;$(LOG4CXX)\lib\$(PlatformToolset)\$(Configuration);$(QTDIR)\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>log4cxx.lib;QtSqld4.lib;QtCored4.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -100,6 +100,7 @@
     <ClInclude Include="ChainedSink.h" />
     <ClInclude Include="EControlCommand.h" />
     <ClInclude Include="EServiceLogSeverity.h" />
+    <ClInclude Include="SerialStreamReader.h" />
     <ClInclude Include="ServiceManager.h" />
   </ItemGroup>
   <ItemGroup>

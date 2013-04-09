@@ -5,6 +5,14 @@ DROP TABLE IF EXISTS `servicelog`;
 DROP TABLE IF EXISTS `commandclassifier`;
 DROP TABLE IF EXISTS `servicelogseverityclassifier`;
 DROP TABLE IF EXISTS `configinfo`;
+DROP TABLE IF EXISTS `status`;
+
+CREATE TABLE `status` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(64) NOT NULL,
+  `value` varchar(1024) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
 CREATE TABLE `commandclassifier` (
@@ -43,7 +51,7 @@ CREATE TABLE `servicelogseverityclassifier` (
 CREATE TABLE `servicelog` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `timeStamp` datetime NOT NULL,
-  `message` varchar(3000) DEFAULT NULL,
+  `message` varchar(512) DEFAULT NULL,
   `type` int(11) NOT NULL,
   `severity_id` int(11) NOT NULL,
   PRIMARY KEY (`id`),

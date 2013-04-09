@@ -32,6 +32,9 @@
     <ClInclude Include="EServiceLogSeverity.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SerialStreamReader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="databaseupdate.sql" />

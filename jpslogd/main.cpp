@@ -8,6 +8,7 @@
 #include "DataChunk.h"
 #include "MySqlSink.h"
 #include "SerialPortBinaryStream.h"
+#include "SerialStreamReader.h"
 #include "ChainedSink.h"
 #include "FileBinaryStream.h"
 #include "ServiceManager.h"
@@ -45,8 +46,27 @@ namespace jpslogd
 			int dataChunkSize = sIniSettings.value("dataChunkSize", 250).toInt();
 
 			serialPort = std::make_shared<SerialPortBinaryStream>(portName, baudRate);
-			serialPort->write("\nem,,dm\n");
+			// Disable running monitoring
+			serialPort->write("\ndm\n");
+
+			//
+			auto serialStream = SerialStreamReader(serialPort);
+			// Get recevier data
+			serialPort->write("\nprint,rcv/id\n");
+			QString _receiverid = serialStream.readLine();
+			_receiverid = _receiverid.mid(6,-1);
+			serialPort->write("\nprint,rcv/model\n");
+			QString _receivermodel = serialStream.readLine();
+			_receivermodel = _receivermodel.mid(6,-1);
+			serialPort->write("\nprint,rcv/ver/main\n");
+			QString _receiverfw = serialStream.readLine();
+			_receiverfw = _receiverfw.mid(6,-1);
+			// Configure for data output
+
 			serialPort->write("\nem,,def,/msg/jps/AZ,/msg/jps/r1,/msg/jps/r2\n");
+
+			
+
 
 			/*auto file = ProjectBase::File::CreateBinary("serialPortData.jps");
 			while (serialPort->serialPort().is_open())
@@ -84,8 +104,15 @@ namespace jpslogd
 			auto dataCenterConnection = Connection::FromSettings("DataCenterDatabase");
 			auto localConnection = Connection::FromSettings("LocalDatabase");
 			auto serviceManager	 = make_unique<ServiceManager>(localConnection);
-			dataCenterSink = make_unique<ChainedSink>(dataCenterConnection, inserterBatchSize, nullptr);
-			localSink = make_unique<ChainedSink>(localConnection, inserterBatchSize, std::move(dataCenterSink));
+
+			// Set receiver propersties
+			serviceManager->ServiceStatus["receiverid"]=_receiverid;
+			serviceManager->ServiceStatus["receiverfw"]=_receiverfw;
+			serviceManager->ServiceStatus["receivermodel"]=_receivermodel;
+
+	//		dataCenterSink = make_unique<ChainedSink>(dataCenterConnection, inserterBatchSize, nullptr);
+	//		localSink = make_unique<ChainedSink>(localConnection, inserterBatchSize, std::move(dataCenterSink));
+			localSink = make_unique<ChainedSink>(localConnection, inserterBatchSize, nullptr);
 			while((msg = stream.Next()).get())
 			{
 				dataChunk->AddMessage(std::move(msg));
@@ -134,6 +161,8 @@ namespace jpslogd
 							}
 						}
 					}
+					// Update status table
+
 				}
 			}
 

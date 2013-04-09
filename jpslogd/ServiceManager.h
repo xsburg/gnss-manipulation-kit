@@ -6,6 +6,7 @@
 #include "EServiceLogSeverity.h"
 #include "ProjectBase\IniSettings.h"
 #include <QtCore/QDataStream>
+#include <QtCore/QVariantMap>
 
 using namespace ProjectBase;
 
@@ -22,17 +23,47 @@ namespace jpslogd
 		bool IsShutdownRequiredFlag;
 		bool IsPausedFlag;
 
+		QVariantMap ServiceStatus;
+
 		ServiceManager(Connection::SharedPtr_t connection)
 		{
 			_connection = connection;
 			IsRestartRequiredFlag = false;
 			IsShutdownRequiredFlag = false;
 			IsPausedFlag = false;
+			ServiceStatus = QVariantMap();
 		}
 
 		void HandlePendingCommands()
 		{
-			auto query = _connection->DbHelper()->ExecuteQuery("SELECT id, command_id, arguments FROM COMMANDQUEUE ORDER BY id;");
+			// Unconditionally update service status
+			
+			ServiceStatus["buildnumber"] = "133";
+			ServiceStatus["builddate"] = "12.12.2013";
+			ServiceStatus["datacenteruri"] = sIniSettings.value("DataCenterDatabase.Driver", "").toString()+"://"+sIniSettings.value("DataCenterDatabase.Hostname", "").toString()+"/"+sIniSettings.value("DataCenterDatabase.DatabaseName", "").toString();
+			ServiceStatus["datacentertransfer"] = "0";
+			ServiceStatus["paused"] = IsPausedFlag;
+			ServiceStatus["trasferstate"] = "0"; // FIX
+
+			ServiceStatus["receiverport"] = sIniSettings.value("PortName").toString();
+
+			_connection->DbHelper()->ExecuteQuery("DELETE FROM `status`");
+			QString insertQuery = "INSERT INTO `status` (`name`, `value`) VALUES (?, ?)";
+			QSqlQuery query = _connection->DbHelper()->ExecuteQuery("");
+			query.prepare(insertQuery);
+			DatabaseHelper::ThrowIfError(query);
+			QList<QVariant> names;
+			QListIterator<QString> i(ServiceStatus.keys());
+			while (i.hasNext()) {
+			 names << i.next();
+			}
+			query.addBindValue(names);
+			query.addBindValue(ServiceStatus.values());
+			query.execBatch();
+			DatabaseHelper::ThrowIfError(query);
+
+
+			query = _connection->DbHelper()->ExecuteQuery("SELECT id, command_id, arguments FROM COMMANDQUEUE ORDER BY id;");
 			while (query.next())
 			{
 				int id = query.value(0).toInt();
