@@ -52,20 +52,24 @@ namespace jpslogd
 			//
 			auto serialStream = SerialStreamReader(serialPort);
 			// Get recevier data
-			serialPort->write("\nprint,rcv/id\n");
+			serialPort->write("\nprint,/par/rcv/id\n");
 			QString _receiverid = serialStream.readLine();
 			_receiverid = _receiverid.mid(6,-1);
-			serialPort->write("\nprint,rcv/model\n");
+			serialPort->write("\nprint,/par/rcv/model\n");
 			QString _receivermodel = serialStream.readLine();
 			_receivermodel = _receivermodel.mid(6,-1);
-			serialPort->write("\nprint,rcv/ver/main\n");
+			serialPort->write("\nprint,/par/rcv/ver/main\n");
 			QString _receiverfw = serialStream.readLine();
 			_receiverfw = _receiverfw.mid(6,-1);
+			serialPort->write("\nprint,/par/rcv/ver/board\n");
+			QString _receiverboard = serialStream.readLine();
+			_receiverboard = _receiverboard.mid(6,-1);
 			// Configure for data output
 
-			serialPort->write("\nem,,def,/msg/jps/AZ,/msg/jps/r1,/msg/jps/r2\n");
 
-			
+			serialPort->write("\nem,,def,/msg/jps/AZ,/msg/jps/r1,/msg/jps/r2,/msg/jps/RD{10.00,0.00,0.00,0x0002},/msg/jps/rc\n");
+//			serialPort->write("\nem,,def,/msg/jps/AZ\n");
+
 
 
 			/*auto file = ProjectBase::File::CreateBinary("serialPortData.jps");
@@ -109,12 +113,14 @@ namespace jpslogd
 			serviceManager->ServiceStatus["receiverid"]=_receiverid;
 			serviceManager->ServiceStatus["receiverfw"]=_receiverfw;
 			serviceManager->ServiceStatus["receivermodel"]=_receivermodel;
+			serviceManager->ServiceStatus["receiverboard"]=_receiverboard;
 
 	//		dataCenterSink = make_unique<ChainedSink>(dataCenterConnection, inserterBatchSize, nullptr);
 	//		localSink = make_unique<ChainedSink>(localConnection, inserterBatchSize, std::move(dataCenterSink));
 			localSink = make_unique<ChainedSink>(localConnection, inserterBatchSize, nullptr);
 			while((msg = stream.Next()).get())
 			{
+				
 				dataChunk->AddMessage(std::move(msg));
 				if (msgCounter++ > dataChunkSize)
 				{

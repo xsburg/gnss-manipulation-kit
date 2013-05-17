@@ -46,9 +46,8 @@ namespace jpslogd
 			ServiceStatus["trasferstate"] = "0"; // FIX
 
 			ServiceStatus["receiverport"] = sIniSettings.value("PortName").toString();
-
-			_connection->DbHelper()->ExecuteQuery("DELETE FROM `status`");
-			QString insertQuery = "INSERT INTO `status` (`name`, `value`) VALUES (?, ?)";
+			//_connection->DbHelper()->ExecuteQuery("DELETE FROM `status`");
+			QString insertQuery = "INSERT INTO `status` (`name`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value`=VALUES(`value`)";
 			QSqlQuery query = _connection->DbHelper()->ExecuteQuery("");
 			query.prepare(insertQuery);
 			DatabaseHelper::ThrowIfError(query);
@@ -155,7 +154,7 @@ namespace jpslogd
 			}
 
 			QSqlQuery query = _connection->DbHelper()->ExecuteQuery("");
-			QString insertQuery = "INSERT INTO `servicelog` (`timeStamp`, `message`, `severity_id`) VALUES (?, ?, ?, ?)";
+			QString insertQuery = "INSERT INTO `servicelog` (`timeStamp`, `message`, `severity_id`, `type`) VALUES (?, ?, ?, 0)";
 			query.prepare(insertQuery);
 			DatabaseHelper::ThrowIfError(query);
 			query.addBindValue(QDateTime::currentDateTimeUtc());
