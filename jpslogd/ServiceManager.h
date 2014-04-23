@@ -22,6 +22,7 @@ namespace jpslogd
 		bool IsRestartRequiredFlag;
 		bool IsShutdownRequiredFlag;
 		bool IsPausedFlag;
+		bool interopEnabled;
 
 		QVariantMap ServiceStatus;
 
@@ -32,21 +33,21 @@ namespace jpslogd
 			IsShutdownRequiredFlag = false;
 			IsPausedFlag = false;
 			ServiceStatus = QVariantMap();
+			if(interopEnabled)sLogger.Info("Provisioning via local database is now active.");
 		}
 
 		void HandlePendingCommands()
 		{
 			// Unconditionally update service status
 			
-			ServiceStatus["buildnumber"] = "133";
-			ServiceStatus["builddate"] = "12.12.2013";
-			ServiceStatus["datacenteruri"] = sIniSettings.value("DataCenterDatabase.Driver", "").toString()+"://"+sIniSettings.value("DataCenterDatabase.Hostname", "").toString()+"/"+sIniSettings.value("DataCenterDatabase.DatabaseName", "").toString();
-			ServiceStatus["datacentertransfer"] = "0";
+			ServiceStatus["buildnumber"] = "999";
+			ServiceStatus["builddate"] = __DATE__;
+			ServiceStatus["datacenteruri"] = sIniSettings.value("remoteDatabase.Driver", "").toString()+"://"+sIniSettings.value("remoteDatabase.Hostname", "").toString()+"/"+sIniSettings.value("remoteDatabase.DatabaseName", "").toString();
+			ServiceStatus["datacentertransfer"] = (sIniSettings.value("remoteDatabase.Driver", "").toString()=="") ? "0" : "1";
 			ServiceStatus["paused"] = IsPausedFlag;
 			ServiceStatus["trasferstate"] = "0"; // FIX
 
 			ServiceStatus["receiverport"] = sIniSettings.value("PortName").toString();
-			//_connection->DbHelper()->ExecuteQuery("DELETE FROM `status`");
 			QString insertQuery = "INSERT INTO `status` (`name`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value`=VALUES(`value`)";
 			QSqlQuery query = _connection->DbHelper()->ExecuteQuery("");
 			query.prepare(insertQuery);

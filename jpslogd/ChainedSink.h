@@ -39,7 +39,7 @@ public:
 		}
 		catch (DatabaseException& ex)
 		{
-			sLogger.Warn("An error occurred while connecting to a database: " + ex.what());
+			sLogger.Error("An error occurred while connecting to a database: " + ex.what());
 			return _isValid = false;
 		}
 		catch (...)
@@ -78,7 +78,7 @@ public:
         catch (Exception& e)
         {
             _connection->Database().rollback();
-            sLogger.Info("Transaction has been rolled back.");
+            sLogger.Error("Transaction has been rolled back.");
             sLogger.Error(e.what());
             return false;
         }
@@ -94,7 +94,7 @@ public:
 			}
 			catch (DatabaseException& ex)
 			{
-				sLogger.Warn("An error occurred while adding a data chunk into the data center database: " + ex.what());
+				sLogger.Error("An error occurred while adding a data chunk into the data center database: " + ex.what());
 			}
 		}
 
@@ -117,7 +117,7 @@ public:
 			}
 			catch (DatabaseException& ex)
 			{
-				sLogger.Warn("An error occurred while flushing the data into the data center database: " + ex.what());
+				sLogger.Error("An error occurred while flushing the data into the data center database: " + ex.what());
 			}
 		}
 

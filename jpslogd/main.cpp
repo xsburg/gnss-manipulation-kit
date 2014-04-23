@@ -17,6 +17,7 @@ using namespace ProjectBase;
 using namespace Greis;
 using namespace jpslogd;
 
+
 #ifdef Q_OS_WIN
 #include <windows.h> // for Sleep
 #endif
@@ -35,20 +36,23 @@ namespace jpslogd
 	bool startLoop()
 	{
 		SerialPortBinaryStream::SharedPtr_t serialPort;
-		//FileBinaryStream::SharedPtr_t fs;
 		ChainedSink::UniquePtr_t dataCenterSink;
 		ChainedSink::UniquePtr_t localSink;
+
 		try
 		{
 			std::string portName = sIniSettings.value("PortName", "COM3").toString().toStdString();
 			unsigned int baudRate = sIniSettings.value("BaudRate", 1500000).toUInt();
 			int inserterBatchSize = sIniSettings.value("inserterBatchSize", 250).toInt();
-			int dataChunkSize = sIniSettings.value("dataChunkSize", 250).toInt();
-
+			int dataChunkSize = sIniSettings.value("dataChunkSize", 250).toInt();;
+			sLogger.Info("Connecting Javad receiver on "+QString::fromStdString(portName)+" at "+QString::number(baudRate)+"bps...");
 			serialPort = std::make_shared<SerialPortBinaryStream>(portName, baudRate);
 			// Disable running monitoring
-			serialPort->write("\ndm\n");
-
+			serialPort->write("\n\n\ndm\n");
+			Sleep(100);
+			serialPort->write("dm\n");
+			Sleep(100);
+			serialPort->write("dm\n");
 			//
 			auto serialStream = SerialStreamReader(serialPort);
 			// Get recevier data
@@ -64,60 +68,40 @@ namespace jpslogd
 			serialPort->write("\nprint,/par/rcv/ver/board\n");
 			QString _receiverboard = serialStream.readLine();
 			_receiverboard = _receiverboard.mid(6,-1);
-			// Configure for data output
-
-
+			sLogger.Info("Connected device is "+_receivermodel+", board "+_receiverboard+" (ID:"+_receiverid+", FW:"+_receiverfw+")");
+			// Configure device for data output
 			serialPort->write("\nem,,def,/msg/jps/AZ,/msg/jps/r1,/msg/jps/r2,/msg/jps/RD{10.00,0.00,0.00,0x0002},/msg/jps/rc\n");
-//			serialPort->write("\nem,,def,/msg/jps/AZ\n");
-
-
-
-			/*auto file = ProjectBase::File::CreateBinary("serialPortData.jps");
-			while (serialPort->serialPort().is_open())
-			{
-				char data[1024];
-				int readc = boost::asio::read(serialPort->serialPort(), boost::asio::buffer(data, 1024));
-				file->write(data, readc);
-				file->flush();
-			}
-			file->close();*/
-			/*char data1[1024];
-			char data2[1024];
-			char data3[1024];
-			char data4[1024];
-			char data5[1024];
-			char data6[1024];
-			serialPort->peek(data1, 5);
-			serialPort->peek(data2, 3);
-			bool a1 = memcmp(data1, data2, 3) == 0;
-			serialPort->peek(data3, 10);
-			bool a2 = memcmp(data3, data1, 5) == 0;
-			serialPort->read(data4, 15);
-			bool a3 = memcmp(data3, data4, 10) == 0;
-			serialPort->peek(data5, 10);
-			serialPort->peek(data6, 15);
-			bool a4 = memcmp(data5, data6, 10) == 0;
-			serialPort->peek(data1, 1);
-			bool a5 = memcmp(data1, data5, 1) == 0;*/
-			//fs = std::make_shared<FileBinaryStream>("serialPortData.jps");
-
 			GreisMessageStream stream(serialPort, true, false);
 			Message::UniquePtr_t msg;
+			sLogger.Info("Configuring databases...");		
+			// Preparing the acquisition sink
 			auto dataChunk = make_unique<DataChunk>();
 			int msgCounter = 0;
-			auto dataCenterConnection = Connection::FromSettings("DataCenterDatabase");
 			auto localConnection = Connection::FromSettings("LocalDatabase");
+			if(localConnection->Driver=="" || localConnection->Hostname=="" || localConnection->Username==""){
+				sLogger.Fatal("Cannot configure local database, check configuraion.");		
+				throw new GreisException("Local database configuration missing.");
+			} else {
+				sLogger.Info("Using local database "+localConnection->DatabaseName+" on "+localConnection->Hostname);
+			}
+			auto remoteConnection = Connection::FromSettings("RemoteDatabase");
+			if(remoteConnection->Driver!=""){
+			dataCenterSink = make_unique<ChainedSink>(remoteConnection, inserterBatchSize, nullptr);
+			localSink = make_unique<ChainedSink>(localConnection, inserterBatchSize, std::move(dataCenterSink));
+			if(!dataCenterSink->IsValid())return true;
+			sLogger.Info("Using remote database "+localConnection->DatabaseName+" on "+localConnection->Hostname);
+			} else {
+			localSink = make_unique<ChainedSink>(localConnection, inserterBatchSize, nullptr);
+			}
+			if(!localSink->IsValid())return true;
+			sLogger.Info("Configuring provisioning via local database...");
 			auto serviceManager	 = make_unique<ServiceManager>(localConnection);
-
 			// Set receiver propersties
 			serviceManager->ServiceStatus["receiverid"]=_receiverid;
 			serviceManager->ServiceStatus["receiverfw"]=_receiverfw;
 			serviceManager->ServiceStatus["receivermodel"]=_receivermodel;
 			serviceManager->ServiceStatus["receiverboard"]=_receiverboard;
 
-	//		dataCenterSink = make_unique<ChainedSink>(dataCenterConnection, inserterBatchSize, nullptr);
-	//		localSink = make_unique<ChainedSink>(localConnection, inserterBatchSize, std::move(dataCenterSink));
-			localSink = make_unique<ChainedSink>(localConnection, inserterBatchSize, nullptr);
 			while((msg = stream.Next()).get())
 			{
 				
@@ -179,7 +163,6 @@ namespace jpslogd
 		{
 			sLogger.Error("An error has occurred: " + ex.what());
 
-			//sLogger.Error(QString::number(fs->pos()));
 			if (localSink.get())
 			{
 				localSink->Flush();
@@ -193,8 +176,29 @@ namespace jpslogd
 
 			return false;
 		}
+		catch (boost::system::system_error& bex)
+		{
+			if(bex.code().value()==2){
+			sLogger.Error("Connection to receiver could not be made.");
+			sLogger.Error("The application could not find the port specified.");
+			sLogger.Error("It is ether wrong configuration or the receiver moved to another port.");
+			} else {
+			sLogger.Error("No connection to receiver, code: " + QString::number(bex.code().value()));
+			}
+			if (localSink.get())
+			{
+				localSink->Flush();
+			}
+			return false;
+		}
+		catch (...)
+		{
+			sLogger.Error("Something bad has happened. Queueing restart.");
+			return false;
+		}
 	}
 }
+
 
 int main(int argc, char **argv)
 {
@@ -211,8 +215,9 @@ int main(int argc, char **argv)
 		QTextCodec::setCodecForLocale(codec);
 		QTextCodec::setCodecForTr(codec);
 
-		sLogger.Initialize(Path::Combine(Path::ApplicationDirPath(), "logger.config.xml"));
 		sIniSettings.Initialize(Path::Combine(Path::ApplicationDirPath(), "config.ini"));
+
+		sLogger.Initialize(sIniSettings.value("LogLevel", 5).toInt());
 
 		sLogger.Debug("The following sqldrivers are available:");
 		auto sqlDrivers = QSqlDatabase::drivers();
@@ -222,9 +227,81 @@ int main(int argc, char **argv)
 			sLogger.Debug(sqlDriverName);
 		}
 
+		QStringList args = a.arguments();
+		QString RootPassword = "";
+		QRegExp rxArgRootPassword("--root-password=(\\S+)");
+		QRegExp rxArgSetup("--setup");
+		bool doSetup = false;
+
+		for (int i = 1; i < args.size(); ++i) {
+			if (rxArgRootPassword.indexIn(args.at(i)) != -1 ) {   
+				RootPassword =  rxArgRootPassword.cap(1);
+			}
+			else if (rxArgSetup.indexIn(args.at(i)) != -1 ) {   
+				sLogger.Warn("Doing first time setup...");
+				doSetup = true;
+			}
+		}
+		if(doSetup)
+			{
+				if(RootPassword!="")
+				{
+					QSqlDatabase db = QSqlDatabase::addDatabase("QMYSQL");
+					db.setHostName("localhost");
+					db.setUserName("root");
+					db.setPassword(RootPassword);
+					QFile baselineFile(Path::Combine(Path::ApplicationDirPath(), "baseline.sql"));
+					if (!baselineFile.open(QIODevice::ReadOnly | QIODevice::Text))
+						return  0;
+					QFile provisioningFile(Path::Combine(Path::ApplicationDirPath(), "jpslogd.sql"));
+					if (!provisioningFile.open(QIODevice::ReadOnly | QIODevice::Text))
+						return  0;
+					if(db.open()){
+					QSqlQuery query(db);
+					QTextStream in(&baselineFile);
+					QString sql = in.readAll();
+					QStringList sqlStatements = sql.split(';', QString::SkipEmptyParts);
+					
+						
+						query.exec("CREATE DATABASE `jpslogd`;");
+						query.exec("USE `jpslogd`;");
+						foreach(const QString& statement, sqlStatements)
+						{
+							if (statement.trimmed() != "")
+							{
+								if (!query.exec(statement))
+									sLogger.Error("An error occured during setup: "+query.lastError().text());
+							}
+						}
+						query.exec("GRANT ALL PRIVILEGES ON *.* TO 'jpslogd'@localhost");
+
+					QTextStream in2(&provisioningFile);
+					sql = in2.readAll();
+					sqlStatements = sql.split(';', QString::SkipEmptyParts);
+						foreach(const QString& statement, sqlStatements)
+						{
+							if (statement.trimmed() != "")
+							{
+								if (!query.exec(statement))
+									sLogger.Error("An error occured during setup: "+query.lastError().text());
+							}
+						}
+
+					}
+						return 0;
+
+
+				} else {
+					sLogger.Fatal("Please specify root password.");
+				}
+			}
+
+
 		while (!startLoop())
 		{
-			sLogger.Error("Reopening the device and attempting to receive data again.");
+		
+			sLogger.Warn("An error occured, acquisition restart pending.");
+			Sleep(1000);
 		}
 
 		return 0;
