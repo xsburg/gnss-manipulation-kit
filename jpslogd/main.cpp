@@ -49,10 +49,10 @@ namespace jpslogd
 			serialPort = std::make_shared<SerialPortBinaryStream>(portName, baudRate);
 			// Disable running monitoring
 			serialPort->write("\n\n\ndm\n");
-			qSleep(100);
-			serialPort->write("dm\n");
-			qSleep(100);
-			serialPort->write("dm\n");
+			qSleep(1000);
+			serialPort->write("dm\r\n\r\ndm\r\n\n\rdm\r\n");
+			qSleep(2000);
+			serialPort->write("dm\n\r");
 			//
 			auto serialStream = SerialStreamReader(serialPort);
 			// Get recevier data
@@ -117,7 +117,7 @@ namespace jpslogd
 				{
 					sLogger.Debug("Another 100 has been received.");
 
-					// Checking for the control commands
+				     	// Checking for the control commands
 					serviceManager->HandlePendingCommands();
 					if (serviceManager->IsRestartRequiredFlag)
 					{

@@ -11,8 +11,8 @@
 CC            = gcc
 CXX           = g++
 DEFINES       = -DQT_NO_DEBUG -DQT_CORE_LIB -DQT_SHARED
-CFLAGS        = -pipe -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fstack-protector --param=ssp-buffer-size=4 -mtune=generic -Wall -W -D_REENTRANT $(DEFINES)
-CXXFLAGS      = -std=c++11 -pipe -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fstack-protector --param=ssp-buffer-size=4 -mtune=generic -Wall -W -D_REENTRANT $(DEFINES)
+CFLAGS        = -pipe -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fstack-protector --param=ssp-buffer-size=4 -mtune=generic -Wall -W -D_REENTRANT $(DEFINES)
+CXXFLAGS      = -std=c++11 -pipe -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fstack-protector --param=ssp-buffer-size=4 -mtune=generic -Wall -W -D_REENTRANT $(DEFINES)
 INCPATH       = -I/usr/lib/qt/mkspecs/linux-g++ -I. -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtGui -I/usr/include/qt4 -I. -I../Greis -I../Greis/StdMessages -I../Greis/CustomTypes -I../Greis.Tests -Ijpslogd -I../JpsParser/Domain -I../ProjectBase/ProjectBase -I../ProjectBase/src -I../ProjectBase -I../ -I/usr/include/boost
 LINK          = g++
 LFLAGS        = 

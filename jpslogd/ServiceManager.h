@@ -63,7 +63,7 @@ namespace jpslogd
 			DatabaseHelper::ThrowIfError(query);
 
 
-			query = _connection->DbHelper()->ExecuteQuery("SELECT id, command_id, arguments FROM COMMANDQUEUE ORDER BY id;");
+			query = _connection->DbHelper()->ExecuteQuery("SELECT id, command_id, arguments FROM commandqueue ORDER BY id;");
 			while (query.next())
 			{
 				int id = query.value(0).toInt();
