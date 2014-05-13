@@ -1,8 +1,8 @@
 #pragma once
 
 #include "MySqlSink.h"
-#include "ProjectBase\Connection.h"
-#include "ProjectBase\SmartPtr.h"
+#include "ProjectBase/Connection.h"
+#include "ProjectBase/SmartPtr.h"
 #include "DataChunk.h"
 
 using namespace ProjectBase;

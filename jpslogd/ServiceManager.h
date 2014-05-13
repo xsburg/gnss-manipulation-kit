@@ -1,10 +1,10 @@
 #pragma once
 
-#include "ProjectBase\SmartPtr.h"
-#include "ProjectBase\Connection.h"
+#include "ProjectBase/SmartPtr.h"
+#include "ProjectBase/Connection.h"
 #include "EControlCommand.h"
 #include "EServiceLogSeverity.h"
-#include "ProjectBase\IniSettings.h"
+#include "ProjectBase/IniSettings.h"
 #include <QtCore/QDataStream>
 #include <QtCore/QVariantMap>
 

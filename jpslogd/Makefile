@@ -11,12 +11,12 @@
 CC            = gcc
 CXX           = g++
 DEFINES       = -DQT_NO_DEBUG -DQT_CORE_LIB -DQT_SHARED
-CFLAGS        = -pipe -O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fstack-protector --param=ssp-buffer-size=4 -mtune=generic -O2 -Wall -W -D_REENTRANT $(DEFINES)
-CXXFLAGS      = -std=c++11 -pipe -O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fstack-protector --param=ssp-buffer-size=4 -mtune=generic -O2 -Wall -W -D_REENTRANT $(DEFINES)
-INCPATH       = -I/usr/lib/qt/mkspecs/linux-g++ -I. -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtGui -I/usr/include/qt4 -I. -I../Greis -I../Greis/StdMessages -I../Greis/CustomTypes -I../Greis.Tests -Ijpslogd -I../JpsParser/Domain -I../ProjectBase/ProjectBase -I../ProjectBase -I../
+CFLAGS        = -pipe -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fstack-protector --param=ssp-buffer-size=4 -mtune=generic -Wall -W -D_REENTRANT $(DEFINES)
+CXXFLAGS      = -std=c++11 -pipe -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fstack-protector --param=ssp-buffer-size=4 -mtune=generic -Wall -W -D_REENTRANT $(DEFINES)
+INCPATH       = -I/usr/lib/qt/mkspecs/linux-g++ -I. -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtGui -I/usr/include/qt4 -I. -I../Greis -I../Greis/StdMessages -I../Greis/CustomTypes -I../Greis.Tests -Ijpslogd -I../JpsParser/Domain -I../ProjectBase/ProjectBase -I../ProjectBase/src -I../ProjectBase -I../ -I/usr/include/boost
 LINK          = g++
-LFLAGS        = -Wl,-O1
-LIBS          = $(SUBLIBS)  -L/usr/lib/qt -L/usr/lib/qt -lQtCore -lpthread -lQtSql
+LFLAGS        = 
+LIBS          = $(SUBLIBS)  -L/usr/lib/qt -L/usr/lib/qt -lQtCore -lpthread -lQtSql -lboost_system
 AR            = ar cqs
 RANLIB        = 
 QMAKE         = /usr/bin/qmake-qt4
@@ -43,7 +43,7 @@ OBJECTS_DIR   = ./
 
 ####### Files
 
-SOURCES       = ../DatabaseToJps/main.cpp \
+SOURCES       = ../jpslogd/main.cpp \
 		../Greis/ChecksumComputer.cpp \
 		../Greis/CustomType.cpp \
 		../Greis/DataChunk.cpp \
@@ -462,7 +462,7 @@ compiler_clean:
 
 ####### Compile
 
-main.o: ../DatabaseToJps/main.cpp ../Greis/DataChunk.h \
+main.o: ../jpslogd/main.cpp ../Greis/DataChunk.h \
 		../Greis/GreisMessageStream.h \
 		../Greis/GreisException.h \
 		../Greis/StdMessage.h \
@@ -481,7 +481,7 @@ main.o: ../DatabaseToJps/main.cpp ../Greis/DataChunk.h \
 		../Greis/GreisMysqlSerializer.h \
 		../Greis/CustomType.h \
 		../Greis/MySqlSource.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o ../DatabaseToJps/main.cpp
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o ../jpslogd/main.cpp
 
 ChecksumComputer.o: ../Greis/ChecksumComputer.cpp ../Greis/ChecksumComputer.h \
 		../Greis/GreisTypes.h

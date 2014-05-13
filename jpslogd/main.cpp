@@ -49,9 +49,9 @@ namespace jpslogd
 			serialPort = std::make_shared<SerialPortBinaryStream>(portName, baudRate);
 			// Disable running monitoring
 			serialPort->write("\n\n\ndm\n");
-			Sleep(100);
+			qSleep(100);
 			serialPort->write("dm\n");
-			Sleep(100);
+			qSleep(100);
 			serialPort->write("dm\n");
 			//
 			auto serialStream = SerialStreamReader(serialPort);
@@ -204,8 +204,8 @@ int main(int argc, char **argv)
 {
 	try
 	{
-		std::setlocale(LC_ALL, "Russian_Russia.1251");
-		std::locale::global(std::locale("Russian_Russia.1251"));
+		//std::setlocale(LC_ALL, "Russian_Russia.1251");
+		//std::locale::global(std::locale("Russian_Russia.1251"));
 
 		QCoreApplication a(argc, argv);
 
@@ -214,7 +214,8 @@ int main(int argc, char **argv)
 		QTextCodec::setCodecForCStrings(codecMs);
 		QTextCodec::setCodecForLocale(codec);
 		QTextCodec::setCodecForTr(codec);
-
+		
+		
 		sIniSettings.Initialize(Path::Combine(Path::ApplicationDirPath(), "config.ini"));
 
 		sLogger.Initialize(sIniSettings.value("LogLevel", 5).toInt());
@@ -301,7 +302,7 @@ int main(int argc, char **argv)
 		{
 		
 			sLogger.Warn("An error occured, acquisition restart pending.");
-			Sleep(1000);
+			qSleep(1000);
 		}
 
 		return 0;
