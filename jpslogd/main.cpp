@@ -72,11 +72,9 @@ namespace jpslogd
 			// Configure device for data output
 			serialPort->write("\nem,,def,/msg/jps/AZ,/msg/jps/r1,/msg/jps/r2,/msg/jps/RD{10.00,0.00,0.00,0x0002},/msg/jps/rc\n");
 			GreisMessageStream stream(serialPort, true, false);
-			Message::UniquePtr_t msg;
 			sLogger.Info("Configuring databases...");		
 			// Preparing the acquisition sink
 			auto dataChunk = make_unique<DataChunk>();
-			int msgCounter = 0;
 			auto localConnection = Connection::FromSettings("LocalDatabase");
 			if(localConnection->Driver=="" || localConnection->Hostname=="" || localConnection->Username==""){
 				sLogger.Fatal("Cannot configure local database, check configuraion.");		
@@ -96,15 +94,18 @@ namespace jpslogd
 			if(!localSink->IsValid())return true;
 			sLogger.Info("Configuring provisioning via local database...");
 			auto serviceManager	 = make_unique<ServiceManager>(localConnection);
-			// Set receiver propersties
+			// Set receiver properties
 			serviceManager->ServiceStatus["receiverid"]=_receiverid;
 			serviceManager->ServiceStatus["receiverfw"]=_receiverfw;
 			serviceManager->ServiceStatus["receivermodel"]=_receivermodel;
 			serviceManager->ServiceStatus["receiverboard"]=_receiverboard;
 
+            int msgCounter = 0;
+            Message::UniquePtr_t msg;
 			while((msg = stream.Next()).get())
 			{
-				
+                serviceManager->HandleMessage(msg.get());
+
 				dataChunk->AddMessage(std::move(msg));
 				if (msgCounter++ > dataChunkSize)
 				{

@@ -15,7 +15,46 @@ namespace jpslogd
     {
     private:
         Connection::SharedPtr_t _connection;
-        QMap<QString, int> _statisticsCache;
+
+        struct MessageStats
+        {
+            static const int WindowSize = 1000;
+            int total;
+            QQueue<int> last1kOfSizes;
+
+            MessageStats()
+            {
+                total = 0;
+            }
+
+            void Handle(int size)
+            {
+                total++;
+                last1kOfSizes.append(size);
+                while (last1kOfSizes.size() > WindowSize)
+                {
+                    last1kOfSizes.takeFirst();
+                }
+            }
+
+            int GetAverageSize(int averageSize)
+            {
+                if (last1kOfSizes.size() > WindowSize / 2 || averageSize == 0)
+                {
+                    averageSize = 0;
+                    for (auto it = last1kOfSizes.constBegin(); it != last1kOfSizes.constEnd(); it++)
+                    {
+                        averageSize += *it;
+                    }
+                    averageSize = averageSize / last1kOfSizes.size();
+                }
+                return averageSize;
+            }
+        };
+
+        QMap<std::string, MessageStats> messageStatsById;
+        int messagesHandled;
+        static const int MessageHandlingBufferSize = 10000;
     public:
         SMART_PTR_T(ServiceManager);
 
@@ -33,6 +72,7 @@ namespace jpslogd
             IsShutdownRequiredFlag = false;
             IsPausedFlag = false;
             ServiceStatus = QVariantMap();
+            messagesHandled = 0;
             if(interopEnabled)sLogger.Info("Provisioning via local database is now active.");
         }
 
@@ -133,19 +173,98 @@ namespace jpslogd
             }
         }
 
+        void PushMessageStats()
+        {
+            sLogger.Info("Pushing the message statistics data...");
+            QMap<std::string, int> receivedById;
+            QMap<std::string, int> averageSizeById;
+            QSqlQuery query = _connection->DbHelper()->ExecuteQuery("SELECT `messageId`, `received`, `averageSize` from `messageStatistics`");
+            while (query.next())
+            {
+                QString qmessageId = query.value(0).toString();
+                QByteArray amessageId = qmessageId.toAscii();
+                std::string messageId = std::string(amessageId.data(), amessageId.size());
+                auto received = query.value(1).toInt();
+                auto averageSize = query.value(2).toInt();
+
+                if (!messageStatsById.contains(messageId))
+                {
+                    continue;
+                }
+
+                MessageStats& stats = messageStatsById[messageId];
+                received += stats.total;
+                averageSize = stats.GetAverageSize(averageSize);
+
+                QString insertQuery = "UPDATE `messageStatistics` SET `received` = ?, `averageSize` = ? WHERE `id` = ?";
+                QSqlQuery query = _connection->DbHelper()->ExecuteQuery("");
+                query.prepare(insertQuery);
+                DatabaseHelper::ThrowIfError(query);
+                query.addBindValue(received);
+                query.addBindValue(averageSize);
+                query.addBindValue(qmessageId);
+                query.exec();
+                DatabaseHelper::ThrowIfError(query);
+                sLogger.Info(QString("[id: %1, received: %2, averageSize: %3]").arg(qmessageId).arg(received).arg(averageSize));
+                messageStatsById.remove(messageId);
+            }
+
+            for (auto it = messageStatsById.begin(); it != messageStatsById.end(); it++)
+            {
+                auto messageId = it.key();
+                QString qmessageId = QString::fromAscii(messageId.c_str(), messageId.size());
+                auto received = it->total;
+                auto averageSize = it->GetAverageSize(0);
+
+                QString insertQuery = "INSERT INTO `messageStatistics` (`messageId`, `received`, `averageSize`) VALUES (?, ?, ?)";
+                QSqlQuery query = _connection->DbHelper()->ExecuteQuery("");
+                query.prepare(insertQuery);
+                DatabaseHelper::ThrowIfError(query);
+                query.addBindValue(qmessageId);
+                query.addBindValue(received);
+                query.addBindValue(averageSize);
+                query.exec();
+                DatabaseHelper::ThrowIfError(query);
+                sLogger.Info(QString("[id: %1, received: %2, averageSize: %3]").arg(qmessageId).arg(received).arg(averageSize));
+                messageStatsById.remove(messageId);
+            }
+
+            messagesHandled = 0;
+            sLogger.Info("Done.");
+        }
+
+        void HandleMessage(Message* msg)
+        {
+            switch (msg->Kind())
+            {
+            case EMessageKind::StdMessage:
+                {
+                    auto stdMsg = (StdMessage*)msg;
+                    auto id = stdMsg->Id();
+                    MessageStats& stats = messageStatsById[id];
+                    stats.Handle(stdMsg->Size());
+                    break;
+                }
+            default:
+                {
+                    auto id = std::string("OTHERS");
+                    int size = msg->Size();
+                    MessageStats& stats = messageStatsById[id];
+                    stats.Handle(msg->Size());
+                    break;
+                }
+            }
+            messagesHandled++;
+            if (messagesHandled > MessageHandlingBufferSize)
+            {
+                PushMessageStats();
+            }
+        }
+
         void resetMessageStatistics()
         {
+            messageStatsById.clear();
             _connection->DbHelper()->ExecuteQuery("DELETE FROM messageStatistics");
-        }
-
-        void updateMessageStatistics(const QString& messageCode, int incrementedBy)
-        {
-
-        }
-
-        void commitMessageStatistics()
-        {
-            _statisticsCache;
         }
 
         void addLogMessage(const QString& message, EServiceLogSeverity::Type severity)
