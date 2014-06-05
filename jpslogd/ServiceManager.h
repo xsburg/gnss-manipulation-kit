@@ -54,7 +54,7 @@ namespace jpslogd
 
         QMap<std::string, MessageStats> messageStatsById;
         int messagesHandled;
-        static const int MessageHandlingBufferSize = 10000;
+        static const int MessageHandlingBufferSize = 1000;
     public:
         SMART_PTR_T(ServiceManager);
 
