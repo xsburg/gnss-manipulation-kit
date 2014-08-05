@@ -14,12 +14,12 @@ namespace Common
         SINGLETON_BLOCK(Logger)
     private:
         //log4cxx::LoggerPtr _logger;
+
+        int logLevel;
     public:
         Logger() {}
 
-		int LogLevel;
-
-        void Initialize(int);
+        void Initialize(int logLevel);
 
         void Debug(const QString& message);
         void Trace(const QString& message);

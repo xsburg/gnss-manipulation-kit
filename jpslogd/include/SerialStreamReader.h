@@ -1,4 +1,6 @@
-#include "SerialPortBinaryStream.h"
+#pragma once
+
+#include "Greis/SerialPortBinaryStream.h"
 
 using namespace Greis;
 

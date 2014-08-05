@@ -1,13 +1,13 @@
 #pragma once
 
-#include "ProjectBase/SmartPtr.h"
-#include "ProjectBase/Connection.h"
+#include <QtCore/QtCore>
+#include "Common/SmartPtr.h"
+#include "Common/Connection.h"
+#include "Common/IniSettings.h"
 #include "EControlCommand.h"
 #include "EServiceLogSeverity.h"
-#include "ProjectBase/IniSettings.h"
-#include <QtCore/QtCore>
 
-using namespace ProjectBase;
+using namespace Common;
 
 namespace jpslogd
 {
@@ -182,7 +182,7 @@ namespace jpslogd
             while (query.next())
             {
                 QString qmessageId = query.value(0).toString();
-                QByteArray amessageId = qmessageId.toAscii();
+                QByteArray amessageId = qmessageId.toLatin1();
                 std::string messageId = std::string(amessageId.data(), amessageId.size());
                 auto received = query.value(1).toInt();
                 auto averageSize = query.value(2).toInt();
@@ -212,7 +212,7 @@ namespace jpslogd
             for (auto it = messageStatsById.begin(); it != messageStatsById.end(); it++)
             {
                 auto messageId = it.key();
-                QString qmessageId = QString::fromAscii(messageId.c_str(), messageId.size());
+                QString qmessageId = QString::fromLatin1(messageId.c_str(), messageId.size());
                 auto received = it->total;
                 auto averageSize = it->GetAverageSize(0);
 

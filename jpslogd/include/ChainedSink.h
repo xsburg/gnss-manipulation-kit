@@ -1,11 +1,11 @@
 #pragma once
 
-#include "MySqlSink.h"
-#include "ProjectBase/Connection.h"
-#include "ProjectBase/SmartPtr.h"
-#include "DataChunk.h"
+#include "Common/Connection.h"
+#include "Common/SmartPtr.h"
+#include "Greis/MySqlSink.h"
+#include "Greis/DataChunk.h"
 
-using namespace ProjectBase;
+using namespace Common;
 
 class ChainedSink
 {
@@ -13,46 +13,46 @@ private:
     Greis::MySqlSink::UniquePtr_t _sink;
     std::unique_ptr<ChainedSink> _nextChainedSink;
     Connection::SharedPtr_t _connection;
-	int _inserterBatchSize;
-	bool _isValid;
+    int _inserterBatchSize;
+    bool _isValid;
 public:
     SMART_PTR_T(ChainedSink);
 
     ChainedSink(Connection::SharedPtr_t connection, int inserterBatchSize, ChainedSink::UniquePtr_t nextSink)
         : _nextChainedSink(std::move(nextSink)), _connection(connection), _inserterBatchSize(inserterBatchSize)
     {
-		Connect();
+        Connect();
     }
 
-	bool Connect()
-	{
-		try
-		{
-			if (IsValid())
-			{
-				return _isValid = true;
-			}
+    bool Connect()
+    {
+        try
+        {
+            if (IsValid())
+            {
+                return _isValid = true;
+            }
 
-			_connection->Connect();
-			_sink = make_unique<Greis::MySqlSink>(_connection.get(), _inserterBatchSize);
-			return _isValid = true;
-		}
-		catch (DatabaseException& ex)
-		{
-			sLogger.Error("An error occurred while connecting to a database: " + ex.what());
-			return _isValid = false;
-		}
-		catch (...)
-		{
-			_isValid = false;
-			throw;
-		}
-	}
+            _connection->Connect();
+            _sink = make_unique<Greis::MySqlSink>(_connection.get(), _inserterBatchSize);
+            return _isValid = true;
+        }
+        catch (DatabaseException& ex)
+        {
+            sLogger.Error("An error occurred while connecting to a database: " + ex.what());
+            return _isValid = false;
+        }
+        catch (...)
+        {
+            _isValid = false;
+            throw;
+        }
+    }
 
-	bool IsValid() const
-	{
-		return _isValid && _connection->Database().isOpen();
-	}
+    bool IsValid() const
+    {
+        return _isValid && _connection->Database().isOpen();
+    }
 
     bool Handle(Greis::DataChunk::UniquePtr_t dataChunk)
     {
@@ -72,7 +72,7 @@ public:
                     _sink->AddMessage(msgIt->get());
                 }
             }
-			_sink->Flush(); //Added for testing purposes 19032013 Keir
+            _sink->Flush(); //Added for testing purposes 19032013 Keir
             _connection->Database().commit();
         }
         catch (Exception& e)
@@ -83,44 +83,44 @@ public:
             return false;
         }
 
-		if (_nextChainedSink.get())
-		{
-			try
-			{
-				if (_nextChainedSink->Connect())
-				{
-					_nextChainedSink->Handle(std::move(dataChunk));
-				}
-			}
-			catch (DatabaseException& ex)
-			{
-				sLogger.Error("An error occurred while adding a data chunk into the data center database: " + ex.what());
-			}
-		}
+        if (_nextChainedSink.get())
+        {
+            try
+            {
+                if (_nextChainedSink->Connect())
+                {
+                    _nextChainedSink->Handle(std::move(dataChunk));
+                }
+            }
+            catch (DatabaseException& ex)
+            {
+                sLogger.Error("An error occurred while adding a data chunk into the data center database: " + ex.what());
+            }
+        }
 
-		return true;
+        return true;
     }
 
     void Flush()
-	{
-		_connection->Database().transaction();
+    {
+        _connection->Database().transaction();
 
         _sink->Flush();
-		if (_nextChainedSink.get())
-		{
-			try
-			{
-				if (_nextChainedSink->Connect())
-				{
-					_nextChainedSink->Flush();
-				}
-			}
-			catch (DatabaseException& ex)
-			{
-				sLogger.Error("An error occurred while flushing the data into the data center database: " + ex.what());
-			}
-		}
+        if (_nextChainedSink.get())
+        {
+            try
+            {
+                if (_nextChainedSink->Connect())
+                {
+                    _nextChainedSink->Flush();
+                }
+            }
+            catch (DatabaseException& ex)
+            {
+                sLogger.Error("An error occurred while flushing the data into the data center database: " + ex.what());
+            }
+        }
 
-		_connection->Database().commit();
+        _connection->Database().commit();
     }
 };
