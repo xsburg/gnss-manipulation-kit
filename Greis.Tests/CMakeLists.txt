@@ -2,9 +2,9 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 
 # variables declaration
 
-SET(PROJECT Common.Tests)
+SET(PROJECT Greis.Tests)
 
-SET(DEPENDS_ON_PROJECTS Common)
+SET(DEPENDS_ON_PROJECTS Common Greis)
 
 FILE(GLOB_RECURSE HEADERS "include/*.h")
 
