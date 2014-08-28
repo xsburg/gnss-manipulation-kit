@@ -44,9 +44,25 @@ namespace jpslogd
             std::string portName = sIniSettings.value("PortName", "COM3").toString().toStdString();
             unsigned int baudRate = sIniSettings.value("BaudRate", 1500000).toUInt();
             int inserterBatchSize = sIniSettings.value("inserterBatchSize", 250).toInt();
-            int dataChunkSize = sIniSettings.value("dataChunkSize", 250).toInt();;
+            int dataChunkSize = sIniSettings.value("dataChunkSize", 250).toInt();
             sLogger.Info("Connecting Javad receiver on "+QString::fromStdString(portName)+" at "+QString::number(baudRate)+"bps...");
             serialPort = std::make_shared<SerialPortBinaryStream>(portName, baudRate);
+            // Setting parameters from [Receiver] section
+            QStringList commands;
+            auto keys = sIniSettings.settings()->allKeys();
+            for (auto key : keys)
+            {
+                if (key.startsWith("Receiver/command"))
+                {
+                    commands.append(sIniSettings.value(key).toString());
+                }
+            }
+            for (auto cmd : commands)
+            {
+                sLogger.Info(QString("Running a command: %1").arg(cmd));
+                serialPort->write(cmd.toLatin1());
+                qSleep(500);
+            }
             // Disable running monitoring
             serialPort->write("\n\n\ndm\n");
             qSleep(1000);
