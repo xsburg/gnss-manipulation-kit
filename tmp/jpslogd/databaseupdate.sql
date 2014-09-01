@@ -14,6 +14,7 @@ CREATE TABLE `messageStatistics` (
   `messageId` VARCHAR(50) NOT NULL UNIQUE,
   `received` INT NOT NULL DEFAULT 0,
   `averageSize` FLOAT NOT NULL DEFAULT 0,
+  `startedAt` DATETIME NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 

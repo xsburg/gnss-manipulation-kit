@@ -215,14 +215,16 @@ namespace jpslogd
                 QString qmessageId = QString::fromLatin1(messageId.c_str(), messageId.size());
                 auto received = it->total;
                 auto averageSize = it->GetAverageSize(0);
+                auto currentDate = QDateTime::currentDateTimeUtc();
 
-                QString insertQuery = "INSERT INTO `messageStatistics` (`messageId`, `received`, `averageSize`) VALUES (?, ?, ?)";
+                QString insertQuery = "INSERT INTO `messageStatistics` (`messageId`, `received`, `averageSize`, `startedAt`) VALUES (?, ?, ?, ?)";
                 QSqlQuery query = _connection->DbHelper()->ExecuteQuery("");
                 query.prepare(insertQuery);
                 DatabaseHelper::ThrowIfError(query);
                 query.addBindValue(qmessageId);
                 query.addBindValue(received);
                 query.addBindValue(averageSize);
+                query.addBindValue(currentDate);
                 query.exec();
                 DatabaseHelper::ThrowIfError(query);
                 sLogger.Info(QString("[id: %1, received: %2, averageSize: %3]").arg(qmessageId).arg(received).arg(averageSize));
