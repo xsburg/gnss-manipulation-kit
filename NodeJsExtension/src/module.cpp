@@ -1,9 +1,8 @@
 #include <node.h>
 
-#include "modulename.hpp"
+#include "module.hpp"
 
 using namespace v8;
-
 
 Persistent<FunctionTemplate> MyObject::constructor;
 
@@ -26,10 +25,9 @@ void MyObject::Init(Handle<Object> target) {
     target->Set(name, constructor->GetFunction());
 }
 
-MyObject::MyObject(int val)
-    : ObjectWrap(),
-      value_(val) {}
-
+MyObject::MyObject(int val) : ObjectWrap(), value_(val)
+{
+}
 
 Handle<Value> MyObject::New(const Arguments& args) {
     HandleScope scope;
@@ -61,13 +59,6 @@ Handle<Value> MyObject::Value(const Arguments& args) {
 
     return scope.Close(Integer::New(obj->value_));
 }
-
-
-
-
-
-
-
 
 void RegisterModule(Handle<Object> target) {
     MyObject::Init(target);

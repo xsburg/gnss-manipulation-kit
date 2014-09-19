@@ -1,8 +1,8 @@
 {
   "targets": [
     {
-      "target_name": "modulename",
-      "sources": [ "modulename.cpp" ]
+      "target_name": "greisjs",
+      "sources": [ "src/module.cpp" ]
     }
   ]
 }
