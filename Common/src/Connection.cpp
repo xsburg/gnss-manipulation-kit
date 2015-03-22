@@ -10,8 +10,7 @@ namespace Common
 
         QString escapedHostname = Hostname;
         escapedHostname.replace('.', '_');
-        QString connectionName = QString("%1_%2_%3_%4").arg(Username).
-            arg(escapedHostname).arg(Port).arg(DatabaseName);
+        QString connectionName = QUuid::createUuid().toString();
         _db = QSqlDatabase::addDatabase(Driver, connectionName);
         _db.setDatabaseName(DatabaseName);
         _db.setPort(Port);
