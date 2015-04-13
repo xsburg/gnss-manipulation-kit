@@ -36,6 +36,7 @@ namespace Common
         if (this->logLevel >= 3)
         {
             std::cerr << message.toStdString() << std::endl;
+            std::cout << message.toStdString() << std::endl;
         }
     }
 
