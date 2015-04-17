@@ -57,6 +57,10 @@ FIND_PACKAGE(Boost COMPONENTS regex system thread REQUIRED)
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 ADD_DEFINITIONS(-DBOOST_ALL_NO_LIB)
 
+## GPS Toolkit
+
+INCLUDE_DIRECTORIES("C:/Program Files (x86)/GPS Toolkit/include")
+
 ## GTest
 
 INCLUDE(CMakeGTest.txt)

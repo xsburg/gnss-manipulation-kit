@@ -56,5 +56,6 @@ target_link_libraries(
     ${PROJECT}
     ${DEPENDS_ON_PROJECTS}
     ${Boost_LIBRARIES}
+    "C:/Program Files (x86)/GPS Toolkit/lib/gpstk.lib"
     Qt5::Core
 	Qt5::Sql)
