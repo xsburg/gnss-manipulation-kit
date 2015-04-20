@@ -1,5 +1,4 @@
-#ifndef Connection_h__
-#define Connection_h__
+#pragma once
 
 #include <QtCore/QtCore>
 #include <QtSql/QtSql>
@@ -45,5 +44,3 @@ namespace Common
         Connection &operator =(const Connection &);
     };
 }
-
-#endif // Connection_h__
