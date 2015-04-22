@@ -1,5 +1,3 @@
-delimiter $$
-
 DROP TABLE IF EXISTS `commandqueue`;
 DROP TABLE IF EXISTS `servicelog`;
 DROP TABLE IF EXISTS `commandclassifier`;
