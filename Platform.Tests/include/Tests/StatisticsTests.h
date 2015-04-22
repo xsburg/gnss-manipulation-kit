@@ -26,12 +26,24 @@ namespace Greis
             auto dataChunk = DataChunk::FromFile(filename);
 
             // Act
+            int count = 0;
+            bool stop;
             auto serviceManager = make_unique<Platform::ServiceManager>(this->Connection());
             for (auto& epoch : dataChunk->Body())
             {
                 for (auto& msg : epoch->Messages)
                 {
+                    ++count;
                     serviceManager->HandleMessage(msg.get());
+                    stop = count == 1000;
+                    if (stop)
+                    {
+                        break;
+                    }
+                }
+                if (stop)
+                {
+                    break;
                 }
             }
             serviceManager->PushMessageStats();
