@@ -27,6 +27,7 @@ namespace Greis
 
         TEST_F(RinexTests, ShouldOpenTestFile)
         {
+
             Rinex3ObsStream rin("bahr1620.04o");
 
             // Create the output file stream

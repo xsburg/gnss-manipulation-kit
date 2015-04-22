@@ -73,7 +73,7 @@ ADD_DEFINITIONS(-DBOOST_ALL_NO_LIB)
 
 ## GPS Toolkit
 
-INCLUDE_DIRECTORIES("C:/Program Files (x86)/GPS Toolkit/include")
+INCLUDE_DIRECTORIES("D:/work/git/ifz/jpsutils/gpstk/build/include")
 
 ## GTest
 
