@@ -1,6 +1,6 @@
 #pragma once
 
-namespace jpslogd
+namespace Platform
 {
 	struct EControlCommand
 	{

@@ -6,16 +6,14 @@
 #include "Common/Path.h"
 #include "Common/Connection.h"
 #include "Greis/DataChunk.h"
-#include "Greis/MySqlSink.h"
 #include "Greis/SerialPortBinaryStream.h"
-#include "Greis/FileBinaryStream.h"
-#include "SerialStreamReader.h"
-#include "ChainedSink.h"
-#include "ServiceManager.h"
+#include "Platform/SerialStreamReader.h"
+#include "Platform/ServiceManager.h"
+#include "Platform/ChainedSink.h"
 
 using namespace Common;
 using namespace Greis;
-using namespace jpslogd;
+using namespace Platform;
 
 
 #ifdef Q_OS_WIN
@@ -216,7 +214,6 @@ namespace jpslogd
     }
 }
 
-
 int main(int argc, char **argv)
 {
     try
@@ -235,7 +232,7 @@ int main(int argc, char **argv)
 
         sLogger.Debug("The following sqldrivers are available:");
         auto sqlDrivers = QSqlDatabase::drivers();
-        for (auto it = sqlDrivers.begin(); it != sqlDrivers.end(); it++)
+        for (auto it = sqlDrivers.begin(); it != sqlDrivers.end(); ++it)
         {
             QString sqlDriverName = *it;
             sLogger.Debug(sqlDriverName);
@@ -256,62 +253,62 @@ int main(int argc, char **argv)
                 doSetup = true;
             }
         }
-        if(doSetup)
+        if (doSetup)
+        {
+            if(RootPassword!="")
             {
-                if(RootPassword!="")
-                {
-                    QSqlDatabase db = QSqlDatabase::addDatabase("QMYSQL");
-                    db.setHostName("localhost");
-                    db.setUserName("root");
-                    db.setPassword(RootPassword);
-                    QFile baselineFile(Path::Combine(Path::ApplicationDirPath(), "baseline.sql"));
-                    if (!baselineFile.open(QIODevice::ReadOnly | QIODevice::Text))
-                        return  0;
-                    QFile provisioningFile(Path::Combine(Path::ApplicationDirPath(), "jpslogd.sql"));
-                    if (!provisioningFile.open(QIODevice::ReadOnly | QIODevice::Text))
-                        return  0;
-                    if(db.open()){
-                    QSqlQuery query(db);
-                    QTextStream in(&baselineFile);
-                    QString sql = in.readAll();
-                    QStringList sqlStatements = sql.split(';', QString::SkipEmptyParts);
+                QSqlDatabase db = QSqlDatabase::addDatabase("QMYSQL");
+                db.setHostName("localhost");
+                db.setUserName("root");
+                db.setPassword(RootPassword);
+                QFile baselineFile(Path::Combine(Path::ApplicationDirPath(), "baseline.sql"));
+                if (!baselineFile.open(QIODevice::ReadOnly | QIODevice::Text))
+                    return  0;
+                QFile provisioningFile(Path::Combine(Path::ApplicationDirPath(), "jpslogd.sql"));
+                if (!provisioningFile.open(QIODevice::ReadOnly | QIODevice::Text))
+                    return  0;
+                if(db.open()){
+                QSqlQuery query(db);
+                QTextStream in(&baselineFile);
+                QString sql = in.readAll();
+                QStringList sqlStatements = sql.split(';', QString::SkipEmptyParts);
                     
                         
-                        query.exec("CREATE DATABASE `jpslogd`;");
-                        query.exec("USE `jpslogd`;");
-                        foreach(const QString& statement, sqlStatements)
+                    query.exec("CREATE DATABASE `jpslogd`;");
+                    query.exec("USE `jpslogd`;");
+                    foreach(const QString& statement, sqlStatements)
+                    {
+                        if (statement.trimmed() != "")
                         {
-                            if (statement.trimmed() != "")
-                            {
-                                if (!query.exec(statement))
-                                    sLogger.Error("An error occured during setup: "+query.lastError().text());
-                            }
+                            if (!query.exec(statement))
+                                sLogger.Error("An error occured during setup: "+query.lastError().text());
                         }
-                        query.exec("GRANT ALL PRIVILEGES ON *.* TO 'jpslogd'@localhost");
-
-                    QTextStream in2(&provisioningFile);
-                    sql = in2.readAll();
-                    sqlStatements = sql.split(';', QString::SkipEmptyParts);
-                        foreach(const QString& statement, sqlStatements)
-                        {
-                            if (statement.trimmed() != "")
-                            {
-                                if (!query.exec(statement))
-                                    sLogger.Error("An error occured during setup: "+query.lastError().text());
-                            }
-                        }
-
                     }
-                        return 0;
+                    query.exec("GRANT ALL PRIVILEGES ON *.* TO 'jpslogd'@localhost");
 
+                QTextStream in2(&provisioningFile);
+                sql = in2.readAll();
+                sqlStatements = sql.split(';', QString::SkipEmptyParts);
+                    foreach(const QString& statement, sqlStatements)
+                    {
+                        if (statement.trimmed() != "")
+                        {
+                            if (!query.exec(statement))
+                                sLogger.Error("An error occured during setup: "+query.lastError().text());
+                        }
+                    }
 
-                } else {
-                    sLogger.Fatal("Please specify root password.");
                 }
+                    return 0;
+
+
+            } else {
+                sLogger.Fatal("Please specify root password.");
             }
+        }
 
 
-        while (!startLoop())
+        while (!jpslogd::startLoop())
         {
         
             sLogger.Warn("An error occured, acquisition restart pending.");
