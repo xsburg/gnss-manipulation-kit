@@ -165,8 +165,8 @@ void Platform::ServiceManager::PushMessageStats()
         query.exec();
         DatabaseHelper::ThrowIfError(query);
         sLogger.Info(QString("[id: %1, received: %2, averageSize: %3]").arg(qmessageId).arg(received).arg(averageSize));
-        messageStatsById.remove(messageId);
     }
+    messageStatsById.clear();
 
     messagesHandled = 0;
     sLogger.Info("Done.");
