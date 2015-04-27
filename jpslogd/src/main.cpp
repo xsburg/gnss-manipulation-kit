@@ -10,6 +10,7 @@
 #include "Platform/SerialStreamReader.h"
 #include "Platform/ServiceManager.h"
 #include "Platform/ChainedSink.h"
+#include <QtDBus/QtDBus>
 
 using namespace Common;
 using namespace Greis;
@@ -31,7 +32,7 @@ void qSleep(int ms)
 
 namespace jpslogd
 {
-    bool startLoop()
+    bool startLoop(QCoreApplication *a)
     {
         SerialPortBinaryStream::SharedPtr_t serialPort;
         ChainedSink::UniquePtr_t dataCenterSink;
@@ -108,6 +109,10 @@ namespace jpslogd
             if(!localSink->IsValid())return true;
             sLogger.Info("Configuring provisioning via local database...");
             auto serviceManager	 = make_unique<ServiceManager>(localConnection);
+		
+	    QDBusServer * DBusServer = new QDBusServer(QString("unix:path=%1").arg(Path::Combine(Path::ApplicationDirPath(), "provision.dbus")));
+	    QObject::connect(DBusServer,SIGNAL(newConnection(QDBusConnection)),serviceManager.get(),SLOT(newDBusConnection(QDBusConnection)));
+
             // Set receiver properties
             serviceManager->ServiceStatus["receiverid"]=_receiverid;
             serviceManager->ServiceStatus["receiverfw"]=_receiverfw;
@@ -118,8 +123,7 @@ namespace jpslogd
             Message::UniquePtr_t msg;
             while((msg = stream.Next()).get())
             {
-                serviceManager->HandleMessage(msg.get());
-
+		a->processEvents();
                 dataChunk->AddMessage(std::move(msg));
                 if (msgCounter++ > dataChunkSize)
                 {
@@ -133,7 +137,6 @@ namespace jpslogd
                     sLogger.Debug("Another 100 has been received.");
 
                         // Checking for the control commands
-                    serviceManager->HandlePendingCommands();
                     if (serviceManager->IsRestartRequiredFlag)
                     {
                         serviceManager->IsRestartRequiredFlag = false;
@@ -153,7 +156,6 @@ namespace jpslogd
                         while (serviceManager->IsPausedFlag)
                         {
                             qSleep(sleepIntervalInMilliseconds);
-                            serviceManager->HandlePendingCommands();
                             if (serviceManager->IsRestartRequiredFlag)
                             {
                                 serviceManager->IsRestartRequiredFlag = false;
@@ -307,8 +309,7 @@ int main(int argc, char **argv)
             }
         }
 
-
-        while (!jpslogd::startLoop())
+	while (!jpslogd::startLoop(&a))
         {
         
             sLogger.Warn("An error occured, acquisition restart pending.");

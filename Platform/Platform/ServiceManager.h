@@ -1,17 +1,21 @@
 #pragma once
 
+#include <QObject>
 #include <QtCore/QtCore>
 #include "Common/SmartPtr.h"
 #include "Common/Connection.h"
 #include "EServiceLogSeverity.h"
 #include <Greis/Message.h>
+#include <QtDBus/QtDBus>
 
 using namespace Common;
 
 namespace Platform
 {
-    class ServiceManager
+    class ServiceManager: public QObject
     {
+	Q_OBJECT
+	
         Connection::SharedPtr_t _connection;
 
         struct MessageStats
@@ -53,9 +57,18 @@ namespace Platform
         QMap<std::string, MessageStats> messageStatsById;
         int messagesHandled;
         static const int MessageHandlingBufferSize = 1000;
+    private:
+	QDBusConnection * DBusPeerConnection;
+    protected slots:
+        void newDBusConnection(const QDBusConnection &connection);
+    public slots:
+	Q_SCRIPTABLE bool SetConfigKeyPersistent (const QString &key, const QString &value);
+	Q_SCRIPTABLE QString GetConfigKey (const QString &key);
+	Q_SCRIPTABLE QString GetStatus ();
+
     public:
         SMART_PTR_T(ServiceManager);
-
+	
         bool IsRestartRequiredFlag;
         bool IsShutdownRequiredFlag;
         bool IsPausedFlag;
@@ -64,8 +77,6 @@ namespace Platform
         QVariantMap ServiceStatus;
 
         ServiceManager(Connection::SharedPtr_t connection);
-
-        void HandlePendingCommands();
 
         void PushMessageStats();
 
