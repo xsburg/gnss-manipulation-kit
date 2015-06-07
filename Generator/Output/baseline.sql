@@ -1137,7 +1137,8 @@ CREATE TABLE `msg_GeoPos` (
     INDEX `idx_fk_msg_GeoPos_idMessageCode` (`idMessageCode`), 
     CONSTRAINT `fk_msg_GeoPos_idEpoch` FOREIGN KEY (`idEpoch`) 
         REFERENCES `epoch` (`id`), 
-    CONSTRAINT `fk_msg_GeoPos_idMessageCode` FOREIGN KEY (`idMessageCode`) 
+    CONSTRAINT `fk_msg_GeoPos_idMessageCode`
+			FOREIGN KEY (`idMessageCode`) 
         REFERENCES `messageCode` (`id`));
 
 -- message 'GeoVel': [VG] Geodetic Velocity

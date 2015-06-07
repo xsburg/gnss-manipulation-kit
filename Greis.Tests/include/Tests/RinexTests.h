@@ -1,10 +1,10 @@
 #pragma once
 
 #include <gtest/gtest.h>
-#include <gpstk/Rinex3ObsStream.hpp>
-#include <gpstk/Rinex3ObsBase.hpp>
-#include <gpstk/Rinex3ObsHeader.hpp>
-#include <gpstk/Rinex3ObsData.hpp>
+#include <gpstk/RinexObsStream.hpp>
+#include <gpstk/RinexObsBase.hpp>
+#include <gpstk/RinexObsHeader.hpp>
+#include <gpstk/RinexObsData.hpp>
 #include "Utils/BaseTest.h"
 #include "Utils/Helpers.h"
 #include "Common/SmartPtr.h"
@@ -27,20 +27,19 @@ namespace Greis
 
         TEST_F(RinexTests, ShouldOpenTestFile)
         {
-
-            Rinex3ObsStream rin("bahr1620.04o");
+            RinexObsStream rin("ifz-data-0.14o");
 
             // Create the output file stream
-            Rinex3ObsStream rout("bahr1620.04o.new", std::ios::out | std::ios::trunc);
+            RinexObsStream rout("bahr1620.04o.new", std::ios::out | std::ios::trunc);
 
             // Read the RINEX header
-            Rinex3ObsHeader head;    //RINEX header object
+            RinexObsHeader head;    //RINEX header object
             rin >> head;
             rout.header = rin.header;
             rout << rout.header;
 
             // Loop over all data epochs
-            Rinex3ObsData data;   //RINEX data object
+            RinexObsData data;   //RINEX data object
             while (rin >> data)
             {
                 rout << data;

@@ -4,4 +4,5 @@
 
 #pragma once
 
+#include "Tests/RtklibTests.h"
 #include "Tests/StatisticsTests.h"
