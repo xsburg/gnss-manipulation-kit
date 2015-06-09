@@ -43,6 +43,15 @@ typedef struct {        /* receiver raw data control type */
     int week;           /* RT17: week number */
     unsigned char pbuff[255 + 4 + 2]; /* RT17: Packet buffer */
 } raw_t2;
+
+extern int showmsg(char *format, ...)
+{
+    va_list arg;
+    va_start(arg, format); vfprintf(stderr, format, arg); va_end(arg);
+    fprintf(stderr, "\r");
+    return 0;
+}
+
 namespace Greis
 {
     namespace Tests
@@ -56,13 +65,72 @@ namespace Greis
             // Arrange
             QString fileName = this->ResolvePath("ifz-data-0.jps");
             
-            FILE* fr = fopen(fileName.toLatin1(), "r");
-            //auto file = File::OpenReadBinary(fileName);
-            //auto data = file->readAll();
+            //FILE* fr = fopen(fileName.toLatin1(), "r");
+            auto file = File::OpenReadBinary(fileName);
+            auto data = file->readAll();
 
             raw_t* raw = new raw_t();
             init_raw(raw);
-            input_javadf(raw, fr);
+            int msgCount = 0;
+            for (size_t i = 0; i < data.size(); i++)
+            {
+                char c = data.at(i);
+                input_javad(raw, c);
+            }
+
+            rnxopt_t opt = {{0}};
+            opt.rnxver = 2.12;
+            opt.navsys = SYS_ALL;
+            strcpy(opt.prog, "JPS2RIN v.2.0.99");
+            strcpy(opt.runby, "JAVAD GNSS");
+            strcpy(opt.marker, "filename"); // marker name
+            strcpy(opt.name[0], "-Unknown-"); // observer
+            strcpy(opt.name[1], "-Unknown-"); // agency
+            strcpy(opt.rec[0], "00L8XRYFXCC213FJTMVBJAVAD"); // REC #
+            strcpy(opt.rec[1], "TR_G3T ALPHA"); // TYPE
+            strcpy(opt.rec[2], "3.4.14 Jan,29,2014"); // VERS
+            strcpy(opt.ant[0], "-Unknown-"); // ANT #
+            strcpy(opt.ant[1], "-Unknown-"); // TYPE
+            opt.apppos[0] = opt.apppos[1] = opt.apppos[2] = 0.0; // approx position x/y/z
+            opt.antdel[0] = opt.antdel[1] = opt.antdel[2] = 0.0; // antenna delta h/e/n
+            // observation types
+            opt.freqtype = FREQTYPE_ALL;
+            opt.obstype = OBSTYPE_ALL;
+            set_obstype(STRFMT_JAVAD, &opt);
+
+            opt.tstart = raw->obs.data[0].time;
+            opt.tend = raw->obs.data[raw->obs.n - 1].time;
+            opt.tint = 1.0; // INTERVAL
+
+            /*char* ofiles[7] = {
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                ""
+            };
+            opt.scanobs = 1;
+            auto file0 = (fileName + ".obs").toLatin1();
+            ofiles[0] = file0.data();
+            auto file1 = (fileName + ".nav").toLatin1();
+            ofiles[1] = file1.data();
+            auto file2 = (fileName + ".gnav").toLatin1();
+            ofiles[2] = file2.data();
+            auto file3 = (fileName + ".hnav").toLatin1();
+            ofiles[3] = file3.data();
+            auto file4 = (fileName + ".qnav").toLatin1();
+            ofiles[4] = file4.data();
+            auto file5 = (fileName + ".lnav").toLatin1();
+            ofiles[5] = file5.data();
+            convrnx(STRFMT_JAVAD, &opt, fileName.toLatin1(), ofiles);*/
+            FILE* fr = fopen((fileName + ".obs").toLatin1(), "w");
+            outrnxobsh(fr, &opt, &raw->nav);
+            outrnxobsb(fr, &opt, raw->obs.data, raw->obs.n, 0);
+            fclose(fr);
+
+            std::cout << "messages read: " << msgCount << std::endl;
 
             //auto dataChunk = DataChunk::FromFile(filename);
 
