@@ -130,6 +130,10 @@ namespace Greis
             outrnxobsb(fr, &opt, raw->obs.data, raw->obs.n, 0);
             fclose(fr);
 
+            rnxctr_t* rnxctr = new rnxctr_t();
+            init_rnxctr(rnxctr);
+            readrnx("filename", 1, "", &rnxctr->obs, &rnxctr->nav, &rnxctr->sta);
+
             std::cout << "messages read: " << msgCount << std::endl;
 
             //auto dataChunk = DataChunk::FromFile(filename);
