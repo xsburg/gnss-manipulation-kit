@@ -8,6 +8,8 @@ FILE(GLOB_RECURSE HEADERS "src/*.h")
 
 FILE(GLOB_RECURSE SOURCES "src/*.c")
 
+LIST(REMOVE_ITEM SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/rcv/septentrio.c")
+
 # source grouping
 
 source_group ("Header Files" FILES ${HEADERS})
@@ -15,7 +17,7 @@ source_group ("Source Files" FILES ${SOURCES})
 
 # project definition
 
-PROJECT(${PROJECT} CXX)
+PROJECT(${PROJECT} C)
 
 # includes
 
@@ -25,6 +27,7 @@ endforeach()
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT}")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/src")
 
 # preprocessor definitions
 
@@ -40,7 +43,7 @@ add_definitions(-DENALEO)
 
 add_library(${PROJECT} STATIC ${HEADERS} ${SOURCES})
 
-SET_TARGET_PROPERTIES(${PROJECT} PROPERTIES LINKER_LANGUAGE CXX)
+SET_TARGET_PROPERTIES(${PROJECT} PROPERTIES LINKER_LANGUAGE C)
 
 target_link_libraries(
     ${PROJECT}
