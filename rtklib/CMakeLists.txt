@@ -4,7 +4,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 
 SET(PROJECT rtklib)
 
-FILE(GLOB_RECURSE HEADERS "${PROJECT}/*.h")
+FILE(GLOB_RECURSE HEADERS "src/*.h")
 
 FILE(GLOB_RECURSE SOURCES "src/*.c")
 
@@ -25,6 +25,16 @@ endforeach()
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT}")
+
+# preprocessor definitions
+
+add_definitions(-D_LIB)
+add_definitions(-DEXTLEX)
+add_definitions(-DENAGLO)
+add_definitions(-DENAGAL)
+add_definitions(-DENAQZS)
+add_definitions(-DENACMP)
+add_definitions(-DENALEO)
 
 # linking
 

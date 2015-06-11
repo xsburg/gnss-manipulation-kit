@@ -71,10 +71,6 @@ FIND_PACKAGE(Boost COMPONENTS regex system thread REQUIRED)
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 ADD_DEFINITIONS(-DBOOST_ALL_NO_LIB)
 
-## GPS Toolkit
-
-INCLUDE_DIRECTORIES("D:/work/git/ifz/jpsutils/gpstk/build/include")
-
 ## GTest
 
 INCLUDE(CMakeGTest.txt)
@@ -85,6 +81,7 @@ add_subdirectory(Common)
 add_subdirectory(Common.Tests)
 add_subdirectory(Greis)
 add_subdirectory(Greis.Tests)
+add_subdirectory(rtklib)
 add_subdirectory(Platform)
 add_subdirectory(Platform.Tests)
 add_subdirectory(DatabaseToJps)
