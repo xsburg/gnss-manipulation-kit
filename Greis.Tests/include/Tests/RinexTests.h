@@ -2,8 +2,6 @@
 
 #include <gtest/gtest.h>
 #include "Utils/BaseTest.h"
-#include "Greis/GreisMessageStream.h"
-#include <rtklib.h>
 #include <Greis/RinexReader.h>
 
 using namespace Common;
@@ -79,7 +77,7 @@ namespace Greis
         TEST_F(RinexTests, ShouldReadJavadFile)
         {
             // Arrange
-            QString fileName = this->ResolvePath("ifz-data-0.jps");
+            /*QString fileName = this->ResolvePath("ifz-data-0.jps");
 
             //FILE* fr = fopen(fileName.toLatin1(), "r");
             auto file = File::OpenReadBinary(fileName);
@@ -116,7 +114,7 @@ namespace Greis
 
             opt.tstart = raw->obs.data[0].time;
             opt.tend = raw->obs.data[raw->obs.n - 1].time;
-            opt.tint = 1.0; // INTERVAL
+            opt.tint = 1.0; // INTERVAL*/
 
             /*char* ofiles[7] = {
             "",
@@ -141,16 +139,16 @@ namespace Greis
             auto file5 = (fileName + ".lnav").toLatin1();
             ofiles[5] = file5.data();
             convrnx(STRFMT_JAVAD, &opt, fileName.toLatin1(), ofiles);*/
-            FILE* fr = fopen((fileName + ".obs").toLatin1(), "w");
-            outrnxobsh(fr, &opt, &raw->nav);
-            outrnxobsb(fr, &opt, raw->obs.data, raw->obs.n, 0);
-            fclose(fr);
+        /*FILE* fr = fopen((fileName + ".obs").toLatin1(), "w");
+        outrnxobsh(fr, &opt, &raw->nav);
+        outrnxobsb(fr, &opt, raw->obs.data, raw->obs.n, 0);
+        fclose(fr);
 
-            rnxctr_t* rnxctr = new rnxctr_t();
-            init_rnxctr(rnxctr);
-            readrnx("filename", 1, "", &rnxctr->obs, &rnxctr->nav, &rnxctr->sta);
+        rnxctr_t* rnxctr = new rnxctr_t();
+        init_rnxctr(rnxctr);
+        readrnx("filename", 1, "", &rnxctr->obs, &rnxctr->nav, &rnxctr->sta);
 
-            std::cout << "messages read: " << msgCount << std::endl;
+        std::cout << "messages read: " << msgCount << std::endl;*/
 
             //auto dataChunk = DataChunk::FromFile(filename);
 
@@ -213,11 +211,12 @@ namespace Greis
         TEST_F(RinexTests, ShouldImportRtkRawToGreis)
         {
             // Arrange
-            //QString fileName = this->ResolvePath("ifz-data-0.jps");
-            //auto dataChunk = DataChunk::FromFile(fileName);
+            QString obsFileNameIn = this->ResolvePath("ifz-data-0.in.14o");
+            QString navFileNameIn = this->ResolvePath("ifz-data-0.in.14N");
+            auto gnssData = RinexReader().ReadFile(obsFileNameIn).ReadFile(navFileNameIn).BuildResult();
 
             // Act
-            //auto gnssData = RtkAdapter().toGnssData(dataChunk.get());
+            auto dataChunk = RtkAdapter().toMessages(gnssData);
 
             // Assert
             // nothing that we can check...

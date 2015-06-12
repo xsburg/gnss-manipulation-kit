@@ -22,6 +22,10 @@ namespace Greis
 
         virtual ~GnssData()
         {
+            if (destroyed)
+            {
+                return;
+            }
             if (obs.data)
             {
                 free(obs.data);
@@ -59,13 +63,17 @@ namespace Greis
         obs_t obs;
         nav_t nav;
         sta_t sta;
+        bool destroyed;
     };
 
     class RawGnssData : public GnssData
     {
     public:
+        SMART_PTR_T(GnssData);
+
         RawGnssData(raw_t raw) : _raw(raw)
         {
+            init_raw(&_raw);
             obs = raw.obs;
             nav = raw.nav;
             sta = raw.sta;
@@ -73,6 +81,7 @@ namespace Greis
 
         RawGnssData()
         {
+            init_raw(&_raw);
             obs = _raw.obs;
             nav = _raw.nav;
             sta = _raw.sta;
@@ -81,6 +90,12 @@ namespace Greis
         virtual ~RawGnssData()
         {
             free_raw(&_raw);
+            destroyed = true;
+        }
+
+        raw_t& getRaw()
+        {
+            return _raw;
         }
     private:
         raw_t _raw;
@@ -114,5 +129,6 @@ namespace Greis
     {
     public:
         GnssData::SharedPtr_t toGnssData(DataChunk* dataChunk);
+        DataChunk::SharedPtr_t toMessages(GnssData::SharedPtr_t gnssData);
     };
 }

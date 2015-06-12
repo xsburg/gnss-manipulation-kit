@@ -109,17 +109,23 @@ Greis::RinexWriter& Greis::RinexWriter::WriteNavFile(QString fileName)
 
 Greis::GnssData::SharedPtr_t Greis::RtkAdapter::toGnssData(DataChunk* dataChunk)
 {
-    GnssData::SharedPtr_t gnssData(new RawGnssData());
+    auto rawGnssData = new RawGnssData();
+    GnssData::SharedPtr_t gnssData(rawGnssData);
 
     auto data = dataChunk->ToByteArray();
 
-    raw_t raw;
-    init_raw(&raw);
     for (size_t i = 0; i < data.size(); i++)
     {
         char c = data.at(i);
-        input_javad(&raw, c);
+        input_javad(&rawGnssData->getRaw(), c);
     }
     
     return gnssData;
+}
+
+Greis::DataChunk::SharedPtr_t Greis::RtkAdapter::toMessages(GnssData::SharedPtr_t gnssData)
+{
+    DataChunk::SharedPtr_t dataChunk;
+
+    return dataChunk;
 }
