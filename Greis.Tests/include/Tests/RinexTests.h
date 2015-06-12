@@ -184,15 +184,43 @@ namespace Greis
         TEST_F(RinexTests, ShouldReadAndWriteRinexData)
         {
             // Arrange
-            QString obsFileNameIn = this->ResolvePath("ifz-data-0.14o");
-            QString navFileNameIn = this->ResolvePath("ifz-data-0.14N");
+            QString obsFileNameIn = this->ResolvePath("ifz-data-0.in.14o");
+            QString navFileNameIn = this->ResolvePath("ifz-data-0.in.14N");
             QString obsFileNameOut = this->ResolvePath("ifz-data-0.out.14o");
+            QString navFileNameOut = this->ResolvePath("ifz-data-0.out.14N");
 
             // Act
             auto gnssData = RinexReader().ReadFile(obsFileNameIn).ReadFile(navFileNameIn).BuildResult();
-            RinexWriter(gnssData).WriteObsFile(obsFileNameOut);
+            RinexWriter(gnssData).WriteObsFile(obsFileNameOut).WriteNavFile(navFileNameOut);
 
             // Assert
+            // nothing that we can check...
+        }
+
+        TEST_F(RinexTests, ShouldExportGreisToRtkRaw)
+        {
+            // Arrange
+            QString fileName = this->ResolvePath("ifz-data-0.jps");
+            auto dataChunk = DataChunk::FromFile(fileName);
+
+            // Act
+            auto gnssData = RtkAdapter().toGnssData(dataChunk.get());
+
+            // Assert
+            // nothing that we can check...
+        }
+
+        TEST_F(RinexTests, ShouldImportRtkRawToGreis)
+        {
+            // Arrange
+            //QString fileName = this->ResolvePath("ifz-data-0.jps");
+            //auto dataChunk = DataChunk::FromFile(fileName);
+
+            // Act
+            //auto gnssData = RtkAdapter().toGnssData(dataChunk.get());
+
+            // Assert
+            // nothing that we can check...
         }
     }
 }

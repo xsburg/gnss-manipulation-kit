@@ -1,8 +1,8 @@
-#include <Greis/RinexReader.h>
-#include <rtklib.h>
-#include <Common/Exception.h>
 #include <QtCore/QFileInfo>
 #include <QtCore/QDir>
+#include <Greis/RinexReader.h>
+#include <Common/Exception.h>
+#include <rtklib.h>
 
 // Implemented abstract method from rtklib
 extern int showmsg(char *format, ...)
@@ -22,7 +22,7 @@ Greis::RinexReader& Greis::RinexReader::ReadFile(QString fileName)
     QFileInfo fileInfo(fileName);
     fileName = fileInfo.absoluteFilePath();
     fileName = QDir::toNativeSeparators(fileName);
-    int status = readrnx(fileName.toLatin1(), 1, "", &_gnssData->obs, &_gnssData->nav, &_gnssData->sta);
+    int status = readrnx(fileName.toLatin1(), 1, "", &_gnssData->getObs(), &_gnssData->getNav(), &_gnssData->getSta());
     if (status == -1)
     {
         throw new Common::Exception("Failed to read rinex, status == -1.");
@@ -32,8 +32,8 @@ Greis::RinexReader& Greis::RinexReader::ReadFile(QString fileName)
 
 Greis::GnssData::SharedPtr_t Greis::RinexReader::BuildResult()
 {
-    sortobs(&_gnssData->obs);
-    uniqnav(&_gnssData->nav);
+    sortobs(&_gnssData->getObs());
+    uniqnav(&_gnssData->getNav());
     return _gnssData;
 }
 
@@ -41,13 +41,11 @@ Greis::RinexWriter::RinexWriter(GnssData::SharedPtr_t gnssData) : _gnssData(gnss
 {
 }
 
-Greis::RinexWriter& Greis::RinexWriter::WriteObsFile(QString fileName)
+rnxopt_t Greis::RinexWriter::createRnxOptions()
 {
     rnxopt_t opt = {{0}};
-
     opt.rnxver = 2.12;
-    opt.navsys = SYS_ALL;
-    strcpy(opt.prog, "JPS2RIN v.2.0.99");
+    strcpy(opt.prog, "GREIFZ v.2.0.99");
     strcpy(opt.runby, "JAVAD GNSS");
     strcpy(opt.marker, "filename"); // marker name
     strcpy(opt.name[0], "-Unknown-"); // observer
@@ -59,19 +57,69 @@ Greis::RinexWriter& Greis::RinexWriter::WriteObsFile(QString fileName)
     strcpy(opt.ant[1], "-Unknown-"); // TYPE
     opt.apppos[0] = opt.apppos[1] = opt.apppos[2] = 0.0; // approx position x/y/z
     opt.antdel[0] = opt.antdel[1] = opt.antdel[2] = 0.0; // antenna delta h/e/n
+
     // observation types
+    opt.navsys = SYS_ALL;
     opt.freqtype = FREQTYPE_ALL;
     opt.obstype = OBSTYPE_ALL;
-    set_obstype(STRFMT_JAVAD, &opt);
-
-    opt.tstart = _gnssData->obs.data[0].time;
-    opt.tend = _gnssData->obs.data[_gnssData->obs.n - 1].time;
+    opt.tstart = _gnssData->getObs().data[0].time;
+    opt.tend = _gnssData->getObs().data[_gnssData->getObs().n - 1].time;
     opt.tint = 1.0; // INTERVAL
+    return opt;
+}
+
+Greis::RinexWriter& Greis::RinexWriter::WriteObsFile(QString fileName)
+{
+    rnxopt_t opt = createRnxOptions();
 
     FILE* fr = fopen(fileName.toLatin1(), "w");
-    outrnxobsh(fr, &opt, &_gnssData->nav);
-    outrnxobsb(fr, &opt, _gnssData->obs.data, _gnssData->obs.n, 0);
+    outrnxobsh(fr, &opt, &_gnssData->getNav());
+
+    int i = 0;
+    int j = 0;
+    while (i < _gnssData->getObs().n) {
+        while (j < _gnssData->getObs().n && timediff(_gnssData->getObs().data[j].time, _gnssData->getObs().data[i].time) <= 0.0)
+        {
+            j++;
+        }
+        outrnxobsb(fr, &opt, _gnssData->getObs().data + i, j - i, 0);
+        i = j;
+    }
     fclose(fr);
 
     return *this;
+}
+
+Greis::RinexWriter& Greis::RinexWriter::WriteNavFile(QString fileName)
+{
+    rnxopt_t opt = createRnxOptions();
+
+    FILE* fr = fopen(fileName.toLatin1(), "w");
+    outrnxnavh(fr, &opt, &_gnssData->getNav());
+
+    for (int i = 0; i < _gnssData->getNav().n; i++)
+    {
+        outrnxnavb(fr, &opt, _gnssData->getNav().eph + i);
+    }
+
+    fclose(fr);
+
+    return *this;
+}
+
+Greis::GnssData::SharedPtr_t Greis::RtkAdapter::toGnssData(DataChunk* dataChunk)
+{
+    GnssData::SharedPtr_t gnssData(new RawGnssData());
+
+    auto data = dataChunk->ToByteArray();
+
+    raw_t raw;
+    init_raw(&raw);
+    for (size_t i = 0; i < data.size(); i++)
+    {
+        char c = data.at(i);
+        input_javad(&raw, c);
+    }
+    
+    return gnssData;
 }
