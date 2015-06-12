@@ -49,3 +49,7 @@ target_link_libraries(
     ${PROJECT}
     ${DEPENDS_ON_PROJECTS}
     ${Pthread})
+
+if (MSVC)
+	target_link_libraries(${PROJECT} winmm.lib)
+endif()

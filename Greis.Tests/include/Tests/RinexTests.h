@@ -184,13 +184,15 @@ namespace Greis
         TEST_F(RinexTests, ShouldReadAndWriteRinexData)
         {
             // Arrange
-            QString obsFileName = this->ResolvePath("ifz-data-0.14o");
-            QString navFileName = this->ResolvePath("ifz-data-0.14N");
+            QString obsFileNameIn = this->ResolvePath("ifz-data-0.14o");
+            QString navFileNameIn = this->ResolvePath("ifz-data-0.14N");
+            QString obsFileNameOut = this->ResolvePath("ifz-data-0.out.14o");
 
             // Act
-            auto gnssData = RinexReader().ReadFile(obsFileName).ReadFile(navFileName).BuildResult();
+            auto gnssData = RinexReader().ReadFile(obsFileNameIn).ReadFile(navFileNameIn).BuildResult();
+            RinexWriter(gnssData).WriteObsFile(obsFileNameOut);
 
-
+            // Assert
         }
     }
 }
