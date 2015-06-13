@@ -127,5 +127,16 @@ Greis::DataChunk::SharedPtr_t Greis::RtkAdapter::toMessages(GnssData::SharedPtr_
 {
     DataChunk::SharedPtr_t dataChunk;
 
+    encode_RT();
+    encode_RD();
+    encode_SI();
+    encode_NN();
+
     return dataChunk;
+}
+
+void Greis::RtkAdapter::encode_RT()
+{
+    ReceiverTimeMessage();
+    TOD = data.tod(?)
 }
