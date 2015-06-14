@@ -31,6 +31,20 @@ namespace Greis
         _isCorrect = true;
     }
 
+    RcvOscOffsStdMessage::RcvOscOffsStdMessage()
+    {
+        _id = "OO";
+        _bodySize = 5;
+        _isCorrect = true;
+    }
+
+    RcvOscOffsStdMessage::RcvOscOffsStdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 5;
+        _isCorrect = true;
+    }
+
     std::string RcvOscOffsStdMessage::ToString() const
     {
         return toString("RcvOscOffsStdMessage");

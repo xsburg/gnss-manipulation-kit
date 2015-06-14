@@ -13,6 +13,8 @@ namespace Greis
 
         LatencyStdMessage(const char* p_message, int p_length);
         LatencyStdMessage(const std::string& p_id, int p_size);
+        LatencyStdMessage();
+        LatencyStdMessage(const std::string& p_id);
 
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }

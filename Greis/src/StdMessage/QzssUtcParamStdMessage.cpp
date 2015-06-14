@@ -31,6 +31,20 @@ namespace Greis
         _isCorrect = true;
     }
 
+    QzssUtcParamStdMessage::QzssUtcParamStdMessage()
+    {
+        _id = "QU";
+        _bodySize = 24;
+        _isCorrect = true;
+    }
+
+    QzssUtcParamStdMessage::QzssUtcParamStdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 24;
+        _isCorrect = true;
+    }
+
     std::string QzssUtcParamStdMessage::ToString() const
     {
         return toString("QzssUtcParamStdMessage");

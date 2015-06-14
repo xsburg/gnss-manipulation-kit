@@ -33,6 +33,20 @@ namespace Greis
         _isCorrect = true;
     }
 
+    GPSTimeStdMessage::GPSTimeStdMessage()
+    {
+        _id = "GT";
+        _bodySize = 7;
+        _isCorrect = true;
+    }
+
+    GPSTimeStdMessage::GPSTimeStdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 7;
+        _isCorrect = true;
+    }
+
     std::string GPSTimeStdMessage::ToString() const
     {
         return toString("GPSTimeStdMessage");

@@ -13,6 +13,8 @@ namespace Greis
 
         TrackingTimeStdMessage(const char* p_message, int p_length);
         TrackingTimeStdMessage(const std::string& p_id, int p_size);
+        TrackingTimeStdMessage();
+        TrackingTimeStdMessage(const std::string& p_id);
 
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }

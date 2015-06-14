@@ -13,6 +13,8 @@ namespace Greis
 
         SolutionTimeStdMessage(const char* p_message, int p_length);
         SolutionTimeStdMessage(const std::string& p_id, int p_size);
+        SolutionTimeStdMessage();
+        SolutionTimeStdMessage(const std::string& p_id);
 
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }

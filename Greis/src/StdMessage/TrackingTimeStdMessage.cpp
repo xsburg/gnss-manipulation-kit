@@ -31,6 +31,20 @@ namespace Greis
         _isCorrect = true;
     }
 
+    TrackingTimeStdMessage::TrackingTimeStdMessage()
+    {
+        _id = "TT";
+        _bodySize = 5;
+        _isCorrect = true;
+    }
+
+    TrackingTimeStdMessage::TrackingTimeStdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 5;
+        _isCorrect = true;
+    }
+
     std::string TrackingTimeStdMessage::ToString() const
     {
         return toString("TrackingTimeStdMessage");

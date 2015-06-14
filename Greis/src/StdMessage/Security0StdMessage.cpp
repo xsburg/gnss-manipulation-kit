@@ -31,6 +31,20 @@ namespace Greis
         _isCorrect = true;
     }
 
+    Security0StdMessage::Security0StdMessage()
+    {
+        _id = "SE";
+        _bodySize = 6;
+        _isCorrect = true;
+    }
+
+    Security0StdMessage::Security0StdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 6;
+        _isCorrect = true;
+    }
+
     std::string Security0StdMessage::ToString() const
     {
         return toString("Security0StdMessage");

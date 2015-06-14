@@ -15,6 +15,8 @@ namespace Greis
 
         BeiDouIonoParamsStdMessage(const char* p_message, int p_length);
         BeiDouIonoParamsStdMessage(const std::string& p_id, int p_size);
+        BeiDouIonoParamsStdMessage();
+        BeiDouIonoParamsStdMessage(const std::string& p_id);
 
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }

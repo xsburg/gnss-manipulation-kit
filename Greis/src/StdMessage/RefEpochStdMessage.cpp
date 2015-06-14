@@ -35,6 +35,20 @@ namespace Greis
         _isCorrect = true;
     }
 
+    RefEpochStdMessage::RefEpochStdMessage()
+    {
+        _id = "rE";
+        _bodySize = 10;
+        _isCorrect = true;
+    }
+
+    RefEpochStdMessage::RefEpochStdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 10;
+        _isCorrect = true;
+    }
+
     std::string RefEpochStdMessage::ToString() const
     {
         return toString("RefEpochStdMessage");

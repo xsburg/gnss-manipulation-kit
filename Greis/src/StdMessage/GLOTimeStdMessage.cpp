@@ -33,6 +33,20 @@ namespace Greis
         _isCorrect = true;
     }
 
+    GLOTimeStdMessage::GLOTimeStdMessage()
+    {
+        _id = "NT";
+        _bodySize = 7;
+        _isCorrect = true;
+    }
+
+    GLOTimeStdMessage::GLOTimeStdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 7;
+        _isCorrect = true;
+    }
+
     std::string GLOTimeStdMessage::ToString() const
     {
         return toString("GLOTimeStdMessage");

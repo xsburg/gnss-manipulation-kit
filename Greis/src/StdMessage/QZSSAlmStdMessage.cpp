@@ -29,6 +29,20 @@ namespace Greis
         _isCorrect = true;
     }
 
+    QZSSAlmStdMessage::QZSSAlmStdMessage()
+    {
+        _id = "QA";
+        _bodySize = 47;
+        _isCorrect = true;
+    }
+
+    QZSSAlmStdMessage::QZSSAlmStdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 47;
+        _isCorrect = true;
+    }
+
     std::string QZSSAlmStdMessage::ToString() const
     {
         return toString("QZSSAlmStdMessage");

@@ -13,6 +13,8 @@ namespace Greis
 
         SBASEhemerisStdMessage(const char* p_message, int p_length);
         SBASEhemerisStdMessage(const std::string& p_id, int p_size);
+        SBASEhemerisStdMessage();
+        SBASEhemerisStdMessage(const std::string& p_id);
 
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }

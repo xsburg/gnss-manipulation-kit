@@ -39,6 +39,20 @@ namespace Greis
         _isCorrect = true;
     }
 
+    BaselinesStdMessage::BaselinesStdMessage()
+    {
+        _id = "bL";
+        _bodySize = 52;
+        _isCorrect = true;
+    }
+
+    BaselinesStdMessage::BaselinesStdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 52;
+        _isCorrect = true;
+    }
+
     std::string BaselinesStdMessage::ToString() const
     {
         return toString("BaselinesStdMessage");

@@ -33,6 +33,20 @@ namespace Greis
         _isCorrect = true;
     }
 
+    SolutionTimeStdMessage::SolutionTimeStdMessage()
+    {
+        _id = "ST";
+        _bodySize = 6;
+        _isCorrect = true;
+    }
+
+    SolutionTimeStdMessage::SolutionTimeStdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 6;
+        _isCorrect = true;
+    }
+
     std::string SolutionTimeStdMessage::ToString() const
     {
         return toString("SolutionTimeStdMessage");

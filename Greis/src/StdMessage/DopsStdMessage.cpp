@@ -37,6 +37,20 @@ namespace Greis
         _isCorrect = true;
     }
 
+    DopsStdMessage::DopsStdMessage()
+    {
+        _id = "DP";
+        _bodySize = 14;
+        _isCorrect = true;
+    }
+
+    DopsStdMessage::DopsStdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 14;
+        _isCorrect = true;
+    }
+
     std::string DopsStdMessage::ToString() const
     {
         return toString("DopsStdMessage");

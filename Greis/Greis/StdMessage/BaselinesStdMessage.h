@@ -13,6 +13,8 @@ namespace Greis
 
         BaselinesStdMessage(const char* p_message, int p_length);
         BaselinesStdMessage(const std::string& p_id, int p_size);
+        BaselinesStdMessage();
+        BaselinesStdMessage(const std::string& p_id);
 
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }

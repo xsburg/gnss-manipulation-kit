@@ -33,6 +33,20 @@ namespace Greis
         _isCorrect = true;
     }
 
+    RcvGPSTimeOffsetStdMessage::RcvGPSTimeOffsetStdMessage()
+    {
+        _id = "GO";
+        _bodySize = 17;
+        _isCorrect = true;
+    }
+
+    RcvGPSTimeOffsetStdMessage::RcvGPSTimeOffsetStdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 17;
+        _isCorrect = true;
+    }
+
     std::string RcvGPSTimeOffsetStdMessage::ToString() const
     {
         return toString("RcvGPSTimeOffsetStdMessage");

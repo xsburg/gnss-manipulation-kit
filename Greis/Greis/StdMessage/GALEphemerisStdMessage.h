@@ -15,6 +15,8 @@ namespace Greis
 
         GALEphemerisStdMessage(const char* p_message, int p_length);
         GALEphemerisStdMessage(const std::string& p_id, int p_size);
+        GALEphemerisStdMessage();
+        GALEphemerisStdMessage(const std::string& p_id);
 
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }

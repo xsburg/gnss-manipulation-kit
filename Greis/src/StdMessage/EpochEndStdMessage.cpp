@@ -29,6 +29,20 @@ namespace Greis
         _isCorrect = true;
     }
 
+    EpochEndStdMessage::EpochEndStdMessage()
+    {
+        _id = "||";
+        _bodySize = 1;
+        _isCorrect = true;
+    }
+
+    EpochEndStdMessage::EpochEndStdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 1;
+        _isCorrect = true;
+    }
+
     std::string EpochEndStdMessage::ToString() const
     {
         return toString("EpochEndStdMessage");

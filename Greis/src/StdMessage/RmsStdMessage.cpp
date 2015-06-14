@@ -39,6 +39,20 @@ namespace Greis
         _isCorrect = true;
     }
 
+    RmsStdMessage::RmsStdMessage()
+    {
+        _id = "SG";
+        _bodySize = 18;
+        _isCorrect = true;
+    }
+
+    RmsStdMessage::RmsStdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 18;
+        _isCorrect = true;
+    }
+
     std::string RmsStdMessage::ToString() const
     {
         return toString("RmsStdMessage");

@@ -210,10 +210,7 @@
         <Code>GO</Code>
       </Codes>
     </StandardMessage>
-    <StandardMessage Name="GLOTime" Size="7" 
-                     Title="[NT] GLONASS Time" 
-                     Validation="Checksum"
-                     Type="Unknown">
+    <StandardMessage Name="GLOTime" Size="7" Title="[NT] GLONASS Time" Validation="Checksum" Type="Unknown">
       <Variables>
         <Variable GreisType="u4" Name="tod" RequiredValue="">
           <SizeOfDimensions />
@@ -221,10 +218,8 @@
         </Variable>
         <Variable GreisType="u2" Name="dn" RequiredValue="">
           <SizeOfDimensions />
-          <Comment>
-              GLONASS day number (modulo 4 years
-              starting from 1996) []
-          </Comment>
+          <Comment>GLONASS day number (modulo 4 years
+starting from 1996) []</Comment>
         </Variable>
         <Variable GreisType="u1" Name="cs" RequiredValue="">
           <SizeOfDimensions />
@@ -612,9 +607,7 @@ tauSys = Tutc(su) - Tglo [s]</Comment>
         <Code>PV</Code>
       </Codes>
     </StandardMessage>
-    <StandardMessage Name="GeoPos" Size="30" 
-                     Title="[PG] Geodetic Position" 
-                     Validation="Checksum" Type="Unknown">
+    <StandardMessage Name="GeoPos" Size="30" Title="[PG] Geodetic Position" Validation="Checksum" Type="Unknown">
       <Variables>
         <Variable GreisType="f8" Name="lat" RequiredValue="">
           <SizeOfDimensions />

@@ -67,6 +67,20 @@ namespace Greis
         _isCorrect = true;
     }
 
+    SBASEhemerisStdMessage::SBASEhemerisStdMessage()
+    {
+        _id = "WE";
+        _bodySize = 73;
+        _isCorrect = true;
+    }
+
+    SBASEhemerisStdMessage::SBASEhemerisStdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 73;
+        _isCorrect = true;
+    }
+
     std::string SBASEhemerisStdMessage::ToString() const
     {
         return toString("SBASEhemerisStdMessage");

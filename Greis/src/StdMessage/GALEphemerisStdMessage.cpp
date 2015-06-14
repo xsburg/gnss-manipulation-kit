@@ -45,6 +45,20 @@ namespace Greis
         _isCorrect = true;
     }
 
+    GALEphemerisStdMessage::GALEphemerisStdMessage()
+    {
+        _id = "EN";
+        _bodySize = 145;
+        _isCorrect = true;
+    }
+
+    GALEphemerisStdMessage::GALEphemerisStdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 145;
+        _isCorrect = true;
+    }
+
     std::string GALEphemerisStdMessage::ToString() const
     {
         return toString("GALEphemerisStdMessage");

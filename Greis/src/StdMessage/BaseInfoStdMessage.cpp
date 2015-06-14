@@ -39,6 +39,20 @@ namespace Greis
         _isCorrect = true;
     }
 
+    BaseInfoStdMessage::BaseInfoStdMessage()
+    {
+        _id = "BI";
+        _bodySize = 28;
+        _isCorrect = true;
+    }
+
+    BaseInfoStdMessage::BaseInfoStdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 28;
+        _isCorrect = true;
+    }
+
     std::string BaseInfoStdMessage::ToString() const
     {
         return toString("BaseInfoStdMessage");

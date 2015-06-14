@@ -59,6 +59,20 @@ namespace Greis
         _isCorrect = true;
     }
 
+    GPSAlm0StdMessage::GPSAlm0StdMessage()
+    {
+        _id = "GA";
+        _bodySize = 47;
+        _isCorrect = true;
+    }
+
+    GPSAlm0StdMessage::GPSAlm0StdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 47;
+        _isCorrect = true;
+    }
+
     std::string GPSAlm0StdMessage::ToString() const
     {
         return toString("GPSAlm0StdMessage");

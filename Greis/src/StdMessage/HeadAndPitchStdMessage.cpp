@@ -35,6 +35,20 @@ namespace Greis
         _isCorrect = true;
     }
 
+    HeadAndPitchStdMessage::HeadAndPitchStdMessage()
+    {
+        _id = "ha";
+        _bodySize = 10;
+        _isCorrect = true;
+    }
+
+    HeadAndPitchStdMessage::HeadAndPitchStdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 10;
+        _isCorrect = true;
+    }
+
     std::string HeadAndPitchStdMessage::ToString() const
     {
         return toString("HeadAndPitchStdMessage");

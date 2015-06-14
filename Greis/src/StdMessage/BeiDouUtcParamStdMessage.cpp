@@ -31,6 +31,20 @@ namespace Greis
         _isCorrect = true;
     }
 
+    BeiDouUtcParamStdMessage::BeiDouUtcParamStdMessage()
+    {
+        _id = "CU";
+        _bodySize = 24;
+        _isCorrect = true;
+    }
+
+    BeiDouUtcParamStdMessage::BeiDouUtcParamStdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 24;
+        _isCorrect = true;
+    }
+
     std::string BeiDouUtcParamStdMessage::ToString() const
     {
         return toString("BeiDouUtcParamStdMessage");

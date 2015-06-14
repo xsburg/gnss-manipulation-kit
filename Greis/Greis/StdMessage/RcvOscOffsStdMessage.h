@@ -13,6 +13,8 @@ namespace Greis
 
         RcvOscOffsStdMessage(const char* p_message, int p_length);
         RcvOscOffsStdMessage(const std::string& p_id, int p_size);
+        RcvOscOffsStdMessage();
+        RcvOscOffsStdMessage(const std::string& p_id);
 
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }

@@ -35,6 +35,20 @@ namespace Greis
         _isCorrect = true;
     }
 
+    BeiDouEphemerisStdMessage::BeiDouEphemerisStdMessage()
+    {
+        _id = "CN";
+        _bodySize = 128;
+        _isCorrect = true;
+    }
+
+    BeiDouEphemerisStdMessage::BeiDouEphemerisStdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 128;
+        _isCorrect = true;
+    }
+
     std::string BeiDouEphemerisStdMessage::ToString() const
     {
         return toString("BeiDouEphemerisStdMessage");

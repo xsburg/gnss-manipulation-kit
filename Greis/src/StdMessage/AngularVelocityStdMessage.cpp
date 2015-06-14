@@ -41,6 +41,20 @@ namespace Greis
         _isCorrect = true;
     }
 
+    AngularVelocityStdMessage::AngularVelocityStdMessage()
+    {
+        _id = "AV";
+        _bodySize = 22;
+        _isCorrect = true;
+    }
+
+    AngularVelocityStdMessage::AngularVelocityStdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 22;
+        _isCorrect = true;
+    }
+
     std::string AngularVelocityStdMessage::ToString() const
     {
         return toString("AngularVelocityStdMessage");

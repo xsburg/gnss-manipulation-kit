@@ -12,7 +12,7 @@ namespace Greis
         SMART_PTR_T(${ClassName});
 
         ${ClassName}(const char* p_message, int p_length);
-        ${ClassName}(const std::string& p_id, int p_size);
+        ${ClassName}(const std::string& p_id, int p_size);${DefaultStaticSizeConstructor}${DefaultStaticSizeConstructorWithId}
 
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }

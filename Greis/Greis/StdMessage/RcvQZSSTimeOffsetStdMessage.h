@@ -13,6 +13,8 @@ namespace Greis
 
         RcvQZSSTimeOffsetStdMessage(const char* p_message, int p_length);
         RcvQZSSTimeOffsetStdMessage(const std::string& p_id, int p_size);
+        RcvQZSSTimeOffsetStdMessage();
+        RcvQZSSTimeOffsetStdMessage(const std::string& p_id);
 
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }

@@ -13,6 +13,8 @@ namespace Greis
 
         RefEpochStdMessage(const char* p_message, int p_length);
         RefEpochStdMessage(const std::string& p_id, int p_size);
+        RefEpochStdMessage();
+        RefEpochStdMessage(const std::string& p_id);
 
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }

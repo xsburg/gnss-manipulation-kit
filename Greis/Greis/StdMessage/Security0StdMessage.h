@@ -13,6 +13,8 @@ namespace Greis
 
         Security0StdMessage(const char* p_message, int p_length);
         Security0StdMessage(const std::string& p_id, int p_size);
+        Security0StdMessage();
+        Security0StdMessage(const std::string& p_id);
 
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }

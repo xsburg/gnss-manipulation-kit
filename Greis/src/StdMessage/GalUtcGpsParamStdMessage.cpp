@@ -41,6 +41,20 @@ namespace Greis
         _isCorrect = true;
     }
 
+    GalUtcGpsParamStdMessage::GalUtcGpsParamStdMessage()
+    {
+        _id = "EU";
+        _bodySize = 40;
+        _isCorrect = true;
+    }
+
+    GalUtcGpsParamStdMessage::GalUtcGpsParamStdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 40;
+        _isCorrect = true;
+    }
+
     std::string GalUtcGpsParamStdMessage::ToString() const
     {
         return toString("GalUtcGpsParamStdMessage");

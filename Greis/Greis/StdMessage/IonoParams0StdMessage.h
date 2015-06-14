@@ -13,6 +13,8 @@ namespace Greis
 
         IonoParams0StdMessage(const char* p_message, int p_length);
         IonoParams0StdMessage(const std::string& p_id, int p_size);
+        IonoParams0StdMessage();
+        IonoParams0StdMessage(const std::string& p_id);
 
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }

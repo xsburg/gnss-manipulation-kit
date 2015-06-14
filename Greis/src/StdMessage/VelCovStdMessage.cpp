@@ -51,6 +51,20 @@ namespace Greis
         _isCorrect = true;
     }
 
+    VelCovStdMessage::VelCovStdMessage()
+    {
+        _id = "SV";
+        _bodySize = 42;
+        _isCorrect = true;
+    }
+
+    VelCovStdMessage::VelCovStdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 42;
+        _isCorrect = true;
+    }
+
     std::string VelCovStdMessage::ToString() const
     {
         return toString("VelCovStdMessage");

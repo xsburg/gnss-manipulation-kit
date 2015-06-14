@@ -51,6 +51,20 @@ namespace Greis
         _isCorrect = true;
     }
 
+    PosCovStdMessage::PosCovStdMessage()
+    {
+        _id = "SP";
+        _bodySize = 42;
+        _isCorrect = true;
+    }
+
+    PosCovStdMessage::PosCovStdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 42;
+        _isCorrect = true;
+    }
+
     std::string PosCovStdMessage::ToString() const
     {
         return toString("PosCovStdMessage");

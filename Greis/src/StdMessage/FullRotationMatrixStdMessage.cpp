@@ -47,6 +47,20 @@ namespace Greis
         _isCorrect = true;
     }
 
+    FullRotationMatrixStdMessage::FullRotationMatrixStdMessage()
+    {
+        _id = "mR";
+        _bodySize = 37;
+        _isCorrect = true;
+    }
+
+    FullRotationMatrixStdMessage::FullRotationMatrixStdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 37;
+        _isCorrect = true;
+    }
+
     std::string FullRotationMatrixStdMessage::ToString() const
     {
         return toString("FullRotationMatrixStdMessage");

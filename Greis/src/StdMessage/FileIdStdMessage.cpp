@@ -31,6 +31,20 @@ namespace Greis
         _isCorrect = true;
     }
 
+    FileIdStdMessage::FileIdStdMessage()
+    {
+        _id = "JP";
+        _bodySize = 85;
+        _isCorrect = true;
+    }
+
+    FileIdStdMessage::FileIdStdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 85;
+        _isCorrect = true;
+    }
+
     std::string FileIdStdMessage::ToString() const
     {
         return toString("FileIdStdMessage");

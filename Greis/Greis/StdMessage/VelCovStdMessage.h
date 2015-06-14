@@ -13,6 +13,8 @@ namespace Greis
 
         VelCovStdMessage(const char* p_message, int p_length);
         VelCovStdMessage(const std::string& p_id, int p_size);
+        VelCovStdMessage();
+        VelCovStdMessage(const std::string& p_id);
 
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }

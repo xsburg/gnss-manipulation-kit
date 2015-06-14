@@ -13,6 +13,8 @@ namespace Greis
 
         PosStdMessage(const char* p_message, int p_length);
         PosStdMessage(const std::string& p_id, int p_size);
+        PosStdMessage();
+        PosStdMessage(const std::string& p_id);
 
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }

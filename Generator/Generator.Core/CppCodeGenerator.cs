@@ -19,6 +19,8 @@ namespace Generator.Core
         private const string ClassFieldsStubToken = "// ${ClassFieldsStub}";
         private const string ClassFieldsAccessorsStubToken = "// ${ClassFieldsAccessorsStub}";
         private const string ClassNameStubToken = "${ClassName}";
+        private const string DefaultStaticSizeConstructorStubToken = "${DefaultStaticSizeConstructor}";
+        private const string DefaultStaticSizeConstructorWithIdStubToken = "${DefaultStaticSizeConstructorWithId}";
         private const string ToByteArrayStubToken = "// ${ToByteArrayStub}";
         private const string DeserializationConstructorStubToken = "// ${DeserializationConstructorStub}";
         private const string ValidateStubToken = "// ${ValidateStub}";
@@ -665,7 +667,41 @@ namespace Generator.Core
 
                 // EMessageIdName
                 var eMessageIdName = this.GetEnumName(msg);
+                // defaultStaticSizeConstructor
+                var defaultStaticSizeConstructor = "";
+                var defaultStaticSizeConstructorBody = "";
+                var defaultStaticSizeConstructorWithId = "";
+                var defaultStaticSizeConstructorBodyWithId = "";
+                if (msg.Size > 0 && msg.Codes.Count == 1)
+                {
+                    // static size message
+                    if (msg.Codes.Count == 1)
+                    {
+                        defaultStaticSizeConstructor = string.Format(
+                            "\r\n" +
+                            "{0}{1}();", codeIntendation, className);
 
+                        defaultStaticSizeConstructorBody = string.Format("\r\n\r\n" +
+                                                                         "    {1}::{1}()" +
+                                                                         "\r\n    {{" +
+                                                                         "\r\n{0}_id = \"{2}\";" +
+                                                                         "\r\n{0}_bodySize = {3};" +
+                                                                         "\r\n{0}_isCorrect = true;" +
+                                                                         "\r\n    }}", codeIntendation, className, msg.Codes[0], msg.Size);                      
+                    }
+
+                    defaultStaticSizeConstructorWithId = string.Format(
+                        "\r\n" +
+                        "{0}{1}(const std::string& p_id);", codeIntendation, className);
+
+                    defaultStaticSizeConstructorBodyWithId = string.Format("\r\n\r\n" +
+                                                                     "    {1}::{1}(const std::string& p_id)" +
+                                                                     "\r\n    {{" +
+                                                                     "\r\n{0}_id = p_id;" +
+                                                                     "\r\n{0}_bodySize = {2};" +
+                                                                     "\r\n{0}_isCorrect = true;" +
+                                                                     "\r\n    }}", codeIntendation, className,  msg.Size);
+                }
                 // ValidateStubToken
                 string validationCode;
                 string recalculateChecksumCode;
@@ -705,11 +741,15 @@ namespace Generator.Core
                     Replace(ClassFieldsStubToken, content.ClassFields).
                     Replace(ClassFieldsAccessorsStubToken, content.ClassFieldsAccessors).
                     Replace(EMessageIdStubToken, eMessageIdName).
-                    Replace(ClassNameStubToken, className);
+                    Replace(ClassNameStubToken, className).
+                    Replace(DefaultStaticSizeConstructorStubToken, defaultStaticSizeConstructor).
+                    Replace(DefaultStaticSizeConstructorWithIdStubToken, defaultStaticSizeConstructorWithId);
                 var fileCppContent = templateStrCpp.Replace(ClassNameStubToken, className).
                     Replace(ToByteArrayStubToken, content.ToByteArrayCode).
                     Replace(ValidateStubToken, validationCode).
                     Replace(RecalculateChecksumStubToken, recalculateChecksumCode).
+                    Replace(DefaultStaticSizeConstructorStubToken, defaultStaticSizeConstructorBody).
+                    Replace(DefaultStaticSizeConstructorWithIdStubToken, defaultStaticSizeConstructorBodyWithId).
                     Replace(DeserializationConstructorStubToken, content.DeserializationConstructorCode);
 
                 // Write

@@ -39,6 +39,20 @@ namespace Greis
         _isCorrect = true;
     }
 
+    PosStdMessage::PosStdMessage()
+    {
+        _id = "PO";
+        _bodySize = 30;
+        _isCorrect = true;
+    }
+
+    PosStdMessage::PosStdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 30;
+        _isCorrect = true;
+    }
+
     std::string PosStdMessage::ToString() const
     {
         return toString("PosStdMessage");

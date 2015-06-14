@@ -31,6 +31,20 @@ namespace Greis
         _isCorrect = true;
     }
 
+    EpochTimeStdMessage::EpochTimeStdMessage()
+    {
+        _id = "::";
+        _bodySize = 5;
+        _isCorrect = true;
+    }
+
+    EpochTimeStdMessage::EpochTimeStdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 5;
+        _isCorrect = true;
+    }
+
     std::string EpochTimeStdMessage::ToString() const
     {
         return toString("EpochTimeStdMessage");

@@ -13,6 +13,8 @@ namespace Greis
 
         RcvGLOTimeOffsetStdMessage(const char* p_message, int p_length);
         RcvGLOTimeOffsetStdMessage(const std::string& p_id, int p_size);
+        RcvGLOTimeOffsetStdMessage();
+        RcvGLOTimeOffsetStdMessage(const std::string& p_id);
 
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }

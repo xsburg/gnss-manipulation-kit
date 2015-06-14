@@ -49,6 +49,20 @@ namespace Greis
         _isCorrect = true;
     }
 
+    IonoParams0StdMessage::IonoParams0StdMessage()
+    {
+        _id = "IO";
+        _bodySize = 39;
+        _isCorrect = true;
+    }
+
+    IonoParams0StdMessage::IonoParams0StdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 39;
+        _isCorrect = true;
+    }
+
     std::string IonoParams0StdMessage::ToString() const
     {
         return toString("IonoParams0StdMessage");
