@@ -123,44 +123,6 @@ Greis::GnssData::SharedPtr_t Greis::RtkAdapter::toGnssData(DataChunk* dataChunk)
     return gnssData;
 }
 
-void Greis::RtkAdapter::encode_RD()
-{
-    /*static int decode_RD(raw_t *raw)
-    {
-        double ep[6] = { 0 };
-        char *msg;
-        unsigned char *p = raw->buff + 5;
-
-        if (!checksum(raw->buff, raw->len)) {
-            trace(2, "javad RD checksum error: len=%d\n", raw->len);
-            return -1;
-        }
-        if (raw->len<11) {
-            trace(2, "javad RD length error: len=%d\n", raw->len);
-            return -1;
-        }
-        ep[0] = U2(p); p += 2;
-        ep[1] = U1(p); p += 1;
-        ep[2] = U1(p); p += 1;
-        raw->tbase = U1(p);
-
-        if (raw->outtype) {
-            msg = raw->msgtype + strlen(raw->msgtype);
-            sprintf(msg, " %04.0f/%02.0f/%02.0f base=%d", ep[0], ep[1], ep[2], raw->tbase);
-        }
-        if (raw->tod<0) {
-            trace(2, "javad RD lack of preceding RT\n");
-            return 0;
-        }
-        raw->time = timeadd(epoch2time(ep), raw->tod*0.001);
-        if (raw->tbase >= 1) raw->time = utc2gpst(raw->time); /* utc->gpst #1#
-
-        trace(3, "decode_RD: time=%s\n", time_str(raw->time, 3));
-
-        return 0;
-    }*/
-}
-
 Greis::DataChunk::SharedPtr_t Greis::RtkAdapter::toMessages(GnssData::SharedPtr_t gnssData)
 {
     DataChunk::SharedPtr_t dataChunk;
@@ -177,6 +139,8 @@ void Greis::RtkAdapter::encode_RT()
 {
     auto rcvTime = RcvTimeStdMessage();
     auto rcvDate = RcvDateStdMessage();
+
+    rcvTime.Tod() = ;
 
     //TOD = data.tod(?)
 
@@ -210,4 +174,38 @@ void Greis::RtkAdapter::encode_RT()
         sprintf(msg, " %s", time_str(time, 3));
     }
     return flushobuf(raw); */
+}
+
+void Greis::RtkAdapter::encode_RD()
+{
+    /*static int decode_RD(raw_t *raw)
+    {
+    double ep[6] = { 0 };
+    char *msg;
+    unsigned char *p = raw->buff + 5;
+
+    if (!checksum(raw->buff, raw->len)) {
+    trace(2, "javad RD checksum error: len=%d\n", raw->len);
+    return -1;
+    }
+    if (raw->len<11) {
+    trace(2, "javad RD length error: len=%d\n", raw->len);
+    return -1;
+    }
+    ep[0] = U2(p); p += 2;
+    ep[1] = U1(p); p += 1;
+    ep[2] = U1(p); p += 1;
+    raw->tbase = U1(p);
+
+    if (raw->tod<0) {
+    trace(2, "javad RD lack of preceding RT\n");
+    return 0;
+    }
+    raw->time = timeadd(epoch2time(ep), raw->tod*0.001);
+    if (raw->tbase >= 1) raw->time = utc2gpst(raw->time); /* utc->gpst #1#
+
+    trace(3, "decode_RD: time=%s\n", time_str(raw->time, 3));
+
+    return 0;
+    }*/
 }
