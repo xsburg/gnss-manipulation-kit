@@ -127,12 +127,99 @@ Greis::DataChunk::SharedPtr_t Greis::RtkAdapter::toMessages(GnssData::SharedPtr_
 {
     DataChunk::SharedPtr_t dataChunk;
 
+    int i = 0;
+    int j = 0;
+    while (i < _gnssData->getObs().n) {
+        while (j < _gnssData->getObs().n && timediff(_gnssData->getObs().data[j].time, _gnssData->getObs().data[i].time) <= 0.0)
+        {
+            j++;
+        }
+        outrnxobsb(fr, &opt, _gnssData->getObs().data + i, j - i, 0);
+        i = j;
+    }
+
     encode_RT();
     encode_RD();
-    //encode_SI();
-    //encode_NN();
+    encode_SI();
+    //encode_NN(); // do nothing for now, requred to compute sat number
+    encode_EL(); // look at decode_Ex checks, apply it and if ok, write SNR
 
     return dataChunk;
+}
+
+void Greis::RtkAdapter::encode_SI()
+{
+	// for i = 0,n (all records in epoch)
+	//	   read .sat field (satellite number)
+	//     convert it to prn
+	//	   save prn as U1
+	//     int satsys = satsys(santo, *prn);
+	//	   satsys -- glonass ? prn = 255
+	
+	/*
+		int i,usi,sat;
+		char *msg;
+		unsigned char *p=raw->buff+5;
+
+		if (!checksum(raw->buff,raw->len)) {
+		    trace(2,"javad SI checksum error: len=%d\n",raw->len);
+		    return -1;
+		}
+		raw->obuf.n=raw->len-6;
+
+		for (i=0;i<raw->obuf.n&&i<MAXOBS;i++) {
+		    usi=U1(p); p+=1;
+		    
+		    if      (usi<=  0) sat=0;                      /* ref [5] table 3-6 * /
+		    else if (usi<= 37) sat=satno(SYS_GPS,usi);     /*   1- 37: GPS * /
+		    else if (usi<= 70) sat=255;                    /*  38- 70: GLONASS * /
+		    else if (usi<=119) sat=satno(SYS_GAL,usi-70);  /*  71-119: GALILEO * /
+		    else if (usi<=142) sat=satno(SYS_SBS,usi);     /* 120-142: SBAS * /
+		    else if (usi<=192) sat=0;
+		    else if (usi<=197) sat=satno(SYS_QZS,usi);     /* 193-197: QZSS * /
+		    else if (usi<=210) sat=0;
+		    else if (usi<=240) sat=satno(SYS_CMP,usi-210); /* 211-240: BeiDou * /
+		    else               sat=0;
+		    
+		    raw->obuf.data[i].time=raw->time;
+		    raw->obuf.data[i].sat=sat;
+		    
+		    /* glonass fcn (frequency channel number) * /
+		    if (sat==255) raw->freqn[i]=usi-45;
+		}
+		trace(4,"decode_SI: nsat=raw->obuf.n\n");
+
+		return 0;
+	*/
+}
+
+extern int satno2prn(int satno, int sys, int prn)
+{
+    if (prn<=0) return 0;
+    switch (sys) {
+        case SYS_GPS:
+            if (prn<MINPRNGPS||MAXPRNGPS<prn) return 0;
+            return prn-MINPRNGPS+1;
+        case SYS_GLO:
+            if (prn<MINPRNGLO||MAXPRNGLO<prn) return 0;
+            return NSATGPS+prn-MINPRNGLO+1;
+        case SYS_GAL:
+            if (prn<MINPRNGAL||MAXPRNGAL<prn) return 0;
+            return NSATGPS+NSATGLO+prn-MINPRNGAL+1;
+        case SYS_QZS:
+            if (prn<MINPRNQZS||MAXPRNQZS<prn) return 0;
+            return NSATGPS+NSATGLO+NSATGAL+prn-MINPRNQZS+1;
+        case SYS_CMP:
+            if (prn<MINPRNCMP||MAXPRNCMP<prn) return 0;
+            return NSATGPS+NSATGLO+NSATGAL+NSATQZS+prn-MINPRNCMP+1;
+        case SYS_LEO:
+            if (prn<MINPRNLEO||MAXPRNLEO<prn) return 0;
+            return NSATGPS+NSATGLO+NSATGAL+NSATQZS+NSATCMP+prn-MINPRNLEO+1;
+        case SYS_SBS:
+            if (prn<MINPRNSBS||MAXPRNSBS<prn) return 0;
+            return NSATGPS+NSATGLO+NSATGAL+NSATQZS+NSATCMP+NSATLEO+prn-MINPRNSBS+1;
+    }
+    return 0;
 }
 
 void Greis::RtkAdapter::encode_RT()
@@ -141,6 +228,10 @@ void Greis::RtkAdapter::encode_RT()
     auto rcvDate = RcvDateStdMessage();
 
     rcvTime.Tod() = ;
+    rcvDate.Year() = ;
+    rcvDate.Month() = ;
+    rcvDate.Day() = ;
+    rcvDate.Base() = 0;
 
     //TOD = data.tod(?)
 
@@ -178,6 +269,25 @@ void Greis::RtkAdapter::encode_RT()
 
 void Greis::RtkAdapter::encode_RD()
 {
+	gtime_t time; // from obs record
+	gtime_t tod;
+
+    double ep[6] = { 0 };
+
+    time2epoch(time, ep);
+
+    auto rcvTime = RcvTimeStdMessage();
+    auto rcvDate = RcvDateStdMessage();
+
+    rcvDate.Year() = ep[0];
+    rcvDate.Month() = ep[1];
+    rcvDate.Day() = ep[2];
+    ep[0] = ep[1] = ep[2] = 0;
+    epoch2time(ep, tod);
+    rcvTime.Tod() = tod.time + tod.sec;
+    rcvDate.Base() = 0;
+
+
     /*static int decode_RD(raw_t *raw)
     {
     double ep[6] = { 0 };
