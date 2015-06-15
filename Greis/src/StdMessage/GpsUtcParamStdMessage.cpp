@@ -45,6 +45,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string GpsUtcParamStdMessage::Codes::Code_UO = "UO";
+
     std::string GpsUtcParamStdMessage::ToString() const
     {
         return toString("GpsUtcParamStdMessage");

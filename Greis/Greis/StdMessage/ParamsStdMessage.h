@@ -13,7 +13,13 @@ namespace Greis
 
         ParamsStdMessage(const char* p_message, int p_length);
         ParamsStdMessage(const std::string& p_id, int p_size);
-
+        ParamsStdMessage(int p_size);
+        
+        struct Codes
+        {
+            static const std::string Code_PM;
+        };
+        
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }
         virtual EMessageId::Type IdNumber() const { return EMessageId::Params; }

@@ -33,6 +33,11 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string GloDelaysStdMessage::Codes::Code_gC = "gC";
+    const std::string GloDelaysStdMessage::Codes::Code_g1 = "g1";
+    const std::string GloDelaysStdMessage::Codes::Code_g2 = "g2";
+    const std::string GloDelaysStdMessage::Codes::Code_g3 = "g3";
+
     std::string GloDelaysStdMessage::ToString() const
     {
         return toString("GloDelaysStdMessage");

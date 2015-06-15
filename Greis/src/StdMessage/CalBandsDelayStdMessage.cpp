@@ -28,6 +28,15 @@ namespace Greis
         _isCorrect = true;
     }
 
+    CalBandsDelayStdMessage::CalBandsDelayStdMessage(int p_size)
+    {
+        _id = "gR";
+        _bodySize = p_size - HeadSize();
+        _isCorrect = true;
+    }
+
+    const std::string CalBandsDelayStdMessage::Codes::Code_gR = "gR";
+
     std::string CalBandsDelayStdMessage::ToString() const
     {
         return toString("CalBandsDelayStdMessage");

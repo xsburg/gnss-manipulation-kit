@@ -13,7 +13,13 @@ namespace Greis
 
         RcvTimeOffsAtPPSStdMessage(const char* p_message, int p_length);
         RcvTimeOffsAtPPSStdMessage(const std::string& p_id, int p_size);
-
+        
+        struct Codes
+        {
+            static const std::string Code_YA;
+            static const std::string Code_YB;
+        };
+        
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }
         virtual EMessageId::Type IdNumber() const { return EMessageId::RcvTimeOffsAtPPS; }

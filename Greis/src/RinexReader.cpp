@@ -3,6 +3,7 @@
 #include <Greis/RinexReader.h>
 #include <Common/Exception.h>
 #include <rtklib.h>
+#include <Greis/AllStdMessages.h>
 
 // Implemented abstract method from rtklib
 extern int showmsg(char *format, ...)
@@ -125,101 +126,146 @@ Greis::GnssData::SharedPtr_t Greis::RtkAdapter::toGnssData(DataChunk* dataChunk)
 
 Greis::DataChunk::SharedPtr_t Greis::RtkAdapter::toMessages(GnssData::SharedPtr_t gnssData)
 {
-    DataChunk::SharedPtr_t dataChunk;
+    auto dataChunk = std::make_shared<DataChunk>();
 
     int i = 0;
     int j = 0;
-    while (i < _gnssData->getObs().n) {
-        while (j < _gnssData->getObs().n && timediff(_gnssData->getObs().data[j].time, _gnssData->getObs().data[i].time) <= 0.0)
+    while (i < gnssData->getObs().n) {
+        while (j < gnssData->getObs().n && timediff(gnssData->getObs().data[j].time, gnssData->getObs().data[i].time) <= 0.0)
         {
             j++;
         }
-        outrnxobsb(fr, &opt, _gnssData->getObs().data + i, j - i, 0);
+        writeEpochMessages(dataChunk.get(), gnssData->getObs().data + i, j - i);
         i = j;
     }
 
-    encode_RT();
-    encode_RD();
-    encode_SI();
+    //encode_RT();
+    //encode_RD();
+    //encode_SI();
     //encode_NN(); // do nothing for now, requred to compute sat number
-    encode_EL(); // look at decode_Ex checks, apply it and if ok, write SNR
+    //encode_EL(); // look at decode_Ex checks, apply it and if ok, write SNR
 
     return dataChunk;
 }
 
-void Greis::RtkAdapter::encode_SI()
+void Greis::RtkAdapter::writeEpochMessages(DataChunk* dataChunk, obsd_t* data, int n)
 {
-	// for i = 0,n (all records in epoch)
-	//	   read .sat field (satellite number)
-	//     convert it to prn
-	//	   save prn as U1
-	//     int satsys = satsys(santo, *prn);
-	//	   satsys -- glonass ? prn = 255
-	
-	/*
-		int i,usi,sat;
-		char *msg;
-		unsigned char *p=raw->buff+5;
+    // [RT], [RD]
+    auto rcvTime = std::make_unique<RcvTimeStdMessage>();
+    auto rcvDate = std::make_unique<RcvDateStdMessage>();
 
-		if (!checksum(raw->buff,raw->len)) {
-		    trace(2,"javad SI checksum error: len=%d\n",raw->len);
-		    return -1;
-		}
-		raw->obuf.n=raw->len-6;
+    double ep[6] = { 0 };
+    // date
+    time2epoch(data->time, ep);
+    rcvDate->Year() = ep[0];
+    rcvDate->Month() = ep[1];
+    rcvDate->Day() = ep[2];
+    ep[0] = ep[1] = ep[2] = 0;
+    // time of day
+    gtime_t tod = {0};
+    int sec = (int)floor(ep[5]);
+    tod.time = (int)ep[3] * 3600 + (int)ep[4] * 60 + sec;
+    tod.sec = ep[5] - sec;
+    rcvTime->Tod() = tod.time + tod.sec;
+    rcvDate->Base() = 0;
+    dataChunk->AddMessage(std::move(rcvTime));
+    dataChunk->AddMessage(std::move(rcvDate));
 
-		for (i=0;i<raw->obuf.n&&i<MAXOBS;i++) {
-		    usi=U1(p); p+=1;
-		    
-		    if      (usi<=  0) sat=0;                      /* ref [5] table 3-6 * /
-		    else if (usi<= 37) sat=satno(SYS_GPS,usi);     /*   1- 37: GPS * /
-		    else if (usi<= 70) sat=255;                    /*  38- 70: GLONASS * /
-		    else if (usi<=119) sat=satno(SYS_GAL,usi-70);  /*  71-119: GALILEO * /
-		    else if (usi<=142) sat=satno(SYS_SBS,usi);     /* 120-142: SBAS * /
-		    else if (usi<=192) sat=0;
-		    else if (usi<=197) sat=satno(SYS_QZS,usi);     /* 193-197: QZSS * /
-		    else if (usi<=210) sat=0;
-		    else if (usi<=240) sat=satno(SYS_CMP,usi-210); /* 211-240: BeiDou * /
-		    else               sat=0;
-		    
-		    raw->obuf.data[i].time=raw->time;
-		    raw->obuf.data[i].sat=sat;
-		    
-		    /* glonass fcn (frequency channel number) * /
-		    if (sat==255) raw->freqn[i]=usi-45;
-		}
-		trace(4,"decode_SI: nsat=raw->obuf.n\n");
+    // [SI]
+    auto si = std::make_unique<SatIndexStdMessage>(StdMessage::HeadSize() + n + 1);
+    std::vector<int> slotData;
+    for (int i = 0; i < n; i++)
+    {
+        obsd_t* satData = data + i;
+        auto sat = satData->sat;
+        int prn;
+        int satSys = satsys(sat, &prn);
+        if (satSys == SYS_GLO)
+        {
+            // Glonass is a special case
+            int slot = prn;
+            prn = 38; // TODO: find out the correct value
+            slotData.push_back(slot);
+        }
 
-		return 0;
-	*/
+        si->Usi().push_back(prn);
+    }
+    dataChunk->AddMessage(std::move(si));
+
+    // [NN]
+    if (slotData.size() > 0)
+    {
+        auto nn = std::make_unique<SatNumbersStdMessage>(StdMessage::HeadSize() + slotData.size() + 1);
+        for (auto slot : slotData)
+        {
+            nn->Osn().push_back(slot);
+        }
+        dataChunk->AddMessage(std::move(nn));
+    }
+
+    // [Ex]
+    for (int i = 0; i < n; i++)
+    {
+        obsd_t* satData = data + i;
+        /*auto sat = satData->sat;
+        int prn;
+        int satSys = satsys(sat, &prn);
+        if (satSys == SYS_GLO)
+        {
+            // Glonass is a special case
+            int slot = prn;
+            prn = 38; // TODO: find out the correct value
+            slotData.push_back(slot);
+        }
+
+        si->Usi().push_back(prn);*/
+    }
 }
 
-extern int satno2prn(int satno, int sys, int prn)
+void encode_SI()
 {
-    if (prn<=0) return 0;
-    switch (sys) {
-        case SYS_GPS:
-            if (prn<MINPRNGPS||MAXPRNGPS<prn) return 0;
-            return prn-MINPRNGPS+1;
-        case SYS_GLO:
-            if (prn<MINPRNGLO||MAXPRNGLO<prn) return 0;
-            return NSATGPS+prn-MINPRNGLO+1;
-        case SYS_GAL:
-            if (prn<MINPRNGAL||MAXPRNGAL<prn) return 0;
-            return NSATGPS+NSATGLO+prn-MINPRNGAL+1;
-        case SYS_QZS:
-            if (prn<MINPRNQZS||MAXPRNQZS<prn) return 0;
-            return NSATGPS+NSATGLO+NSATGAL+prn-MINPRNQZS+1;
-        case SYS_CMP:
-            if (prn<MINPRNCMP||MAXPRNCMP<prn) return 0;
-            return NSATGPS+NSATGLO+NSATGAL+NSATQZS+prn-MINPRNCMP+1;
-        case SYS_LEO:
-            if (prn<MINPRNLEO||MAXPRNLEO<prn) return 0;
-            return NSATGPS+NSATGLO+NSATGAL+NSATQZS+NSATCMP+prn-MINPRNLEO+1;
-        case SYS_SBS:
-            if (prn<MINPRNSBS||MAXPRNSBS<prn) return 0;
-            return NSATGPS+NSATGLO+NSATGAL+NSATQZS+NSATCMP+NSATLEO+prn-MINPRNSBS+1;
-    }
-    return 0;
+    // for i = 0,n (all records in epoch)
+    //	   read .sat field (satellite number)
+    //     convert it to prn
+    //	   save prn as U1
+    //     int satsys = satsys(santo, *prn);
+    //	   satsys -- glonass ? prn = 255
+    
+    /*
+        int i,usi,sat;
+        char *msg;
+        unsigned char *p=raw->buff+5;
+
+        if (!checksum(raw->buff,raw->len)) {
+            trace(2,"javad SI checksum error: len=%d\n",raw->len);
+            return -1;
+        }
+        raw->obuf.n=raw->len-6;
+
+        for (i=0;i<raw->obuf.n&&i<MAXOBS;i++) {
+            usi=U1(p); p+=1;
+            
+            if      (usi<=  0) sat=0;                      /* ref [5] table 3-6 * /
+            else if (usi<= 37) sat=satno(SYS_GPS,usi);     /*   1- 37: GPS * /
+            else if (usi<= 70) sat=255;                    /*  38- 70: GLONASS * /
+            else if (usi<=119) sat=satno(SYS_GAL,usi-70);  /*  71-119: GALILEO * /
+            else if (usi<=142) sat=satno(SYS_SBS,usi);     /* 120-142: SBAS * /
+            else if (usi<=192) sat=0;
+            else if (usi<=197) sat=satno(SYS_QZS,usi);     /* 193-197: QZSS * /
+            else if (usi<=210) sat=0;
+            else if (usi<=240) sat=satno(SYS_CMP,usi-210); /* 211-240: BeiDou * /
+            else               sat=0;
+            
+            raw->obuf.data[i].time=raw->time;
+            raw->obuf.data[i].sat=sat;
+            
+            /* glonass fcn (frequency channel number) * /
+            if (sat==255) raw->freqn[i]=usi-45;
+        }
+        trace(4,"decode_SI: nsat=raw->obuf.n\n");
+
+        return 0;
+    */
 }
 
 void Greis::RtkAdapter::encode_RT()
@@ -227,11 +273,11 @@ void Greis::RtkAdapter::encode_RT()
     auto rcvTime = RcvTimeStdMessage();
     auto rcvDate = RcvDateStdMessage();
 
-    rcvTime.Tod() = ;
+    /*rcvTime.Tod() = ;
     rcvDate.Year() = ;
     rcvDate.Month() = ;
     rcvDate.Day() = ;
-    rcvDate.Base() = 0;
+    rcvDate.Base() = 0;*/
 
     //TOD = data.tod(?)
 
@@ -269,8 +315,8 @@ void Greis::RtkAdapter::encode_RT()
 
 void Greis::RtkAdapter::encode_RD()
 {
-	gtime_t time; // from obs record
-	gtime_t tod;
+    gtime_t time; // from obs record
+    gtime_t tod;
 
     double ep[6] = { 0 };
 
@@ -283,7 +329,7 @@ void Greis::RtkAdapter::encode_RD()
     rcvDate.Month() = ep[1];
     rcvDate.Day() = ep[2];
     ep[0] = ep[1] = ep[2] = 0;
-    epoch2time(ep, tod);
+    //todoepoch2time(ep, tod);
     rcvTime.Tod() = tod.time + tod.sec;
     rcvDate.Base() = 0;
 

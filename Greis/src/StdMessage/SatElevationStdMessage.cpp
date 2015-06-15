@@ -33,6 +33,15 @@ namespace Greis
         _isCorrect = true;
     }
 
+    SatElevationStdMessage::SatElevationStdMessage(int p_size)
+    {
+        _id = "EL";
+        _bodySize = p_size - HeadSize();
+        _isCorrect = true;
+    }
+
+    const std::string SatElevationStdMessage::Codes::Code_EL = "EL";
+
     std::string SatElevationStdMessage::ToString() const
     {
         return toString("SatElevationStdMessage");

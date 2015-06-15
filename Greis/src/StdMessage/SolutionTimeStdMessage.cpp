@@ -47,6 +47,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string SolutionTimeStdMessage::Codes::Code_ST = "ST";
+
     std::string SolutionTimeStdMessage::ToString() const
     {
         return toString("SolutionTimeStdMessage");

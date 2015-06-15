@@ -15,7 +15,13 @@ namespace Greis
 
         Spectrum1StdMessage(const char* p_message, int p_length);
         Spectrum1StdMessage(const std::string& p_id, int p_size);
-
+        Spectrum1StdMessage(int p_size);
+        
+        struct Codes
+        {
+            static const std::string Code_sP;
+        };
+        
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }
         virtual EMessageId::Type IdNumber() const { return EMessageId::Spectrum1; }

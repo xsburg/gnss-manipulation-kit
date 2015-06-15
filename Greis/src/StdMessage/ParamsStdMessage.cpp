@@ -35,6 +35,15 @@ namespace Greis
         _isCorrect = true;
     }
 
+    ParamsStdMessage::ParamsStdMessage(int p_size)
+    {
+        _id = "PM";
+        _bodySize = p_size - HeadSize();
+        _isCorrect = true;
+    }
+
+    const std::string ParamsStdMessage::Codes::Code_PM = "PM";
+
     std::string ParamsStdMessage::ToString() const
     {
         return toString("ParamsStdMessage");

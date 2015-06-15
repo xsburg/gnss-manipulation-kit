@@ -43,6 +43,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string QZSSAlmStdMessage::Codes::Code_QA = "QA";
+
     std::string QZSSAlmStdMessage::ToString() const
     {
         return toString("QZSSAlmStdMessage");

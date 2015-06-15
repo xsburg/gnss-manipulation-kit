@@ -45,6 +45,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string Security1StdMessage::Codes::Code_SM = "SM";
+
     std::string Security1StdMessage::ToString() const
     {
         return toString("Security1StdMessage");

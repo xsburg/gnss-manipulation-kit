@@ -55,6 +55,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string AngularVelocityStdMessage::Codes::Code_AV = "AV";
+
     std::string AngularVelocityStdMessage::ToString() const
     {
         return toString("AngularVelocityStdMessage");

@@ -47,6 +47,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string RcvGALTimeOffsetStdMessage::Codes::Code_EO = "EO";
+
     std::string RcvGALTimeOffsetStdMessage::ToString() const
     {
         return toString("RcvGALTimeOffsetStdMessage");

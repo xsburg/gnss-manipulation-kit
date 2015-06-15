@@ -15,7 +15,13 @@ namespace Greis
 
         RawMeasStdMessage(const char* p_message, int p_length);
         RawMeasStdMessage(const std::string& p_id, int p_size);
-
+        RawMeasStdMessage(int p_size);
+        
+        struct Codes
+        {
+            static const std::string Code_rM;
+        };
+        
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }
         virtual EMessageId::Type IdNumber() const { return EMessageId::RawMeas; }

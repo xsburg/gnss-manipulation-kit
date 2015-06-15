@@ -57,6 +57,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string GloUtcGpsParamStdMessage::Codes::Code_NU = "NU";
+
     std::string GloUtcGpsParamStdMessage::ToString() const
     {
         return toString("GloUtcGpsParamStdMessage");

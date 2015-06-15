@@ -61,6 +61,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string FullRotationMatrixStdMessage::Codes::Code_mR = "mR";
+
     std::string FullRotationMatrixStdMessage::ToString() const
     {
         return toString("FullRotationMatrixStdMessage");

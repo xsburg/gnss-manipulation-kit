@@ -47,6 +47,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string RcvGLOTimeOffsetStdMessage::Codes::Code_NO = "NO";
+
     std::string RcvGLOTimeOffsetStdMessage::ToString() const
     {
         return toString("RcvGLOTimeOffsetStdMessage");

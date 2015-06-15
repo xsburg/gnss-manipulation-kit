@@ -28,6 +28,12 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string IAmpStdMessage::Codes::Code_ec = "ec";
+    const std::string IAmpStdMessage::Codes::Code_e1 = "e1";
+    const std::string IAmpStdMessage::Codes::Code_e2 = "e2";
+    const std::string IAmpStdMessage::Codes::Code_e3 = "e3";
+    const std::string IAmpStdMessage::Codes::Code_e5 = "e5";
+
     std::string IAmpStdMessage::ToString() const
     {
         return toString("IAmpStdMessage");

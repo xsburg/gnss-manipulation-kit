@@ -43,6 +43,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string QzssIonoParamsStdMessage::Codes::Code_QI = "QI";
+
     std::string QzssIonoParamsStdMessage::ToString() const
     {
         return toString("QzssIonoParamsStdMessage");

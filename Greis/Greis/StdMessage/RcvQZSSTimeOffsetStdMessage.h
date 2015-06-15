@@ -15,7 +15,12 @@ namespace Greis
         RcvQZSSTimeOffsetStdMessage(const std::string& p_id, int p_size);
         RcvQZSSTimeOffsetStdMessage();
         RcvQZSSTimeOffsetStdMessage(const std::string& p_id);
-
+        
+        struct Codes
+        {
+            static const std::string Code_QO;
+        };
+        
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }
         virtual EMessageId::Type IdNumber() const { return EMessageId::RcvQZSSTimeOffset; }

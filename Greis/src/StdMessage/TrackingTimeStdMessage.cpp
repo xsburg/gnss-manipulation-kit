@@ -45,6 +45,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string TrackingTimeStdMessage::Codes::Code_TT = "TT";
+
     std::string TrackingTimeStdMessage::ToString() const
     {
         return toString("TrackingTimeStdMessage");

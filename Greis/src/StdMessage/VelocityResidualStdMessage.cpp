@@ -28,6 +28,15 @@ namespace Greis
         _isCorrect = true;
     }
 
+    VelocityResidualStdMessage::VelocityResidualStdMessage(int p_size)
+    {
+        _id = "vr";
+        _bodySize = p_size - HeadSize();
+        _isCorrect = true;
+    }
+
+    const std::string VelocityResidualStdMessage::Codes::Code_vr = "vr";
+
     std::string VelocityResidualStdMessage::ToString() const
     {
         return toString("VelocityResidualStdMessage");

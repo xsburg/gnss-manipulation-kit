@@ -59,6 +59,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string RotationMatrixStdMessage::Codes::Code_MR = "MR";
+
     std::string RotationMatrixStdMessage::ToString() const
     {
         return toString("RotationMatrixStdMessage");

@@ -47,6 +47,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string RcvSBASTimeOffsetStdMessage::Codes::Code_WO = "WO";
+
     std::string RcvSBASTimeOffsetStdMessage::ToString() const
     {
         return toString("RcvSBASTimeOffsetStdMessage");

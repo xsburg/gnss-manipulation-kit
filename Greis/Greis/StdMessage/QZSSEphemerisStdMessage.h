@@ -15,7 +15,13 @@ namespace Greis
 
         QZSSEphemerisStdMessage(const char* p_message, int p_length);
         QZSSEphemerisStdMessage(const std::string& p_id, int p_size);
-
+        QZSSEphemerisStdMessage(int p_size);
+        
+        struct Codes
+        {
+            static const std::string Code_QE;
+        };
+        
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }
         virtual EMessageId::Type IdNumber() const { return EMessageId::QZSSEphemeris; }

@@ -35,6 +35,15 @@ namespace Greis
         _isCorrect = true;
     }
 
+    WrapperStdMessage::WrapperStdMessage(int p_size)
+    {
+        _id = ">>";
+        _bodySize = p_size - HeadSize();
+        _isCorrect = true;
+    }
+
+    const std::string WrapperStdMessage::Codes::Code = ">>";
+
     std::string WrapperStdMessage::ToString() const
     {
         return toString("WrapperStdMessage");

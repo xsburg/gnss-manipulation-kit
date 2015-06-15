@@ -37,6 +37,15 @@ namespace Greis
         _isCorrect = true;
     }
 
+    EventStdMessage::EventStdMessage(int p_size)
+    {
+        _id = "==";
+        _bodySize = p_size - HeadSize();
+        _isCorrect = true;
+    }
+
+    const std::string EventStdMessage::Codes::Code = "==";
+
     std::string EventStdMessage::ToString() const
     {
         return toString("EventStdMessage");

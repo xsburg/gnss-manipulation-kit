@@ -13,7 +13,17 @@ namespace Greis
 
         RCPRC0StdMessage(const char* p_message, int p_length);
         RCPRC0StdMessage(const std::string& p_id, int p_size);
-
+        
+        struct Codes
+        {
+            static const std::string Code_CP;
+            static const std::string Code_1P;
+            static const std::string Code_2P;
+            static const std::string Code_3P;
+            static const std::string Code_5P;
+            static const std::string Code_lP;
+        };
+        
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }
         virtual EMessageId::Type IdNumber() const { return EMessageId::RCPRC0; }

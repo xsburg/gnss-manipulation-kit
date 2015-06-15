@@ -15,7 +15,12 @@ namespace Greis
         AngularVelocityStdMessage(const std::string& p_id, int p_size);
         AngularVelocityStdMessage();
         AngularVelocityStdMessage(const std::string& p_id);
-
+        
+        struct Codes
+        {
+            static const std::string Code_AV;
+        };
+        
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }
         virtual EMessageId::Type IdNumber() const { return EMessageId::AngularVelocity; }

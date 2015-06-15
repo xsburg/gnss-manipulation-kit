@@ -61,6 +61,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string PosVelStdMessage::Codes::Code_PV = "PV";
+
     std::string PosVelStdMessage::ToString() const
     {
         return toString("PosVelStdMessage");

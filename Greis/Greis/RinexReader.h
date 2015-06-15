@@ -131,6 +131,7 @@ namespace Greis
         GnssData::SharedPtr_t toGnssData(DataChunk* dataChunk);
         DataChunk::SharedPtr_t toMessages(GnssData::SharedPtr_t gnssData);
     private:
+        void writeEpochMessages(DataChunk* dataChunk, obsd_t* data, int n);
         void encode_RT();
         void encode_RD();
     };

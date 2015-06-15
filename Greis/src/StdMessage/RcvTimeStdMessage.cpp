@@ -45,6 +45,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string RcvTimeStdMessage::Codes::Code = "~~";
+
     std::string RcvTimeStdMessage::ToString() const
     {
         return toString("RcvTimeStdMessage");

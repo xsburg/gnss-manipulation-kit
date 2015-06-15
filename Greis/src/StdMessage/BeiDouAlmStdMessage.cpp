@@ -43,6 +43,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string BeiDouAlmStdMessage::Codes::Code_CA = "CA";
+
     std::string BeiDouAlmStdMessage::ToString() const
     {
         return toString("BeiDouAlmStdMessage");

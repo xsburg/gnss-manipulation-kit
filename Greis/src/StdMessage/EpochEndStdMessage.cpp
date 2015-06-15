@@ -43,6 +43,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string EpochEndStdMessage::Codes::Code = "||";
+
     std::string EpochEndStdMessage::ToString() const
     {
         return toString("EpochEndStdMessage");

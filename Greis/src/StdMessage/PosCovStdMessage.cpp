@@ -65,6 +65,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string PosCovStdMessage::Codes::Code_SP = "SP";
+
     std::string PosCovStdMessage::ToString() const
     {
         return toString("PosCovStdMessage");

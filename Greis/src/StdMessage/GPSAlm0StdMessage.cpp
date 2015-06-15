@@ -73,6 +73,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string GPSAlm0StdMessage::Codes::Code_GA = "GA";
+
     std::string GPSAlm0StdMessage::ToString() const
     {
         return toString("GPSAlm0StdMessage");

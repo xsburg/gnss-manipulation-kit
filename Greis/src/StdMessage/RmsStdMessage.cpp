@@ -53,6 +53,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string RmsStdMessage::Codes::Code_SG = "SG";
+
     std::string RmsStdMessage::ToString() const
     {
         return toString("RmsStdMessage");

@@ -53,6 +53,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string BaselinesStdMessage::Codes::Code_bL = "bL";
+
     std::string BaselinesStdMessage::ToString() const
     {
         return toString("BaselinesStdMessage");

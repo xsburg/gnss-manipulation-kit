@@ -49,6 +49,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string BeiDouEphemerisStdMessage::Codes::Code_CN = "CN";
+
     std::string BeiDouEphemerisStdMessage::ToString() const
     {
         return toString("BeiDouEphemerisStdMessage");

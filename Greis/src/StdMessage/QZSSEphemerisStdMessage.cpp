@@ -28,6 +28,15 @@ namespace Greis
         _isCorrect = true;
     }
 
+    QZSSEphemerisStdMessage::QZSSEphemerisStdMessage(int p_size)
+    {
+        _id = "QE";
+        _bodySize = p_size - HeadSize();
+        _isCorrect = true;
+    }
+
+    const std::string QZSSEphemerisStdMessage::Codes::Code_QE = "QE";
+
     std::string QZSSEphemerisStdMessage::ToString() const
     {
         return toString("QZSSEphemerisStdMessage");

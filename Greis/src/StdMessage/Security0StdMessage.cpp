@@ -45,6 +45,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string Security0StdMessage::Codes::Code_SE = "SE";
+
     std::string Security0StdMessage::ToString() const
     {
         return toString("Security0StdMessage");

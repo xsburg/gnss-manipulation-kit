@@ -53,6 +53,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string GeoVelStdMessage::Codes::Code_VG = "VG";
+
     std::string GeoVelStdMessage::ToString() const
     {
         return toString("GeoVelStdMessage");

@@ -49,6 +49,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string HeadAndPitchStdMessage::Codes::Code_ha = "ha";
+
     std::string HeadAndPitchStdMessage::ToString() const
     {
         return toString("HeadAndPitchStdMessage");

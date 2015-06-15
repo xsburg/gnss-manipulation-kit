@@ -53,6 +53,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string VelStdMessage::Codes::Code_VE = "VE";
+
     std::string VelStdMessage::ToString() const
     {
         return toString("VelStdMessage");

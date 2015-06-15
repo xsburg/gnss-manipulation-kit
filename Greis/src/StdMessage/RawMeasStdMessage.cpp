@@ -28,6 +28,15 @@ namespace Greis
         _isCorrect = true;
     }
 
+    RawMeasStdMessage::RawMeasStdMessage(int p_size)
+    {
+        _id = "rM";
+        _bodySize = p_size - HeadSize();
+        _isCorrect = true;
+    }
+
+    const std::string RawMeasStdMessage::Codes::Code_rM = "rM";
+
     std::string RawMeasStdMessage::ToString() const
     {
         return toString("RawMeasStdMessage");

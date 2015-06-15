@@ -47,6 +47,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string GALAlmStdMessage::Codes::Code_EA = "EA";
+
     std::string GALAlmStdMessage::ToString() const
     {
         return toString("GALAlmStdMessage");

@@ -51,6 +51,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string MsgFmtStdMessage::Codes::Code_MF = "MF";
+
     std::string MsgFmtStdMessage::ToString() const
     {
         return toString("MsgFmtStdMessage");

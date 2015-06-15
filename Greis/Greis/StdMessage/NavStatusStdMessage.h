@@ -13,7 +13,13 @@ namespace Greis
 
         NavStatusStdMessage(const char* p_message, int p_length);
         NavStatusStdMessage(const std::string& p_id, int p_size);
-
+        NavStatusStdMessage(int p_size);
+        
+        struct Codes
+        {
+            static const std::string Code_SS;
+        };
+        
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }
         virtual EMessageId::Type IdNumber() const { return EMessageId::NavStatus; }

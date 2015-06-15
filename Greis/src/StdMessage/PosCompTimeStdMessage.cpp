@@ -45,6 +45,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string PosCompTimeStdMessage::Codes::Code_PT = "PT";
+
     std::string PosCompTimeStdMessage::ToString() const
     {
         return toString("PosCompTimeStdMessage");

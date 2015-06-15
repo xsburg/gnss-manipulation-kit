@@ -28,6 +28,15 @@ namespace Greis
         _isCorrect = true;
     }
 
+    Spectrum0StdMessage::Spectrum0StdMessage(int p_size)
+    {
+        _id = "sp";
+        _bodySize = p_size - HeadSize();
+        _isCorrect = true;
+    }
+
+    const std::string Spectrum0StdMessage::Codes::Code_sp = "sp";
+
     std::string Spectrum0StdMessage::ToString() const
     {
         return toString("Spectrum0StdMessage");

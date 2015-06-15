@@ -33,6 +33,15 @@ namespace Greis
         _isCorrect = true;
     }
 
+    AntNameStdMessage::AntNameStdMessage(int p_size)
+    {
+        _id = "AN";
+        _bodySize = p_size - HeadSize();
+        _isCorrect = true;
+    }
+
+    const std::string AntNameStdMessage::Codes::Code_AN = "AN";
+
     std::string AntNameStdMessage::ToString() const
     {
         return toString("AntNameStdMessage");

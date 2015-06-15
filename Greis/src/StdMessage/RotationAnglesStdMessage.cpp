@@ -59,6 +59,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string RotationAnglesStdMessage::Codes::Code_AR = "AR";
+
     std::string RotationAnglesStdMessage::ToString() const
     {
         return toString("RotationAnglesStdMessage");

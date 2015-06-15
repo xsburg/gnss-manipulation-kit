@@ -33,6 +33,15 @@ namespace Greis
         _isCorrect = true;
     }
 
+    SatIndexStdMessage::SatIndexStdMessage(int p_size)
+    {
+        _id = "SI";
+        _bodySize = p_size - HeadSize();
+        _isCorrect = true;
+    }
+
+    const std::string SatIndexStdMessage::Codes::Code_SI = "SI";
+
     std::string SatIndexStdMessage::ToString() const
     {
         return toString("SatIndexStdMessage");

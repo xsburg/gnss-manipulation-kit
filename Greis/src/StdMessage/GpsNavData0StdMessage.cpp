@@ -35,6 +35,15 @@ namespace Greis
         _isCorrect = true;
     }
 
+    GpsNavData0StdMessage::GpsNavData0StdMessage(int p_size)
+    {
+        _id = "GD";
+        _bodySize = p_size - HeadSize();
+        _isCorrect = true;
+    }
+
+    const std::string GpsNavData0StdMessage::Codes::Code_GD = "GD";
+
     std::string GpsNavData0StdMessage::ToString() const
     {
         return toString("GpsNavData0StdMessage");

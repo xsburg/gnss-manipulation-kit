@@ -33,6 +33,13 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string FlagsStdMessage::Codes::Code_FC = "FC";
+    const std::string FlagsStdMessage::Codes::Code_F1 = "F1";
+    const std::string FlagsStdMessage::Codes::Code_F2 = "F2";
+    const std::string FlagsStdMessage::Codes::Code_F3 = "F3";
+    const std::string FlagsStdMessage::Codes::Code_F5 = "F5";
+    const std::string FlagsStdMessage::Codes::Code_Fl = "Fl";
+
     std::string FlagsStdMessage::ToString() const
     {
         return toString("FlagsStdMessage");

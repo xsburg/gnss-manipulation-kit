@@ -51,6 +51,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string SbasRawNavDataStdMessage::Codes::Code_WD = "WD";
+
     std::string SbasRawNavDataStdMessage::ToString() const
     {
         return toString("SbasRawNavDataStdMessage");

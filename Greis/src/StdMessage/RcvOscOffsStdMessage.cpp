@@ -45,6 +45,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string RcvOscOffsStdMessage::Codes::Code_OO = "OO";
+
     std::string RcvOscOffsStdMessage::ToString() const
     {
         return toString("RcvOscOffsStdMessage");

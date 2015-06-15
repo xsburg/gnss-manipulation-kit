@@ -59,6 +59,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string GALEphemerisStdMessage::Codes::Code_EN = "EN";
+
     std::string GALEphemerisStdMessage::ToString() const
     {
         return toString("GALEphemerisStdMessage");

@@ -28,6 +28,12 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string QAmpStdMessage::Codes::Code_qc = "qc";
+    const std::string QAmpStdMessage::Codes::Code_q1 = "q1";
+    const std::string QAmpStdMessage::Codes::Code_q2 = "q2";
+    const std::string QAmpStdMessage::Codes::Code_q3 = "q3";
+    const std::string QAmpStdMessage::Codes::Code_q5 = "q5";
+
     std::string QAmpStdMessage::ToString() const
     {
         return toString("QAmpStdMessage");

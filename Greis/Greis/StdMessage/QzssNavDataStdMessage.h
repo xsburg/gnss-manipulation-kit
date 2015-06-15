@@ -15,7 +15,13 @@ namespace Greis
 
         QzssNavDataStdMessage(const char* p_message, int p_length);
         QzssNavDataStdMessage(const std::string& p_id, int p_size);
-
+        QzssNavDataStdMessage(int p_size);
+        
+        struct Codes
+        {
+            static const std::string Code_QD;
+        };
+        
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }
         virtual EMessageId::Type IdNumber() const { return EMessageId::QzssNavData; }

@@ -47,6 +47,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string GPSTimeStdMessage::Codes::Code_GT = "GT";
+
     std::string GPSTimeStdMessage::ToString() const
     {
         return toString("GPSTimeStdMessage");

@@ -15,7 +15,17 @@ namespace Greis
 
         SCStdMessage(const char* p_message, int p_length);
         SCStdMessage(const std::string& p_id, int p_size);
-
+        
+        struct Codes
+        {
+            static const std::string Code_CC;
+            static const std::string Code_C1;
+            static const std::string Code_C2;
+            static const std::string Code_C3;
+            static const std::string Code_C5;
+            static const std::string Code_Cl;
+        };
+        
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }
         virtual EMessageId::Type IdNumber() const { return EMessageId::SC; }

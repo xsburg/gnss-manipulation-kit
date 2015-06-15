@@ -33,6 +33,12 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string SRDPStdMessage::Codes::Code_1d = "1d";
+    const std::string SRDPStdMessage::Codes::Code_2d = "2d";
+    const std::string SRDPStdMessage::Codes::Code_3d = "3d";
+    const std::string SRDPStdMessage::Codes::Code_5d = "5d";
+    const std::string SRDPStdMessage::Codes::Code_ld = "ld";
+
     std::string SRDPStdMessage::ToString() const
     {
         return toString("SRDPStdMessage");

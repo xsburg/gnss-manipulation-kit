@@ -45,6 +45,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string RcvTimeAccuracyStdMessage::Codes::Code_BP = "BP";
+
     std::string RcvTimeAccuracyStdMessage::ToString() const
     {
         return toString("RcvTimeAccuracyStdMessage");

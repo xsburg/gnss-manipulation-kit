@@ -33,6 +33,13 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string RCPRc1StdMessage::Codes::Code_cp = "cp";
+    const std::string RCPRc1StdMessage::Codes::Code_1p = "1p";
+    const std::string RCPRc1StdMessage::Codes::Code_2p = "2p";
+    const std::string RCPRc1StdMessage::Codes::Code_3p = "3p";
+    const std::string RCPRc1StdMessage::Codes::Code_5p = "5p";
+    const std::string RCPRc1StdMessage::Codes::Code_lp = "lp";
+
     std::string RCPRc1StdMessage::ToString() const
     {
         return toString("RCPRc1StdMessage");

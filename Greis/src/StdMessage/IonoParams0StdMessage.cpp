@@ -63,6 +63,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string IonoParams0StdMessage::Codes::Code_IO = "IO";
+
     std::string IonoParams0StdMessage::ToString() const
     {
         return toString("IonoParams0StdMessage");

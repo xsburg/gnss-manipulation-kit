@@ -45,6 +45,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string QzssUtcParamStdMessage::Codes::Code_QU = "QU";
+
     std::string QzssUtcParamStdMessage::ToString() const
     {
         return toString("QzssUtcParamStdMessage");

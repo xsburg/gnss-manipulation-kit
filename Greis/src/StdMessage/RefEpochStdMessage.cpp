@@ -49,6 +49,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string RefEpochStdMessage::Codes::Code_rE = "rE";
+
     std::string RefEpochStdMessage::ToString() const
     {
         return toString("RefEpochStdMessage");

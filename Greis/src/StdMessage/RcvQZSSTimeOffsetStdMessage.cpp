@@ -47,6 +47,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string RcvQZSSTimeOffsetStdMessage::Codes::Code_QO = "QO";
+
     std::string RcvQZSSTimeOffsetStdMessage::ToString() const
     {
         return toString("RcvQZSSTimeOffsetStdMessage");

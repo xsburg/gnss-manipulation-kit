@@ -26,7 +26,9 @@ namespace Greis
         : _id(p_id), _bodySize(p_size - HeadSize())
     {
         _isCorrect = true;
-    }${DefaultStaticSizeConstructor}${DefaultStaticSizeConstructorWithId}
+    }${DefaultStaticSizeConstructor}${DefaultStaticSizeConstructorWithId}${DynamicSizeConstructor}
+
+    ${CodeConsts}
 
     std::string ${ClassName}::ToString() const
     {

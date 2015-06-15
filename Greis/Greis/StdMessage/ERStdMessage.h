@@ -13,7 +13,13 @@ namespace Greis
 
         ERStdMessage(const char* p_message, int p_length);
         ERStdMessage(const std::string& p_id, int p_size);
-
+        ERStdMessage(int p_size);
+        
+        struct Codes
+        {
+            static const std::string Code_ER;
+        };
+        
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }
         virtual EMessageId::Type IdNumber() const { return EMessageId::ER; }

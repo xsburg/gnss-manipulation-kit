@@ -47,6 +47,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string RcvGPSTimeOffsetStdMessage::Codes::Code_GO = "GO";
+
     std::string RcvGPSTimeOffsetStdMessage::ToString() const
     {
         return toString("RcvGPSTimeOffsetStdMessage");

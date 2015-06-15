@@ -35,6 +35,9 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string ExtEventStdMessage::Codes::Code_XA = "XA";
+    const std::string ExtEventStdMessage::Codes::Code_XB = "XB";
+
     std::string ExtEventStdMessage::ToString() const
     {
         return toString("ExtEventStdMessage");

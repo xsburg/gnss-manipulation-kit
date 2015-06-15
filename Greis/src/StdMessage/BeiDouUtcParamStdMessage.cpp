@@ -45,6 +45,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string BeiDouUtcParamStdMessage::Codes::Code_CU = "CU";
+
     std::string BeiDouUtcParamStdMessage::ToString() const
     {
         return toString("BeiDouUtcParamStdMessage");

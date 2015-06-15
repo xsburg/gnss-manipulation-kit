@@ -47,6 +47,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string GLOTimeStdMessage::Codes::Code_NT = "NT";
+
     std::string GLOTimeStdMessage::ToString() const
     {
         return toString("GLOTimeStdMessage");

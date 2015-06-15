@@ -53,6 +53,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string GeoPosStdMessage::Codes::Code_PG = "PG";
+
     std::string GeoPosStdMessage::ToString() const
     {
         return toString("GeoPosStdMessage");

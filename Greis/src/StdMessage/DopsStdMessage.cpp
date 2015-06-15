@@ -51,6 +51,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string DopsStdMessage::Codes::Code_DP = "DP";
+
     std::string DopsStdMessage::ToString() const
     {
         return toString("DopsStdMessage");

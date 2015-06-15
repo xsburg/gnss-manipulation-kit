@@ -33,6 +33,13 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string DPStdMessage::Codes::Code_DC = "DC";
+    const std::string DPStdMessage::Codes::Code_D1 = "D1";
+    const std::string DPStdMessage::Codes::Code_D2 = "D2";
+    const std::string DPStdMessage::Codes::Code_D3 = "D3";
+    const std::string DPStdMessage::Codes::Code_D5 = "D5";
+    const std::string DPStdMessage::Codes::Code_Dl = "Dl";
+
     std::string DPStdMessage::ToString() const
     {
         return toString("DPStdMessage");

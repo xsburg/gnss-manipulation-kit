@@ -55,6 +55,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string GalUtcGpsParamStdMessage::Codes::Code_EU = "EU";
+
     std::string GalUtcGpsParamStdMessage::ToString() const
     {
         return toString("GalUtcGpsParamStdMessage");

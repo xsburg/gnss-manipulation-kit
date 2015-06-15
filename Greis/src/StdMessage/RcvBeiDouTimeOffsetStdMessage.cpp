@@ -47,6 +47,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string RcvBeiDouTimeOffsetStdMessage::Codes::Code_CO = "CO";
+
     std::string RcvBeiDouTimeOffsetStdMessage::ToString() const
     {
         return toString("RcvBeiDouTimeOffsetStdMessage");

@@ -41,6 +41,15 @@ namespace Greis
         _isCorrect = true;
     }
 
+    GalRawNavDataStdMessage::GalRawNavDataStdMessage(int p_size)
+    {
+        _id = "ED";
+        _bodySize = p_size - HeadSize();
+        _isCorrect = true;
+    }
+
+    const std::string GalRawNavDataStdMessage::Codes::Code_ED = "ED";
+
     std::string GalRawNavDataStdMessage::ToString() const
     {
         return toString("GalRawNavDataStdMessage");

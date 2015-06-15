@@ -47,6 +47,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string InertialMeasurementsStdMessage::Codes::Code_IM = "IM";
+
     std::string InertialMeasurementsStdMessage::ToString() const
     {
         return toString("InertialMeasurementsStdMessage");

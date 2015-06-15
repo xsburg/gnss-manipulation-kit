@@ -81,6 +81,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string SBASEhemerisStdMessage::Codes::Code_WE = "WE";
+
     std::string SBASEhemerisStdMessage::ToString() const
     {
         return toString("SBASEhemerisStdMessage");

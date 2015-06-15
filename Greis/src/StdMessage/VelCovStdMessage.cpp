@@ -65,6 +65,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string VelCovStdMessage::Codes::Code_SV = "SV";
+
     std::string VelCovStdMessage::ToString() const
     {
         return toString("VelCovStdMessage");

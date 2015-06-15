@@ -53,6 +53,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string PosStdMessage::Codes::Code_PO = "PO";
+
     std::string PosStdMessage::ToString() const
     {
         return toString("PosStdMessage");

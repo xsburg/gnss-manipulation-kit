@@ -13,7 +13,17 @@ namespace Greis
 
         CNR4StdMessage(const char* p_message, int p_length);
         CNR4StdMessage(const std::string& p_id, int p_size);
-
+        
+        struct Codes
+        {
+            static const std::string Code_CE;
+            static const std::string Code_1E;
+            static const std::string Code_2E;
+            static const std::string Code_3E;
+            static const std::string Code_5E;
+            static const std::string Code_lE;
+        };
+        
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }
         virtual EMessageId::Type IdNumber() const { return EMessageId::CNR4; }

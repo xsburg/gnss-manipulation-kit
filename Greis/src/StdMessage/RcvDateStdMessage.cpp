@@ -51,6 +51,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string RcvDateStdMessage::Codes::Code_RD = "RD";
+
     std::string RcvDateStdMessage::ToString() const
     {
         return toString("RcvDateStdMessage");

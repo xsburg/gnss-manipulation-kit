@@ -69,6 +69,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string SBASAlmanacStdMessage::Codes::Code_WA = "WA";
+
     std::string SBASAlmanacStdMessage::ToString() const
     {
         return toString("SBASAlmanacStdMessage");

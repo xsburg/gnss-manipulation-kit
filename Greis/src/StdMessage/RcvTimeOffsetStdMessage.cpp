@@ -47,6 +47,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string RcvTimeOffsetStdMessage::Codes::Code_TO = "TO";
+
     std::string RcvTimeOffsetStdMessage::ToString() const
     {
         return toString("RcvTimeOffsetStdMessage");

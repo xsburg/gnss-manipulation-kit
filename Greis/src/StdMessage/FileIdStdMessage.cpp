@@ -45,6 +45,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string FileIdStdMessage::Codes::Code_JP = "JP";
+
     std::string FileIdStdMessage::ToString() const
     {
         return toString("FileIdStdMessage");

@@ -12,8 +12,13 @@ namespace Greis
         SMART_PTR_T(${ClassName});
 
         ${ClassName}(const char* p_message, int p_length);
-        ${ClassName}(const std::string& p_id, int p_size);${DefaultStaticSizeConstructor}${DefaultStaticSizeConstructorWithId}
-
+        ${ClassName}(const std::string& p_id, int p_size);${DefaultStaticSizeConstructor}${DefaultStaticSizeConstructorWithId}${DynamicSizeConstructor}
+        
+        struct Codes
+        {
+            ${CodeConsts}
+        };
+        
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }
         virtual EMessageId::Type IdNumber() const { return EMessageId::${EMessageId}; }

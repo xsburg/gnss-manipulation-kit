@@ -43,6 +43,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string BeiDouIonoParamsStdMessage::Codes::Code_CI = "CI";
+
     std::string BeiDouIonoParamsStdMessage::ToString() const
     {
         return toString("BeiDouIonoParamsStdMessage");

@@ -53,6 +53,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string SbasUtcParamStdMessage::Codes::Code_WU = "WU";
+
     std::string SbasUtcParamStdMessage::ToString() const
     {
         return toString("SbasUtcParamStdMessage");

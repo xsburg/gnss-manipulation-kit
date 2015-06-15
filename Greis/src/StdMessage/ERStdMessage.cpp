@@ -31,6 +31,15 @@ namespace Greis
         _isCorrect = true;
     }
 
+    ERStdMessage::ERStdMessage(int p_size)
+    {
+        _id = "ER";
+        _bodySize = p_size - HeadSize();
+        _isCorrect = true;
+    }
+
+    const std::string ERStdMessage::Codes::Code_ER = "ER";
+
     std::string ERStdMessage::ToString() const
     {
         return toString("ERStdMessage");

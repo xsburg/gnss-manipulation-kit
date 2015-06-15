@@ -53,6 +53,8 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string BaseInfoStdMessage::Codes::Code_BI = "BI";
+
     std::string BaseInfoStdMessage::ToString() const
     {
         return toString("BaseInfoStdMessage");

@@ -17,7 +17,12 @@ namespace Greis
         BeiDouEphemerisStdMessage(const std::string& p_id, int p_size);
         BeiDouEphemerisStdMessage();
         BeiDouEphemerisStdMessage(const std::string& p_id);
-
+        
+        struct Codes
+        {
+            static const std::string Code_CN;
+        };
+        
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }
         virtual EMessageId::Type IdNumber() const { return EMessageId::BeiDouEphemeris; }
