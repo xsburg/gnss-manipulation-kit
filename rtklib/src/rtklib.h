@@ -1532,6 +1532,11 @@ extern int input_bnxf  (raw_t *raw, FILE *fp);
 extern int input_rt17f (raw_t *raw, FILE *fp);
 extern int input_lexrf (raw_t *raw, FILE *fp);
 
+/* private functions of javad.c */
+extern int tofreq(char sig, int sys, int *type);
+extern int checkpri(const char *opt, int sys, int code, int freq);
+extern int settag(obsd_t *data, gtime_t time);
+
 extern int gen_ubx (const char *msg, unsigned char *buff);
 extern int gen_stq (const char *msg, unsigned char *buff);
 extern int gen_nvs (const char *msg, unsigned char *buff);

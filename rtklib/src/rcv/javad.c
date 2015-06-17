@@ -75,7 +75,7 @@ static int is_meas(char sig)
     return sig=='c'||sig=='C'||sig=='1'||sig=='2'||sig=='3'||sig=='5'||sig=='l';
 }
 /* convert signal to frequency and obs type ----------------------------------*/
-static int tofreq(char sig, int sys, int *type)
+extern int tofreq(char sig, int sys, int *type)
 {
     const unsigned char types[6][6]={ /* ref [5] table 3-7 */
         /*  c/C       1        2        3        5        l  */
@@ -117,7 +117,7 @@ static int tofreq(char sig, int sys, int *type)
     return freqs[j][i]<=NFREQ?freqs[j][i]-1:-1;
 }
 /* check code priority and return obs position -------------------------------*/
-static int checkpri(const char *opt, int sys, int code, int freq)
+extern int checkpri(const char *opt, int sys, int code, int freq)
 {
     int nex=NEXOBS; /* number of extended obs data */
     

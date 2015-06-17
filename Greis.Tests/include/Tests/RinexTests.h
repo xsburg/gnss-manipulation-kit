@@ -221,6 +221,23 @@ namespace Greis
             // Assert
             // nothing that we can check...
         }
+
+        TEST_F(RinexTests, ShouldImportRtkRawToGreis2)
+        {
+            // Arrange
+            QString jpsFileIn = this->ResolvePath("javad_20110115.jps");
+            auto dataChunk = DataChunk::FromFile(jpsFileIn);
+            auto gnssData = RtkAdapter().toGnssData(dataChunk.get());
+
+            /*QString navFileNameIn = this->ResolvePath("ifz-data-0.in.14N");
+            auto gnssData = RinexReader().ReadFile(obsFileNameIn).ReadFile(navFileNameIn).BuildResult();
+
+            // Act
+            auto dataChunk = RtkAdapter().toMessages(gnssData);*/
+
+            // Assert
+            // nothing that we can check...
+        }
     }
 }
 

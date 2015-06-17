@@ -108,19 +108,138 @@ Greis::RinexWriter& Greis::RinexWriter::WriteNavFile(QString fileName)
     return *this;
 }
 
+void init_obs(obs_t* obs, int nmax = MAXOBS)
+{
+    obs->data = (obsd_t*)malloc(sizeof(obsd_t)*nmax);
+    obs->nmax = nmax;
+}
+
+void free_obs(obs_t* obs)
+{
+    free(obs->data);
+    obs->data = NULL;
+    obs->n = 0;
+}
+
+void init_nav(nav_t* nav, int nmax = MAXSAT, int ngmax = NSATGLO, int nsmax = NSATSBS * 2)
+{
+    nav->eph = (eph_t *)malloc(sizeof(eph_t)*nmax);
+    nav->nmax = nmax;
+    nav->geph = (geph_t*)malloc(sizeof(geph_t)*ngmax);
+    nav->ngmax = ngmax;
+    nav->seph = (seph_t*)malloc(sizeof(seph_t)*nsmax);
+    nav->nsmax = nsmax;
+    nav->alm = NULL;
+}
+
+void free_nav(nav_t* nav)
+{
+    free(nav->eph);
+    nav->eph = NULL;
+    nav->nmax = 0;
+    nav->n = 0;
+    free(nav->geph);
+    nav->geph = NULL;
+    nav->ngmax = 0;
+    nav->ng = 0;
+    free(nav->seph);
+    nav->seph = NULL;
+    nav->nsmax = 0;
+    nav->ns = 0;
+}
+
+void copy_nav(nav_t* src, nav_t* dst)
+{
+    *dst = *src;
+    init_nav(dst);
+    for (int i = 0; i < src->n; i++)
+    {
+        dst->eph[i] = src->eph[i];
+    }
+    for (int i = 0; i < src->ng; i++)
+    {
+        dst->geph[i] = src->geph[i];
+    }
+    for (int i = 0; i < src->ns; i++)
+    {
+    dst->seph[i] = src->seph[i];
+    }
+}
+
+void copy_obs(obs_t* src, obs_t* dst)
+{
+    *dst = *src;
+    init_obs(dst);
+    for (int i = 0; i < src->n; i++)
+    {
+        dst->data[i] = src->data[i];
+    }
+}
+
 Greis::GnssData::SharedPtr_t Greis::RtkAdapter::toGnssData(DataChunk* dataChunk)
 {
-    auto rawGnssData = new RawGnssData();
-    GnssData::SharedPtr_t gnssData(rawGnssData);
+    raw_t* raw = new raw_t();
+    init_raw(raw);
 
     auto data = dataChunk->ToByteArray();
+
+    std::vector<obs_t> obsEpochs;
+    int ephTotalCount = 0;
+    std::vector<nav_t> navEpochs;
 
     for (size_t i = 0; i < data.size(); i++)
     {
         char c = data.at(i);
-        input_javad(&rawGnssData->getRaw(), c);
+        int ret = input_javad(raw, c);
+        switch (ret)
+        {
+        case 1:
+            // input observation data
+            ephTotalCount += raw->obs.n;
+            obs_t tmp;
+            copy_obs(&raw->obs, &tmp);
+            obsEpochs.push_back(tmp);
+            break;
+        case 2:
+            // input ephemeris
+            nav_t tmp2;
+            copy_nav(&raw->nav, &tmp2);
+            navEpochs.push_back(tmp2);
+            break;
+        }
     }
+
+    free_raw(raw);
+    delete raw;
     
+    // obs all
+    obs_t obsAll;
+    init_obs(&obsAll, ephTotalCount);
+    obsAll.n = ephTotalCount;
+    int index = 0;
+    for (auto& obsEp : obsEpochs)
+    {
+        for (int i = 0; i < obsEp.n; i++)
+        {
+            obsAll.data[index++] = obsEp.data[i];
+        }
+        free_obs(&obsEp);
+    }
+    // nav all
+    nav_t navAll;
+    init_nav(&nav, );
+    navAll.n = ephTotalCount;
+    int index = 0;
+    for (auto& obsEp : obsEpochs)
+    {
+        for (int i = 0; i < obsEp.n; i++)
+        {
+            obsAll.data[index++] = obsEp.data[i];
+        }
+        free_obs(&obsEp);
+    }
+
+    GnssData::SharedPtr_t gnssData(new GnssData(obsAll));
     return gnssData;
 }
 
@@ -203,23 +322,109 @@ void Greis::RtkAdapter::writeEpochMessages(DataChunk* dataChunk, obsd_t* data, i
         dataChunk->AddMessage(std::move(nn));
     }
 
-    // [Ex]
-    for (int i = 0; i < n; i++)
+    // [Ex] [*E]
+    // [EC], [E1], [E2], [E3], [E5], [El], [CE], [1E], [2E], [3E], [5E], [lE]:
+    char codes[6] = { 'C', '1', '2', '3', '5', 'l' };
+    std::vector<std::string> codeIds = {
+        CNRStdMessage::Codes::Code_EC,
+        CNRStdMessage::Codes::Code_E1,
+        CNRStdMessage::Codes::Code_E2,
+        CNRStdMessage::Codes::Code_E3,
+        CNRStdMessage::Codes::Code_E5,
+        CNRStdMessage::Codes::Code_El
+    };
+    for (int codeIndex = 0; codeIndex < 6; codeIndex++)
     {
-        obsd_t* satData = data + i;
-        /*auto sat = satData->sat;
-        int prn;
-        int satSys = satsys(sat, &prn);
-        if (satSys == SYS_GLO)
+        char code = codes[codeIndex];
+        std::string codeId = codeIds[codeIndex];
+        
+        auto msg = std::make_unique<CNRStdMessage>(codeId, StdMessage::HeadSize() + n + 1);
+        msg->Cnr().resize(n);
+        for (int i = 0; i < n; i++)
         {
-            // Glonass is a special case
-            int slot = prn;
-            prn = 38; // TODO: find out the correct value
-            slotData.push_back(slot);
-        }
+            obsd_t* satData = data + i;
 
-        si->Usi().push_back(prn);*/
+            msg->Cnr()[i] = 0;
+
+            int sys;
+            if (!(sys = satsys(satData->sat, NULL)))
+            {
+                continue;
+            }
+
+            int type;
+            int freq;
+            if ((freq = tofreq(code, sys, &type)) < 0)
+            {
+                continue;
+            }
+
+            int j;
+            if ((j = checkpri("", sys, type, freq)) >= 0)
+            {
+                unsigned char cnr = satData->SNR[j] / 4.0;
+                msg->Cnr()[i] = cnr;
+            }
+        }
+        dataChunk->AddMessage(std::move(msg));
     }
+
+
+/*
+    + if (!strncmp(p,"~~",2)) return decode_RT(raw); /* receiver time #1#
+
+    + if (strstr(raw->opt, "-NOET")) {
+    +     if (!strncmp(p, "::", 2)) return decode_ET(raw); /* epoch time #1#
+    + }
+    + if (!strncmp(p, "RD", 2)) return decode_RD(raw); /* receiver date #1#
+    + if (!strncmp(p, "SI", 2)) return decode_SI(raw); /* satellite indices #1#
+    + if (!strncmp(p, "NN", 2)) return decode_NN(raw); /* glonass slot numbers #1#
+
+    if (!strncmp(p, "GA", 2)) return decode_GA(raw); /* gps almanac #1#
+    if (!strncmp(p, "NA", 2)) return decode_NA(raw); /* glonass almanac #1#
+    if (!strncmp(p, "EA", 2)) return decode_EA(raw); /* galileo almanac #1#
+    if (!strncmp(p, "WA", 2)) return decode_WA(raw); /* sbas almanac #1#
+    if (!strncmp(p, "QA", 2)) return decode_QA(raw); /* qzss almanac (ext) #1#
+
+    if (!strncmp(p, "GE", 2)) return decode_GE(raw); /* gps ephemeris #1#
+    if (!strncmp(p, "NE", 2)) return decode_NE(raw); /* glonass ephemeris #1#
+    if (!strncmp(p, "EN", 2)) return decode_EN(raw); /* galileo ephemeris #1#
+    if (!strncmp(p, "WE", 2)) return decode_WE(raw); /* waas ephemeris #1#
+    if (!strncmp(p, "QE", 2)) return decode_QE(raw); /* qzss ephemeris (ext) #1#
+    if (!strncmp(p, "CN", 2)) return decode_CN(raw); /* beidou ephemeris (ext) #1#
+
+    if (!strncmp(p, "UO", 2)) return decode_UO(raw); /* gps utc time parameters #1#
+    if (!strncmp(p, "NU", 2)) return decode_NU(raw); /* glonass utc and gps time par #1#
+    if (!strncmp(p, "EU", 2)) return decode_EU(raw); /* galileo utc and gps time par #1#
+    if (!strncmp(p, "WU", 2)) return decode_WU(raw); /* waas utc time parameters #1#
+    if (!strncmp(p, "QU", 2)) return decode_QU(raw); /* qzss utc and gps time par #1#
+    if (!strncmp(p, "IO", 2)) return decode_IO(raw); /* ionospheric parameters #1#
+
+    if (!strncmp(p, "GD", 2)) return decode_nD(raw, SYS_GPS); /* raw navigation data #1#
+    if (!strncmp(p, "QD", 2)) return decode_nD(raw, SYS_QZS); /* raw navigation data #1#
+    if (!strncmp(p, "gd", 2)) return decode_nd(raw, SYS_GPS); /* raw navigation data #1#
+    if (!strncmp(p, "qd", 2)) return decode_nd(raw, SYS_QZS); /* raw navigation data #1#
+    if (!strncmp(p, "ED", 2)) return decode_nd(raw, SYS_GAL); /* raw navigation data #1#
+    if (!strncmp(p, "cd", 2)) return decode_nd(raw, SYS_CMP); /* raw navigation data #1#
+    if (!strncmp(p, "LD", 2)) return decode_LD(raw); /* glonass raw navigation data #1#
+    if (!strncmp(p, "lD", 2)) return decode_lD(raw); /* glonass raw navigation data #1#
+    if (!strncmp(p, "WD", 2)) return decode_WD(raw); /* sbas raw navigation data #1#
+
+    if (!strncmp(p, "TC", 2)) return decode_TC(raw); /* CA/L1 continuous track time #1#
+
+    if (p[0] == 'R') return decode_Rx(raw, p[1]); /* pseudoranges #1#
+    if (p[0] == 'r') return decode_rx(raw, p[1]); /* short pseudoranges #1#
+    if (p[1] == 'R') return decode_xR(raw, p[0]); /* relative pseudoranges #1#
+    if (p[1] == 'r') return decode_xr(raw, p[0]); /* short relative pseudoranges #1#
+    if (p[0] == 'P') return decode_Px(raw, p[1]); /* carrier phases #1#
+    if (p[0] == 'p') return decode_px(raw, p[1]); /* short carrier phases #1#
+    if (p[1] == 'P') return decode_xP(raw, p[0]); /* relative carrier phases #1#
+    if (p[1] == 'p') return decode_xp(raw, p[0]); /* relative carrier phases #1#
+    if (p[0] == 'D') return decode_Dx(raw, p[1]); /* doppler #1#
+    if (p[1] == 'd') return decode_xd(raw, p[0]); /* short relative doppler #1#
+    if (p[0] == 'E') return decode_Ex(raw, p[1]); /* carrier to noise ratio #1#
+    if (p[1] == 'E') return decode_xE(raw, p[0]); /* carrier to noise ratio x 4 #1#
+    if (p[0] == 'F') return decode_Fx(raw, p[1]); /* signal lock loop flags #1#*/
 }
 
 void encode_SI()

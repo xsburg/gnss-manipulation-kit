@@ -20,6 +20,13 @@ namespace Greis
             sta = { "" };
         }
 
+        GnssData(obs_t p_obs)
+        {
+            obs = p_obs;
+            nav = { 0 };
+            sta = { "" };
+        }
+
         virtual ~GnssData()
         {
             if (destroyed)
