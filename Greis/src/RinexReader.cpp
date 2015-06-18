@@ -276,6 +276,8 @@ Greis::DataChunk::SharedPtr_t Greis::RtkAdapter::toMessages(GnssData::SharedPtr_
 
 void Greis::RtkAdapter::writeEpochMessages(DataChunk* dataChunk, obsd_t* data, int n)
 {
+    char* opt = "-RL1C -RL2C";
+
     // [RT], [RD]
     auto rcvTime = std::make_unique<RcvTimeStdMessage>();
     auto rcvDate = std::make_unique<RcvDateStdMessage>();
@@ -376,7 +378,7 @@ void Greis::RtkAdapter::writeEpochMessages(DataChunk* dataChunk, obsd_t* data, i
             }
 
             int j;
-            if ((j = checkpri("", sys, type, freq)) >= 0)
+            if ((j = checkpri(opt, sys, type, freq)) >= 0)
             {
                 unsigned char cnr = satData->SNR[j] / 4.0;
                 msg->Cnr()[i] = cnr;

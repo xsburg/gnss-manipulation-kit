@@ -245,13 +245,25 @@ namespace Greis
             return found;
         }
 
+        void check_xE_Ex(CNR4StdMessage* expected, CNRStdMessage* actual)
+        {
+            ASSERT_EQ(expected->CnrX4().size(), actual->Cnr().size());
+            for (int i = 0; i < expected->CnrX4().size(); i++)
+            {
+                Types::u1 e = expected->CnrX4()[i];
+                Types::u1 a = actual->Cnr()[i];
+                bool equalData = e / 4 == a;
+                EXPECT_TRUE(equalData);
+            }
+        }
+
         TEST_F(RinexTests, ShouldImportOneRawEpoch)
         {
             // Arrange
             QString jpsFileIn = this->ResolvePath("javad_20110115-cut.jps");
             auto dataChunkIn = DataChunk::FromFile(jpsFileIn);
             RtkAdapter adapter;
-            adapter.opt = "-NOET";
+            adapter.opt = "-NOET -RL1C -RL2C";
             auto gnssDataIn = adapter.toGnssData(dataChunkIn.get());
             auto msg_rt_e = findMessage<RcvTimeStdMessage>(dataChunkIn.get(), RcvTimeStdMessage::Codes::Code);
             auto msg_rd_e = findMessage<RcvDateStdMessage>(dataChunkIn.get(), RcvDateStdMessage::Codes::Code_RD);
@@ -305,7 +317,19 @@ namespace Greis
                 ASSERT_TRUE(equalData);
             }
             // [CE/EC]
-            ASSERT_EQ(msg_CE_e->CnrX4().size(), msg_EC_a->Cnr().size());
+            check_xE_Ex(msg_CE_e, msg_EC_a);
+            // [1E/E1]
+            check_xE_Ex(msg_1E_e, msg_E1_a);
+            // [2E/E2]
+            check_xE_Ex(msg_2E_e, msg_E2_a);
+            // [3E/E3]
+            check_xE_Ex(msg_3E_e, msg_E3_a);
+            // [5E/E5]
+            check_xE_Ex(msg_5E_e, msg_E5_a);
+            // [lE/El]
+            check_xE_Ex(msg_lE_e, msg_El_a);
+
+            /*ASSERT_EQ(msg_CE_e->CnrX4().size(), msg_EC_a->Cnr().size());
             for (int i = 0; i < msg_CE_e->CnrX4().size(); i++)
             {
                 Types::u1 e = msg_CE_e->CnrX4()[i];
@@ -313,6 +337,15 @@ namespace Greis
                 bool equalData = e / 4 == a;
                 ASSERT_TRUE(equalData);
             }
+            // [1E/E1]
+            ASSERT_EQ(msg_1E_e->CnrX4().size(), msg_EC_a->Cnr().size());
+            for (int i = 0; i < msg_CE_e->CnrX4().size(); i++)
+            {
+                Types::u1 e = msg_CE_e->CnrX4()[i];
+                Types::u1 a = msg_EC_a->Cnr()[i];
+                bool equalData = e / 4 == a;
+                ASSERT_TRUE(equalData);
+            }*/
             
             /*
             auto msg_rt_e_data = msg_rt_e->ToByteArray();
