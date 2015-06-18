@@ -6,9 +6,18 @@ using namespace Common;
 
 namespace Greis
 {
+    void DataChunk::FlushEpoch()
+    {
+        if (_lastEpoch->Messages.size() > 0)
+        {
+            _lastEpoch->DateTime = _dateTime;
+            _body.push_back(std::move(_lastEpoch));
+        }
+    }
+
     DataChunk::UniquePtr_t DataChunk::FromFile(QString filename)
     {
-        auto dataChunk = DataChunk::UniquePtr_t(new DataChunk());
+        auto dataChunk = std::make_unique<DataChunk>();
         GreisMessageStream stream(std::make_shared<FileBinaryStream>(filename), false, false);
         
         // Collecting the head
@@ -45,12 +54,7 @@ namespace Greis
         {
             dataChunk->AddMessage(std::move(msg));
         }
-        // last Epoch
-        if (dataChunk->_lastEpoch->Messages.size() > 0)
-        {
-            dataChunk->_lastEpoch->DateTime = dataChunk->_dateTime;
-            dataChunk->_body.push_back(std::move(dataChunk->_lastEpoch));
-        }
+        dataChunk->FlushEpoch();
 
         sLogger.Trace(QString("%1 epochs have been totally deserialized.").arg(dataChunk->_epochCounter));
         return dataChunk;

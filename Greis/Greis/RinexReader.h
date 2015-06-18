@@ -18,13 +18,15 @@ namespace Greis
             obs = { 0 };
             nav = { 0 };
             sta = { "" };
+            destroyed = false;
         }
 
-        GnssData(obs_t p_obs)
+        GnssData(obs_t p_obs, nav_t p_nav)
         {
             obs = p_obs;
-            nav = { 0 };
+            nav = p_nav;
             sta = { "" };
+            destroyed = false;
         }
 
         virtual ~GnssData()
@@ -137,6 +139,7 @@ namespace Greis
     public:
         GnssData::SharedPtr_t toGnssData(DataChunk* dataChunk);
         DataChunk::SharedPtr_t toMessages(GnssData::SharedPtr_t gnssData);
+        std::string opt;
     private:
         void writeEpochMessages(DataChunk* dataChunk, obsd_t* data, int n);
         void encode_RT();

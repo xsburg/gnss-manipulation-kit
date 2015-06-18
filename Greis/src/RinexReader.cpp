@@ -180,12 +180,17 @@ Greis::GnssData::SharedPtr_t Greis::RtkAdapter::toGnssData(DataChunk* dataChunk)
 {
     raw_t* raw = new raw_t();
     init_raw(raw);
+    if (this->opt.size() > 0)
+    {
+        strcpy(raw->opt, this->opt.c_str());
+    }
 
     auto data = dataChunk->ToByteArray();
 
     std::vector<obs_t> obsEpochs;
-    int ephTotalCount = 0;
+    int obsTotalCount = 0;
     std::vector<nav_t> navEpochs;
+    int ephTotalCount = 0;
 
     for (size_t i = 0; i < data.size(); i++)
     {
@@ -195,7 +200,7 @@ Greis::GnssData::SharedPtr_t Greis::RtkAdapter::toGnssData(DataChunk* dataChunk)
         {
         case 1:
             // input observation data
-            ephTotalCount += raw->obs.n;
+            obsTotalCount += raw->obs.n;
             obs_t tmp;
             copy_obs(&raw->obs, &tmp);
             obsEpochs.push_back(tmp);
@@ -205,6 +210,7 @@ Greis::GnssData::SharedPtr_t Greis::RtkAdapter::toGnssData(DataChunk* dataChunk)
             nav_t tmp2;
             copy_nav(&raw->nav, &tmp2);
             navEpochs.push_back(tmp2);
+            ephTotalCount += raw->nav.n;
             break;
         }
     }
@@ -214,8 +220,8 @@ Greis::GnssData::SharedPtr_t Greis::RtkAdapter::toGnssData(DataChunk* dataChunk)
     
     // obs all
     obs_t obsAll;
-    init_obs(&obsAll, ephTotalCount);
-    obsAll.n = ephTotalCount;
+    init_obs(&obsAll, obsTotalCount);
+    obsAll.n = obsTotalCount;
     int index = 0;
     for (auto& obsEp : obsEpochs)
     {
@@ -227,19 +233,19 @@ Greis::GnssData::SharedPtr_t Greis::RtkAdapter::toGnssData(DataChunk* dataChunk)
     }
     // nav all
     nav_t navAll;
-    init_nav(&nav, );
+    init_nav(&navAll, ephTotalCount);
     navAll.n = ephTotalCount;
-    int index = 0;
-    for (auto& obsEp : obsEpochs)
+    index = 0;
+    for (auto& navEp : navEpochs)
     {
-        for (int i = 0; i < obsEp.n; i++)
+        for (int i = 0; i < navEp.n; i++)
         {
-            obsAll.data[index++] = obsEp.data[i];
+            navAll.eph[index++] = navEp.eph[i];
         }
-        free_obs(&obsEp);
+        free_nav(&navEp);
     }
 
-    GnssData::SharedPtr_t gnssData(new GnssData(obsAll));
+    GnssData::SharedPtr_t gnssData(new GnssData(obsAll, navAll));
     return gnssData;
 }
 
@@ -264,6 +270,7 @@ Greis::DataChunk::SharedPtr_t Greis::RtkAdapter::toMessages(GnssData::SharedPtr_
     //encode_NN(); // do nothing for now, requred to compute sat number
     //encode_EL(); // look at decode_Ex checks, apply it and if ok, write SNR
 
+    dataChunk->FlushEpoch();
     return dataChunk;
 }
 
@@ -285,7 +292,7 @@ void Greis::RtkAdapter::writeEpochMessages(DataChunk* dataChunk, obsd_t* data, i
     int sec = (int)floor(ep[5]);
     tod.time = (int)ep[3] * 3600 + (int)ep[4] * 60 + sec;
     tod.sec = ep[5] - sec;
-    rcvTime->Tod() = tod.time + tod.sec;
+    rcvTime->Tod() = (tod.time + tod.sec) * 1000;
     rcvDate->Base() = 0;
     dataChunk->AddMessage(std::move(rcvTime));
     dataChunk->AddMessage(std::move(rcvDate));
@@ -306,6 +313,14 @@ void Greis::RtkAdapter::writeEpochMessages(DataChunk* dataChunk, obsd_t* data, i
             prn = 38; // TODO: find out the correct value
             slotData.push_back(slot);
         }
+        if (satSys == SYS_GAL)
+        {
+            prn += 70;
+        }
+        if (satSys == SYS_CMP)
+        {
+            prn += 210;
+        }
 
         si->Usi().push_back(prn);
     }
@@ -323,7 +338,8 @@ void Greis::RtkAdapter::writeEpochMessages(DataChunk* dataChunk, obsd_t* data, i
     }
 
     // [Ex] [*E]
-    // [EC], [E1], [E2], [E3], [E5], [El], [CE], [1E], [2E], [3E], [5E], [lE]:
+    // [EC], [E1], [E2], [E3], [E5], [El] (used to encode)
+    // [CE], [1E], [2E], [3E], [5E], [lE] (used in decoding, not encoding)
     char codes[6] = { 'C', '1', '2', '3', '5', 'l' };
     std::vector<std::string> codeIds = {
         CNRStdMessage::Codes::Code_EC,

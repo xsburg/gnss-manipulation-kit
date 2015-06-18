@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 #include "Utils/BaseTest.h"
 #include <Greis/RinexReader.h>
+#include <Greis/AllStdMessages.h>
 
 using namespace Common;
 
@@ -222,13 +223,106 @@ namespace Greis
             // nothing that we can check...
         }
 
-        TEST_F(RinexTests, ShouldImportRtkRawToGreis2)
+        template<typename TMessage>
+        TMessage* findMessage(DataChunk* dataChunk, std::string code, int epochIndex = 0)
+        {
+            TMessage* found = nullptr;
+            for (auto& msg : dataChunk->Body()[epochIndex]->Messages)
+            {
+                if (msg->Kind() != EMessageKind::StdMessage)
+                {
+                    continue;
+                }
+                if (static_cast<StdMessage*>(msg.get())->Id() == code)
+                {
+                    if (found != nullptr)
+                    {
+                        throw new Exception("Duplicated message.");
+                    }
+                    found = dynamic_cast<TMessage*>(msg.get());
+                }
+            }
+            return found;
+        }
+
+        TEST_F(RinexTests, ShouldImportOneRawEpoch)
         {
             // Arrange
-            QString jpsFileIn = this->ResolvePath("javad_20110115.jps");
-            auto dataChunk = DataChunk::FromFile(jpsFileIn);
-            auto gnssData = RtkAdapter().toGnssData(dataChunk.get());
+            QString jpsFileIn = this->ResolvePath("javad_20110115-cut.jps");
+            auto dataChunkIn = DataChunk::FromFile(jpsFileIn);
+            RtkAdapter adapter;
+            adapter.opt = "-NOET";
+            auto gnssDataIn = adapter.toGnssData(dataChunkIn.get());
+            auto msg_rt_e = findMessage<RcvTimeStdMessage>(dataChunkIn.get(), RcvTimeStdMessage::Codes::Code);
+            auto msg_rd_e = findMessage<RcvDateStdMessage>(dataChunkIn.get(), RcvDateStdMessage::Codes::Code_RD);
+            auto msg_si_e = findMessage<SatIndexStdMessage>(dataChunkIn.get(), SatIndexStdMessage::Codes::Code_SI);
+            auto msg_nn_e = findMessage<SatNumbersStdMessage>(dataChunkIn.get(), SatNumbersStdMessage::Codes::Code_NN);
+            auto msg_EC_e = findMessage<CNRStdMessage>(dataChunkIn.get(), CNRStdMessage::Codes::Code_EC);
+            auto msg_E1_e = findMessage<CNRStdMessage>(dataChunkIn.get(), CNRStdMessage::Codes::Code_E1);
+            auto msg_E2_e = findMessage<CNRStdMessage>(dataChunkIn.get(), CNRStdMessage::Codes::Code_E2);
+            auto msg_E3_e = findMessage<CNRStdMessage>(dataChunkIn.get(), CNRStdMessage::Codes::Code_E3);
+            auto msg_E5_e = findMessage<CNRStdMessage>(dataChunkIn.get(), CNRStdMessage::Codes::Code_E5);
+            auto msg_El_e = findMessage<CNRStdMessage>(dataChunkIn.get(), CNRStdMessage::Codes::Code_El);
+            auto msg_CE_e = findMessage<CNR4StdMessage>(dataChunkIn.get(), CNR4StdMessage::Codes::Code_CE);
+            auto msg_1E_e = findMessage<CNR4StdMessage>(dataChunkIn.get(), CNR4StdMessage::Codes::Code_1E);
+            auto msg_2E_e = findMessage<CNR4StdMessage>(dataChunkIn.get(), CNR4StdMessage::Codes::Code_2E);
+            auto msg_3E_e = findMessage<CNR4StdMessage>(dataChunkIn.get(), CNR4StdMessage::Codes::Code_3E);
+            auto msg_5E_e = findMessage<CNR4StdMessage>(dataChunkIn.get(), CNR4StdMessage::Codes::Code_5E);
+            auto msg_lE_e = findMessage<CNR4StdMessage>(dataChunkIn.get(), CNR4StdMessage::Codes::Code_lE);
 
+            auto dataChunkOut = RtkAdapter().toMessages(gnssDataIn);
+            auto msg_rt_a = findMessage<RcvTimeStdMessage>(dataChunkOut.get(), RcvTimeStdMessage::Codes::Code);
+            auto msg_rd_a = findMessage<RcvDateStdMessage>(dataChunkOut.get(), RcvDateStdMessage::Codes::Code_RD);
+            auto msg_si_a = findMessage<SatIndexStdMessage>(dataChunkOut.get(), SatIndexStdMessage::Codes::Code_SI);
+            auto msg_nn_a = findMessage<SatNumbersStdMessage>(dataChunkOut.get(), SatNumbersStdMessage::Codes::Code_NN);
+            auto msg_EC_a = findMessage<CNRStdMessage>(dataChunkOut.get(), CNRStdMessage::Codes::Code_EC);
+            auto msg_E1_a = findMessage<CNRStdMessage>(dataChunkOut.get(), CNRStdMessage::Codes::Code_E1);
+            auto msg_E2_a = findMessage<CNRStdMessage>(dataChunkOut.get(), CNRStdMessage::Codes::Code_E2);
+            auto msg_E3_a = findMessage<CNRStdMessage>(dataChunkOut.get(), CNRStdMessage::Codes::Code_E3);
+            auto msg_E5_a = findMessage<CNRStdMessage>(dataChunkOut.get(), CNRStdMessage::Codes::Code_E5);
+            auto msg_El_a = findMessage<CNRStdMessage>(dataChunkOut.get(), CNRStdMessage::Codes::Code_El);
+
+            // [RT]
+            ASSERT_EQ(msg_rt_e->Tod(), msg_rt_a->Tod());
+            // [RD]
+            ASSERT_EQ(msg_rd_e->Year(), msg_rd_a->Year());
+            ASSERT_EQ(msg_rd_e->Month(), msg_rd_a->Month());
+            ASSERT_EQ(msg_rd_e->Day(), msg_rd_a->Day());
+            ASSERT_EQ(msg_rd_e->Base(), msg_rd_a->Base());
+            // [SI]
+            ASSERT_EQ(msg_si_e->Usi().size(), msg_si_a->Usi().size());
+            for (int i = 0; i < msg_si_e->Usi().size(); i++)
+            {
+                bool equalIndexes = msg_si_e->Usi()[i] == msg_si_a->Usi()[i];
+                bool glonassStubIndex = msg_si_a->Usi()[i] == 38;
+                ASSERT_TRUE(equalIndexes || glonassStubIndex);
+            }
+            // [NN]
+            ASSERT_EQ(msg_nn_e->Osn().size(), msg_nn_a->Osn().size());
+            for (int i = 0; i < msg_nn_e->Osn().size(); i++)
+            {
+                bool equalData = msg_nn_e->Osn()[i] == msg_nn_a->Osn()[i];
+                ASSERT_TRUE(equalData);
+            }
+            // [CE/EC]
+            ASSERT_EQ(msg_CE_e->CnrX4().size(), msg_EC_a->Cnr().size());
+            for (int i = 0; i < msg_CE_e->CnrX4().size(); i++)
+            {
+                Types::u1 e = msg_CE_e->CnrX4()[i];
+                Types::u1 a = msg_EC_a->Cnr()[i];
+                bool equalData = e / 4 == a;
+                ASSERT_TRUE(equalData);
+            }
+            
+            /*
+            auto msg_rt_e_data = msg_rt_e->ToByteArray();
+            int size_e = msg_rt_e_data.size();
+            auto msg_rt_a_data = msg_rt_a->ToByteArray();
+            int size_a = msg_rt_a_data.size();
+            ASSERT_EQ(size_e, size_a);
+            int neq = memcmp(msg_rt_e_data.data(), msg_rt_a_data.data(), size_e);
+            ASSERT_EQ(neq, 0);*/
+            //auto gnssDataOut = RtkAdapter().toGnssData(dataChunkOut.get());
             /*QString navFileNameIn = this->ResolvePath("ifz-data-0.in.14N");
             auto gnssData = RinexReader().ReadFile(obsFileNameIn).ReadFile(navFileNameIn).BuildResult();
 
