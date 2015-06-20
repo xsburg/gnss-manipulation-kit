@@ -142,7 +142,5 @@ namespace Greis
         std::string opt;
     private:
         void writeEpochMessages(DataChunk* dataChunk, obsd_t* data, int n);
-        void encode_RT();
-        void encode_RD();
     };
 }

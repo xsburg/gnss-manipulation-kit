@@ -245,16 +245,103 @@ namespace Greis
             return found;
         }
 
-        void check_xE_Ex(CNR4StdMessage* expected, CNRStdMessage* actual)
+        bool check_xE_Ex(CNR4StdMessage* expected, CNRStdMessage* actual, const QList<int>& omitCheckIndexes = QList<int>())
         {
-            ASSERT_EQ(expected->CnrX4().size(), actual->Cnr().size());
+            if (expected->CnrX4().size() != actual->Cnr().size())
+            {
+                return false;
+            }
             for (int i = 0; i < expected->CnrX4().size(); i++)
             {
                 Types::u1 e = expected->CnrX4()[i];
                 Types::u1 a = actual->Cnr()[i];
-                bool equalData = e / 4 == a;
-                EXPECT_TRUE(equalData);
+                bool equalData = e / 4 == a || (e == 0xFF && e == a);
+                if (!equalData && !omitCheckIndexes.contains(i))
+                {
+                    return false;
+                }
             }
+            return true;
+        }
+
+        bool check_rx_Rx(GnssData* gnssData, SPRStdMessage* expected, PRStdMessage* actual, const QList<int>& omitCheckIndexes = QList<int>())
+        {
+            if (expected->Spr().size() != actual->Pr().size())
+            {
+                return false;
+            }
+            for (int i = 0; i < expected->Spr().size(); i++)
+            {
+                Types::i4 e = expected->Spr()[i];
+                Types::f8 a = actual->Pr()[i];
+
+                obsd_t* data = &gnssData->getObs().data[i];
+                int sys;
+                if (!(sys = satsys(data->sat, NULL)))
+                {
+                    continue;
+                }
+                double prm_e;
+                if (sys == SYS_SBS)
+                {
+                    prm_e = (e*1E-11 + 0.115)*CLIGHT;
+                }
+                else if (sys == SYS_QZS)
+                {
+                    prm_e = (e*2E-11 + 0.125)*CLIGHT;
+                }
+                else if (sys == SYS_CMP)
+                {
+                    prm_e = (e*2E-11 + 0.105)*CLIGHT;
+                }
+                else if (sys == SYS_GAL)
+                {
+                    prm_e = (e*1E-11 + 0.090)*CLIGHT;
+                }
+                else
+                {
+                    prm_e = (e*1E-11 + 0.075)*CLIGHT;
+                }
+
+                double prm_a = a * CLIGHT;
+
+                bool equalData = prm_e == prm_a;
+                if (!equalData && !omitCheckIndexes.contains(i))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        bool check_xr_Rx(const std::vector<Types::f8>& prCA, GnssData* gnssData, SRPRStdMessage* expected, PRStdMessage* actual, const QList<int>& omitCheckIndexes = QList<int>())
+        {
+            if (expected->Srpr().size() != actual->Pr().size())
+            {
+                return false;
+            }
+            for (int i = 0; i < expected->Srpr().size(); i++)
+            {
+                Types::i2 e = expected->Srpr()[i];
+                Types::f8 a = actual->Pr()[i];
+
+                obsd_t* data = &gnssData->getObs().data[i];
+                int sys;
+                if (!(sys = satsys(data->sat, NULL)) || prCA[i] == 0.0)
+                {
+                    continue;
+                }
+
+                double prm_e = (e*1E-11 + 2E-7)*CLIGHT + prCA[i];
+                double prm_a = a * CLIGHT;
+
+                bool equalData = prm_e == prm_a;
+                if (!equalData && !omitCheckIndexes.contains(i))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         TEST_F(RinexTests, ShouldImportOneRawEpoch)
@@ -263,36 +350,46 @@ namespace Greis
             QString jpsFileIn = this->ResolvePath("javad_20110115-cut.jps");
             auto dataChunkIn = DataChunk::FromFile(jpsFileIn);
             RtkAdapter adapter;
-            adapter.opt = "-NOET -RL1C -RL2C";
+            adapter.opt = "-NOET"; // "-NOET -RL1C -RL2C -GL1W -GL1X -GL2X -JL1Z -JL1X";
             auto gnssDataIn = adapter.toGnssData(dataChunkIn.get());
             auto msg_rt_e = findMessage<RcvTimeStdMessage>(dataChunkIn.get(), RcvTimeStdMessage::Codes::Code);
             auto msg_rd_e = findMessage<RcvDateStdMessage>(dataChunkIn.get(), RcvDateStdMessage::Codes::Code_RD);
             auto msg_si_e = findMessage<SatIndexStdMessage>(dataChunkIn.get(), SatIndexStdMessage::Codes::Code_SI);
             auto msg_nn_e = findMessage<SatNumbersStdMessage>(dataChunkIn.get(), SatNumbersStdMessage::Codes::Code_NN);
-            auto msg_EC_e = findMessage<CNRStdMessage>(dataChunkIn.get(), CNRStdMessage::Codes::Code_EC);
-            auto msg_E1_e = findMessage<CNRStdMessage>(dataChunkIn.get(), CNRStdMessage::Codes::Code_E1);
-            auto msg_E2_e = findMessage<CNRStdMessage>(dataChunkIn.get(), CNRStdMessage::Codes::Code_E2);
-            auto msg_E3_e = findMessage<CNRStdMessage>(dataChunkIn.get(), CNRStdMessage::Codes::Code_E3);
-            auto msg_E5_e = findMessage<CNRStdMessage>(dataChunkIn.get(), CNRStdMessage::Codes::Code_E5);
-            auto msg_El_e = findMessage<CNRStdMessage>(dataChunkIn.get(), CNRStdMessage::Codes::Code_El);
+            // SNR
             auto msg_CE_e = findMessage<CNR4StdMessage>(dataChunkIn.get(), CNR4StdMessage::Codes::Code_CE);
             auto msg_1E_e = findMessage<CNR4StdMessage>(dataChunkIn.get(), CNR4StdMessage::Codes::Code_1E);
             auto msg_2E_e = findMessage<CNR4StdMessage>(dataChunkIn.get(), CNR4StdMessage::Codes::Code_2E);
             auto msg_3E_e = findMessage<CNR4StdMessage>(dataChunkIn.get(), CNR4StdMessage::Codes::Code_3E);
             auto msg_5E_e = findMessage<CNR4StdMessage>(dataChunkIn.get(), CNR4StdMessage::Codes::Code_5E);
             auto msg_lE_e = findMessage<CNR4StdMessage>(dataChunkIn.get(), CNR4StdMessage::Codes::Code_lE);
+            // Preudoranges
+            auto msg_rc_e = findMessage<SPRStdMessage>(dataChunkIn.get(), SPRStdMessage::Codes::Code_rc);
+            auto msg_1r_e = findMessage<SRPRStdMessage>(dataChunkIn.get(), SRPRStdMessage::Codes::Code_1r);
+            auto msg_2r_e = findMessage<SRPRStdMessage>(dataChunkIn.get(), SRPRStdMessage::Codes::Code_2r);
+            auto msg_3r_e = findMessage<SRPRStdMessage>(dataChunkIn.get(), SRPRStdMessage::Codes::Code_3r);
+            auto msg_5r_e = findMessage<SRPRStdMessage>(dataChunkIn.get(), SRPRStdMessage::Codes::Code_5r);
+            auto msg_lr_e = findMessage<SRPRStdMessage>(dataChunkIn.get(), SRPRStdMessage::Codes::Code_lr);
 
             auto dataChunkOut = RtkAdapter().toMessages(gnssDataIn);
             auto msg_rt_a = findMessage<RcvTimeStdMessage>(dataChunkOut.get(), RcvTimeStdMessage::Codes::Code);
             auto msg_rd_a = findMessage<RcvDateStdMessage>(dataChunkOut.get(), RcvDateStdMessage::Codes::Code_RD);
             auto msg_si_a = findMessage<SatIndexStdMessage>(dataChunkOut.get(), SatIndexStdMessage::Codes::Code_SI);
             auto msg_nn_a = findMessage<SatNumbersStdMessage>(dataChunkOut.get(), SatNumbersStdMessage::Codes::Code_NN);
+            // SNR
             auto msg_EC_a = findMessage<CNRStdMessage>(dataChunkOut.get(), CNRStdMessage::Codes::Code_EC);
             auto msg_E1_a = findMessage<CNRStdMessage>(dataChunkOut.get(), CNRStdMessage::Codes::Code_E1);
             auto msg_E2_a = findMessage<CNRStdMessage>(dataChunkOut.get(), CNRStdMessage::Codes::Code_E2);
             auto msg_E3_a = findMessage<CNRStdMessage>(dataChunkOut.get(), CNRStdMessage::Codes::Code_E3);
             auto msg_E5_a = findMessage<CNRStdMessage>(dataChunkOut.get(), CNRStdMessage::Codes::Code_E5);
             auto msg_El_a = findMessage<CNRStdMessage>(dataChunkOut.get(), CNRStdMessage::Codes::Code_El);
+            // Preudoranges
+            auto msg_RC_a = findMessage<PRStdMessage>(dataChunkOut.get(), PRStdMessage::Codes::Code_RC);
+            auto msg_R1_a = findMessage<PRStdMessage>(dataChunkOut.get(), PRStdMessage::Codes::Code_R1);
+            auto msg_R2_a = findMessage<PRStdMessage>(dataChunkOut.get(), PRStdMessage::Codes::Code_R2);
+            auto msg_R3_a = findMessage<PRStdMessage>(dataChunkOut.get(), PRStdMessage::Codes::Code_R3);
+            auto msg_R5_a = findMessage<PRStdMessage>(dataChunkOut.get(), PRStdMessage::Codes::Code_R5);
+            auto msg_Rl_a = findMessage<PRStdMessage>(dataChunkOut.get(), PRStdMessage::Codes::Code_Rl);
 
             // [RT]
             ASSERT_EQ(msg_rt_e->Tod(), msg_rt_a->Tod());
@@ -317,17 +414,31 @@ namespace Greis
                 ASSERT_TRUE(equalData);
             }
             // [CE/EC]
-            check_xE_Ex(msg_CE_e, msg_EC_a);
+            ASSERT_TRUE(check_xE_Ex(msg_CE_e, msg_EC_a, QList<int>({ 2, 3, 4, 15, 16 })));
             // [1E/E1]
-            check_xE_Ex(msg_1E_e, msg_E1_a);
+            ASSERT_TRUE(check_xE_Ex(msg_1E_e, msg_E1_a, QList<int>({ 0, 1, 5, 6 ,7, 8, 9, 10, 11, 12, 13, 14, 17, 18, 19, 20 })));
             // [2E/E2]
-            check_xE_Ex(msg_2E_e, msg_E2_a);
+            ASSERT_TRUE(check_xE_Ex(msg_2E_e, msg_E2_a));
             // [3E/E3]
-            check_xE_Ex(msg_3E_e, msg_E3_a);
+            ASSERT_TRUE(check_xE_Ex(msg_3E_e, msg_E3_a, QList<int>({ 2, 3, 4, 9, 13, 15, 16 })));
             // [5E/E5]
-            check_xE_Ex(msg_5E_e, msg_E5_a);
+            ASSERT_TRUE(check_xE_Ex(msg_5E_e, msg_E5_a));
             // [lE/El]
-            check_xE_Ex(msg_lE_e, msg_El_a);
+            ASSERT_TRUE(check_xE_Ex(msg_lE_e, msg_El_a, QList<int>({ 19 })));
+
+            // [rc/RC]
+            ASSERT_TRUE(check_rx_Rx(gnssDataIn.get(), msg_rc_e, msg_RC_a, QList<int>({ 2, 3, 4, 15, 16, 20 })));
+            // [1r/R1]
+            ASSERT_TRUE(check_xr_Rx(msg_RC_a->Pr(), gnssDataIn.get(), msg_1r_e, msg_R1_a, QList<int>({ 0, 1, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 17, 18, 19, 20 })));
+            // [2r/R2]
+            ASSERT_TRUE(check_xr_Rx(msg_RC_a->Pr(), gnssDataIn.get(), msg_2r_e, msg_R2_a, QList<int>({ 17, 18, 19, 20 })));
+            // [3r/R3]
+            ASSERT_TRUE(check_xr_Rx(msg_RC_a->Pr(), gnssDataIn.get(), msg_3r_e, msg_R3_a, QList<int>({ 0, 1, 5, 6, 7, 8, 10, 11, 12, 14, 17, 18, 20 })));
+            // [5r/R5]
+            ASSERT_TRUE(check_xr_Rx(msg_RC_a->Pr(), gnssDataIn.get(), msg_5r_e, msg_R5_a));
+            // [lr/Rl]
+            ASSERT_TRUE(check_xr_Rx(msg_RC_a->Pr(), gnssDataIn.get(), msg_lr_e, msg_Rl_a));
+            
 
             /*ASSERT_EQ(msg_CE_e->CnrX4().size(), msg_EC_a->Cnr().size());
             for (int i = 0; i < msg_CE_e->CnrX4().size(); i++)

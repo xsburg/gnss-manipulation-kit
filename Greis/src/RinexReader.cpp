@@ -276,7 +276,7 @@ Greis::DataChunk::SharedPtr_t Greis::RtkAdapter::toMessages(GnssData::SharedPtr_
 
 void Greis::RtkAdapter::writeEpochMessages(DataChunk* dataChunk, obsd_t* data, int n)
 {
-    char* opt = "-RL1C -RL2C";
+    char* opt = "";//  "-RL1C -RL2C -GL1W -GL1X -GL2X -JL1Z -JL1X";
 
     // [RT], [RD]
     auto rcvTime = std::make_unique<RcvTimeStdMessage>();
@@ -339,11 +339,10 @@ void Greis::RtkAdapter::writeEpochMessages(DataChunk* dataChunk, obsd_t* data, i
         dataChunk->AddMessage(std::move(nn));
     }
 
-    // [Ex] [*E]
-    // [EC], [E1], [E2], [E3], [E5], [El] (used to encode)
-    // [CE], [1E], [2E], [3E], [5E], [lE] (used in decoding, not encoding)
     char codes[6] = { 'C', '1', '2', '3', '5', 'l' };
-    std::vector<std::string> codeIds = {
+
+    // [EC], [E1], [E2], [E3], [E5], [El]
+    std::vector<std::string> cnrCodeIds = {
         CNRStdMessage::Codes::Code_EC,
         CNRStdMessage::Codes::Code_E1,
         CNRStdMessage::Codes::Code_E2,
@@ -354,7 +353,7 @@ void Greis::RtkAdapter::writeEpochMessages(DataChunk* dataChunk, obsd_t* data, i
     for (int codeIndex = 0; codeIndex < 6; codeIndex++)
     {
         char code = codes[codeIndex];
-        std::string codeId = codeIds[codeIndex];
+        std::string codeId = cnrCodeIds[codeIndex];
         
         auto msg = std::make_unique<CNRStdMessage>(codeId, StdMessage::HeadSize() + n + 1);
         msg->Cnr().resize(n);
@@ -362,7 +361,7 @@ void Greis::RtkAdapter::writeEpochMessages(DataChunk* dataChunk, obsd_t* data, i
         {
             obsd_t* satData = data + i;
 
-            msg->Cnr()[i] = 0;
+            msg->Cnr()[i] = 0xFF;
 
             int sys;
             if (!(sys = satsys(satData->sat, NULL)))
@@ -381,7 +380,59 @@ void Greis::RtkAdapter::writeEpochMessages(DataChunk* dataChunk, obsd_t* data, i
             if ((j = checkpri(opt, sys, type, freq)) >= 0)
             {
                 unsigned char cnr = satData->SNR[j] / 4.0;
-                msg->Cnr()[i] = cnr;
+                if (cnr != 0)
+                {
+                    msg->Cnr()[i] = cnr;
+                }
+                else
+                {
+                    msg->Cnr()[i] = 0xFF;
+                }
+            }
+        }
+        dataChunk->AddMessage(std::move(msg));
+    }
+
+    // [RC], [R1], [R2], [R3], [R5], [Rl]
+    std::vector<std::string> prCodeIds = {
+        PRStdMessage::Codes::Code_RC,
+        PRStdMessage::Codes::Code_R1,
+        PRStdMessage::Codes::Code_R2,
+        PRStdMessage::Codes::Code_R3,
+        PRStdMessage::Codes::Code_R5,
+        PRStdMessage::Codes::Code_Rl
+    };
+    for (int codeIndex = 0; codeIndex < 6; codeIndex++)
+    {
+        char code = codes[codeIndex];
+        std::string codeId = prCodeIds[codeIndex];
+        
+        auto msg = std::make_unique<PRStdMessage>(codeId, StdMessage::HeadSize() + 8 * n + 1);
+        msg->Pr().resize(n);
+        for (int i = 0; i < n; i++)
+        {
+            obsd_t* satData = data + i;
+
+            msg->Pr()[i] = 0.0;
+
+            int sys;
+            if (!(sys = satsys(satData->sat, NULL)))
+            {
+                continue;
+            }
+
+            int type;
+            int freq;
+            if ((freq = tofreq(code, sys, &type)) < 0)
+            {
+                continue;
+            }
+
+            int j;
+            if ((j = checkpri(opt, sys, type, freq)) >= 0)
+            {
+                Types::f8 pr = satData->P[j] / CLIGHT;
+                msg->Pr()[i] = pr;
             }
         }
         dataChunk->AddMessage(std::move(msg));
@@ -398,11 +449,11 @@ void Greis::RtkAdapter::writeEpochMessages(DataChunk* dataChunk, obsd_t* data, i
     + if (!strncmp(p, "SI", 2)) return decode_SI(raw); /* satellite indices #1#
     + if (!strncmp(p, "NN", 2)) return decode_NN(raw); /* glonass slot numbers #1#
 
-    if (!strncmp(p, "GA", 2)) return decode_GA(raw); /* gps almanac #1#
-    if (!strncmp(p, "NA", 2)) return decode_NA(raw); /* glonass almanac #1#
-    if (!strncmp(p, "EA", 2)) return decode_EA(raw); /* galileo almanac #1#
-    if (!strncmp(p, "WA", 2)) return decode_WA(raw); /* sbas almanac #1#
-    if (!strncmp(p, "QA", 2)) return decode_QA(raw); /* qzss almanac (ext) #1#
+    + if (!strncmp(p, "GA", 2)) return decode_GA(raw); /* gps almanac #1#
+    + if (!strncmp(p, "NA", 2)) return decode_NA(raw); /* glonass almanac #1#
+    + if (!strncmp(p, "EA", 2)) return decode_EA(raw); /* galileo almanac #1#
+    + if (!strncmp(p, "WA", 2)) return decode_WA(raw); /* sbas almanac #1#
+    + if (!strncmp(p, "QA", 2)) return decode_QA(raw); /* qzss almanac (ext) #1#
 
     if (!strncmp(p, "GE", 2)) return decode_GE(raw); /* gps ephemeris #1#
     if (!strncmp(p, "NE", 2)) return decode_NE(raw); /* glonass ephemeris #1#
@@ -440,151 +491,7 @@ void Greis::RtkAdapter::writeEpochMessages(DataChunk* dataChunk, obsd_t* data, i
     if (p[1] == 'p') return decode_xp(raw, p[0]); /* relative carrier phases #1#
     if (p[0] == 'D') return decode_Dx(raw, p[1]); /* doppler #1#
     if (p[1] == 'd') return decode_xd(raw, p[0]); /* short relative doppler #1#
-    if (p[0] == 'E') return decode_Ex(raw, p[1]); /* carrier to noise ratio #1#
-    if (p[1] == 'E') return decode_xE(raw, p[0]); /* carrier to noise ratio x 4 #1#
+    + if (p[0] == 'E') return decode_Ex(raw, p[1]); /* carrier to noise ratio #1#
+    + if (p[1] == 'E') return decode_xE(raw, p[0]); /* carrier to noise ratio x 4 #1#
     if (p[0] == 'F') return decode_Fx(raw, p[1]); /* signal lock loop flags #1#*/
-}
-
-void encode_SI()
-{
-    // for i = 0,n (all records in epoch)
-    //	   read .sat field (satellite number)
-    //     convert it to prn
-    //	   save prn as U1
-    //     int satsys = satsys(santo, *prn);
-    //	   satsys -- glonass ? prn = 255
-    
-    /*
-        int i,usi,sat;
-        char *msg;
-        unsigned char *p=raw->buff+5;
-
-        if (!checksum(raw->buff,raw->len)) {
-            trace(2,"javad SI checksum error: len=%d\n",raw->len);
-            return -1;
-        }
-        raw->obuf.n=raw->len-6;
-
-        for (i=0;i<raw->obuf.n&&i<MAXOBS;i++) {
-            usi=U1(p); p+=1;
-            
-            if      (usi<=  0) sat=0;                      /* ref [5] table 3-6 * /
-            else if (usi<= 37) sat=satno(SYS_GPS,usi);     /*   1- 37: GPS * /
-            else if (usi<= 70) sat=255;                    /*  38- 70: GLONASS * /
-            else if (usi<=119) sat=satno(SYS_GAL,usi-70);  /*  71-119: GALILEO * /
-            else if (usi<=142) sat=satno(SYS_SBS,usi);     /* 120-142: SBAS * /
-            else if (usi<=192) sat=0;
-            else if (usi<=197) sat=satno(SYS_QZS,usi);     /* 193-197: QZSS * /
-            else if (usi<=210) sat=0;
-            else if (usi<=240) sat=satno(SYS_CMP,usi-210); /* 211-240: BeiDou * /
-            else               sat=0;
-            
-            raw->obuf.data[i].time=raw->time;
-            raw->obuf.data[i].sat=sat;
-            
-            /* glonass fcn (frequency channel number) * /
-            if (sat==255) raw->freqn[i]=usi-45;
-        }
-        trace(4,"decode_SI: nsat=raw->obuf.n\n");
-
-        return 0;
-    */
-}
-
-void Greis::RtkAdapter::encode_RT()
-{
-    auto rcvTime = RcvTimeStdMessage();
-    auto rcvDate = RcvDateStdMessage();
-
-    /*rcvTime.Tod() = ;
-    rcvDate.Year() = ;
-    rcvDate.Month() = ;
-    rcvDate.Day() = ;
-    rcvDate.Base() = 0;*/
-
-    //TOD = data.tod(?)
-
-    /*gtime_t time;
-    char *msg;
-    unsigned char *p=raw->buff+5;
-    
-    if (!checksum(raw->buff,raw->len)) {
-        trace(2,"javad RT error: len=%d\n",raw->len);
-        return -1;
-    }
-    if (raw->len<10) {
-        trace(2,"javad RT length error: len=%d\n",raw->len);
-        return -1;
-    }
-    raw->tod=U4(p);
-    
-    if (raw->time.time==0) return 0;
-    
-    / * update receiver time * /
-    time = raw->time;
-    if (raw->tbase >= 1) time = gpst2utc(time); / * gpst->utc * /
-    time = adjday(time, raw->tod*0.001);
-    if (raw->tbase >= 1) time = utc2gpst(time); / * utc->gpst * /
-    raw->time = time;
-
-    trace(3, "decode_RT: time=%s\n", time_str(time, 3));
-
-    if (raw->outtype) {
-        msg = raw->msgtype + strlen(raw->msgtype);
-        sprintf(msg, " %s", time_str(time, 3));
-    }
-    return flushobuf(raw); */
-}
-
-void Greis::RtkAdapter::encode_RD()
-{
-    gtime_t time; // from obs record
-    gtime_t tod;
-
-    double ep[6] = { 0 };
-
-    time2epoch(time, ep);
-
-    auto rcvTime = RcvTimeStdMessage();
-    auto rcvDate = RcvDateStdMessage();
-
-    rcvDate.Year() = ep[0];
-    rcvDate.Month() = ep[1];
-    rcvDate.Day() = ep[2];
-    ep[0] = ep[1] = ep[2] = 0;
-    //todoepoch2time(ep, tod);
-    rcvTime.Tod() = tod.time + tod.sec;
-    rcvDate.Base() = 0;
-
-
-    /*static int decode_RD(raw_t *raw)
-    {
-    double ep[6] = { 0 };
-    char *msg;
-    unsigned char *p = raw->buff + 5;
-
-    if (!checksum(raw->buff, raw->len)) {
-    trace(2, "javad RD checksum error: len=%d\n", raw->len);
-    return -1;
-    }
-    if (raw->len<11) {
-    trace(2, "javad RD length error: len=%d\n", raw->len);
-    return -1;
-    }
-    ep[0] = U2(p); p += 2;
-    ep[1] = U1(p); p += 1;
-    ep[2] = U1(p); p += 1;
-    raw->tbase = U1(p);
-
-    if (raw->tod<0) {
-    trace(2, "javad RD lack of preceding RT\n");
-    return 0;
-    }
-    raw->time = timeadd(epoch2time(ep), raw->tod*0.001);
-    if (raw->tbase >= 1) raw->time = utc2gpst(raw->time); /* utc->gpst #1#
-
-    trace(3, "decode_RD: time=%s\n", time_str(raw->time, 3));
-
-    return 0;
-    }*/
 }
