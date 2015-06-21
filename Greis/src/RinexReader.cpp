@@ -438,6 +438,51 @@ void Greis::RtkAdapter::writeEpochMessages(DataChunk* dataChunk, obsd_t* data, i
         dataChunk->AddMessage(std::move(msg));
     }
 
+    // [PC], [P1], [P2], [P3], [P5], [Pl]
+    std::vector<std::string> cpCodeIds = {
+        CPStdMessage::Codes::Code_PC,
+        CPStdMessage::Codes::Code_P1,
+        CPStdMessage::Codes::Code_P2,
+        CPStdMessage::Codes::Code_P3,
+        CPStdMessage::Codes::Code_P5,
+        CPStdMessage::Codes::Code_Pl
+    };
+    for (int codeIndex = 0; codeIndex < 6; codeIndex++)
+    {
+        char code = codes[codeIndex];
+        std::string codeId = cpCodeIds[codeIndex];
+        
+        auto msg = std::make_unique<CPStdMessage>(codeId, StdMessage::HeadSize() + 8 * n + 1);
+        msg->Cp().resize(n);
+        for (int i = 0; i < n; i++)
+        {
+            obsd_t* satData = data + i;
+
+            msg->Cp()[i] = 0.0;
+
+            int sys;
+            if (!(sys = satsys(satData->sat, NULL)))
+            {
+                continue;
+            }
+
+            int type;
+            int freq;
+            if ((freq = tofreq(code, sys, &type)) < 0)
+            {
+                continue;
+            }
+
+            int j;
+            if ((j = checkpri(opt, sys, type, freq)) >= 0)
+            {
+                Types::f8 cp = satData->L[j];
+                msg->Cp()[i] = cp;
+            }
+        }
+        dataChunk->AddMessage(std::move(msg));
+    }
+
 
 /*
     + if (!strncmp(p,"~~",2)) return decode_RT(raw); /* receiver time #1#

@@ -325,6 +325,11 @@ namespace Greis
                 Types::i2 e = expected->Srpr()[i];
                 Types::f8 a = actual->Pr()[i];
 
+                if (e == 0x7FFF)
+                {
+                    continue;
+                }
+
                 obsd_t* data = &gnssData->getObs().data[i];
                 int sys;
                 if (!(sys = satsys(data->sat, NULL)) || prCA[i] == 0.0)
@@ -332,10 +337,10 @@ namespace Greis
                     continue;
                 }
 
-                double prm_e = (e*1E-11 + 2E-7)*CLIGHT + prCA[i];
+                double prm_e = (e*1E-11 + 2E-7)*CLIGHT + prCA[i] * CLIGHT;
                 double prm_a = a * CLIGHT;
 
-                bool equalData = prm_e == prm_a;
+                bool equalData = abs(prm_e - prm_a) < 5e-009;
                 if (!equalData && !omitCheckIndexes.contains(i))
                 {
                     return false;
@@ -370,6 +375,13 @@ namespace Greis
             auto msg_3r_e = findMessage<SRPRStdMessage>(dataChunkIn.get(), SRPRStdMessage::Codes::Code_3r);
             auto msg_5r_e = findMessage<SRPRStdMessage>(dataChunkIn.get(), SRPRStdMessage::Codes::Code_5r);
             auto msg_lr_e = findMessage<SRPRStdMessage>(dataChunkIn.get(), SRPRStdMessage::Codes::Code_lr);
+            // Carrier phases
+            auto msg_cp_e = findMessage<RCPRc1StdMessage>(dataChunkIn.get(), RCPRc1StdMessage::Codes::Code_cp);
+            auto msg_1p_e = findMessage<RCPRc1StdMessage>(dataChunkIn.get(), RCPRc1StdMessage::Codes::Code_1p);
+            auto msg_2p_e = findMessage<RCPRc1StdMessage>(dataChunkIn.get(), RCPRc1StdMessage::Codes::Code_2p);
+            auto msg_3p_e = findMessage<RCPRc1StdMessage>(dataChunkIn.get(), RCPRc1StdMessage::Codes::Code_3p);
+            auto msg_5p_e = findMessage<RCPRc1StdMessage>(dataChunkIn.get(), RCPRc1StdMessage::Codes::Code_5p);
+            auto msg_lp_e = findMessage<RCPRc1StdMessage>(dataChunkIn.get(), RCPRc1StdMessage::Codes::Code_lp);
 
             auto dataChunkOut = RtkAdapter().toMessages(gnssDataIn);
             auto msg_rt_a = findMessage<RcvTimeStdMessage>(dataChunkOut.get(), RcvTimeStdMessage::Codes::Code);
@@ -390,6 +402,13 @@ namespace Greis
             auto msg_R3_a = findMessage<PRStdMessage>(dataChunkOut.get(), PRStdMessage::Codes::Code_R3);
             auto msg_R5_a = findMessage<PRStdMessage>(dataChunkOut.get(), PRStdMessage::Codes::Code_R5);
             auto msg_Rl_a = findMessage<PRStdMessage>(dataChunkOut.get(), PRStdMessage::Codes::Code_Rl);
+            // Carrier phases
+            auto msg_cp_a = findMessage<CPStdMessage>(dataChunkOut.get(), CPStdMessage::Codes::Code_PC);
+            auto msg_1p_a = findMessage<CPStdMessage>(dataChunkOut.get(), CPStdMessage::Codes::Code_P1);
+            auto msg_2p_a = findMessage<CPStdMessage>(dataChunkOut.get(), CPStdMessage::Codes::Code_P2);
+            auto msg_3p_a = findMessage<CPStdMessage>(dataChunkOut.get(), CPStdMessage::Codes::Code_P3);
+            auto msg_5p_a = findMessage<CPStdMessage>(dataChunkOut.get(), CPStdMessage::Codes::Code_P5);
+            auto msg_lp_a = findMessage<CPStdMessage>(dataChunkOut.get(), CPStdMessage::Codes::Code_Pl);
 
             // [RT]
             ASSERT_EQ(msg_rt_e->Tod(), msg_rt_a->Tod());
@@ -433,12 +452,15 @@ namespace Greis
             // [2r/R2]
             ASSERT_TRUE(check_xr_Rx(msg_RC_a->Pr(), gnssDataIn.get(), msg_2r_e, msg_R2_a, QList<int>({ 17, 18, 19, 20 })));
             // [3r/R3]
-            ASSERT_TRUE(check_xr_Rx(msg_RC_a->Pr(), gnssDataIn.get(), msg_3r_e, msg_R3_a, QList<int>({ 0, 1, 5, 6, 7, 8, 10, 11, 12, 14, 17, 18, 20 })));
+            ASSERT_TRUE(check_xr_Rx(msg_RC_a->Pr(), gnssDataIn.get(), msg_3r_e, msg_R3_a, QList<int>({ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20 })));
             // [5r/R5]
             ASSERT_TRUE(check_xr_Rx(msg_RC_a->Pr(), gnssDataIn.get(), msg_5r_e, msg_R5_a));
             // [lr/Rl]
-            ASSERT_TRUE(check_xr_Rx(msg_RC_a->Pr(), gnssDataIn.get(), msg_lr_e, msg_Rl_a));
+            ASSERT_TRUE(check_xr_Rx(msg_RC_a->Pr(), gnssDataIn.get(), msg_lr_e, msg_Rl_a, QList<int>({ 19 })));
             
+            // [cp/PC]
+
+
 
             /*ASSERT_EQ(msg_CE_e->CnrX4().size(), msg_EC_a->Cnr().size());
             for (int i = 0; i < msg_CE_e->CnrX4().size(); i++)
