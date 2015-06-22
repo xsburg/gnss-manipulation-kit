@@ -349,6 +349,11 @@ namespace Greis
             return true;
         }
 
+        bool check_xp_Px(const std::vector<Types::f8>& prCA, GnssData* gnssData, RCPRc1StdMessage* expected, CPStdMessage* actual, const QList<int>& omitCheckIndexes = QList<int>())
+        {
+            
+        }
+
         TEST_F(RinexTests, ShouldImportOneRawEpoch)
         {
             // Arrange
@@ -403,12 +408,12 @@ namespace Greis
             auto msg_R5_a = findMessage<PRStdMessage>(dataChunkOut.get(), PRStdMessage::Codes::Code_R5);
             auto msg_Rl_a = findMessage<PRStdMessage>(dataChunkOut.get(), PRStdMessage::Codes::Code_Rl);
             // Carrier phases
-            auto msg_cp_a = findMessage<CPStdMessage>(dataChunkOut.get(), CPStdMessage::Codes::Code_PC);
-            auto msg_1p_a = findMessage<CPStdMessage>(dataChunkOut.get(), CPStdMessage::Codes::Code_P1);
-            auto msg_2p_a = findMessage<CPStdMessage>(dataChunkOut.get(), CPStdMessage::Codes::Code_P2);
-            auto msg_3p_a = findMessage<CPStdMessage>(dataChunkOut.get(), CPStdMessage::Codes::Code_P3);
-            auto msg_5p_a = findMessage<CPStdMessage>(dataChunkOut.get(), CPStdMessage::Codes::Code_P5);
-            auto msg_lp_a = findMessage<CPStdMessage>(dataChunkOut.get(), CPStdMessage::Codes::Code_Pl);
+            auto msg_PC_a = findMessage<CPStdMessage>(dataChunkOut.get(), CPStdMessage::Codes::Code_PC);
+            auto msg_P1_a = findMessage<CPStdMessage>(dataChunkOut.get(), CPStdMessage::Codes::Code_P1);
+            auto msg_P2_a = findMessage<CPStdMessage>(dataChunkOut.get(), CPStdMessage::Codes::Code_P2);
+            auto msg_P3_a = findMessage<CPStdMessage>(dataChunkOut.get(), CPStdMessage::Codes::Code_P3);
+            auto msg_P5_a = findMessage<CPStdMessage>(dataChunkOut.get(), CPStdMessage::Codes::Code_P5);
+            auto msg_Pl_a = findMessage<CPStdMessage>(dataChunkOut.get(), CPStdMessage::Codes::Code_Pl);
 
             // [RT]
             ASSERT_EQ(msg_rt_e->Tod(), msg_rt_a->Tod());
@@ -459,7 +464,17 @@ namespace Greis
             ASSERT_TRUE(check_xr_Rx(msg_RC_a->Pr(), gnssDataIn.get(), msg_lr_e, msg_Rl_a, QList<int>({ 19 })));
             
             // [cp/PC]
-
+            ASSERT_TRUE(check_xp_Px(msg_RC_a->Pr(), gnssDataIn.get(), msg_cp_e, msg_PC_a));
+            // [1p/P1]
+            ASSERT_TRUE(check_xp_Px(msg_RC_a->Pr(), gnssDataIn.get(), msg_1p_e, msg_P1_a));
+            // [2p/P2]
+            ASSERT_TRUE(check_xp_Px(msg_RC_a->Pr(), gnssDataIn.get(), msg_2p_e, msg_P2_a));
+            // [3p/P3]
+            ASSERT_TRUE(check_xp_Px(msg_RC_a->Pr(), gnssDataIn.get(), msg_3p_e, msg_P3_a));
+            // [5p/P5]
+            ASSERT_TRUE(check_xp_Px(msg_RC_a->Pr(), gnssDataIn.get(), msg_5p_e, msg_P5_a));
+            // [lp/Pl]
+            ASSERT_TRUE(check_xp_Px(msg_RC_a->Pr(), gnssDataIn.get(), msg_lp_e, msg_Pl_a));
 
 
             /*ASSERT_EQ(msg_CE_e->CnrX4().size(), msg_EC_a->Cnr().size());
