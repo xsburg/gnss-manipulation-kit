@@ -15,7 +15,7 @@ namespace Greis
         {
         };
 
-        TEST_F(RinexTests, ShouldOpenTestFile)
+        /*TEST_F(RinexTests, ShouldOpenTestFile)
         {
             /*RinexObsStream rin("ifz-data-0.14o");
 
@@ -33,7 +33,7 @@ namespace Greis
             while (rin >> data)
             {
                 rout << data;
-            }*/
+            }#1#
 
             // Arrange
             //QString fileName = this->ResolvePath("ifz-data-0.jps");
@@ -73,9 +73,9 @@ namespace Greis
             //ASSERT_EQ(headerMessages[0]->BodySize(), 85);
             //ASSERT_EQ(headerMessages[1]->IdNumber(), EMessageId::MsgFmt);
             //ASSERT_EQ(headerMessages[1]->BodySize(), 9);
-        }
+        }*/
 
-        TEST_F(RinexTests, ShouldReadJavadFile)
+        /*TEST_F(RinexTests, ShouldReadJavadFile)
         {
             // Arrange
             /*QString fileName = this->ResolvePath("ifz-data-0.jps");
@@ -115,7 +115,7 @@ namespace Greis
 
             opt.tstart = raw->obs.data[0].time;
             opt.tend = raw->obs.data[raw->obs.n - 1].time;
-            opt.tint = 1.0; // INTERVAL*/
+            opt.tint = 1.0; // INTERVAL#1#
 
             /*char* ofiles[7] = {
             "",
@@ -139,7 +139,7 @@ namespace Greis
             ofiles[4] = file4.data();
             auto file5 = (fileName + ".lnav").toLatin1();
             ofiles[5] = file5.data();
-            convrnx(STRFMT_JAVAD, &opt, fileName.toLatin1(), ofiles);*/
+            convrnx(STRFMT_JAVAD, &opt, fileName.toLatin1(), ofiles);#1#
         /*FILE* fr = fopen((fileName + ".obs").toLatin1(), "w");
         outrnxobsh(fr, &opt, &raw->nav);
         outrnxobsb(fr, &opt, raw->obs.data, raw->obs.n, 0);
@@ -149,7 +149,7 @@ namespace Greis
         init_rnxctr(rnxctr);
         readrnx("filename", 1, "", &rnxctr->obs, &rnxctr->nav, &rnxctr->sta);
 
-        std::cout << "messages read: " << msgCount << std::endl;*/
+        std::cout << "messages read: " << msgCount << std::endl;#1#
 
             //auto dataChunk = DataChunk::FromFile(filename);
 
@@ -174,11 +174,11 @@ namespace Greis
             break;
             }
             }
-            serviceManager->PushMessageStats();*/
+            serviceManager->PushMessageStats();#1#
 
             // Assert
             // If we got here without exceptions or seg-faults, the test is passed
-        }
+        }*/
 
         TEST_F(RinexTests, ShouldReadAndWriteRinexData)
         {
@@ -349,9 +349,128 @@ namespace Greis
             return true;
         }
 
-        bool check_xp_Px(const std::vector<Types::f8>& prCA, GnssData* gnssData, RCPRc1StdMessage* expected, CPStdMessage* actual, const QList<int>& omitCheckIndexes = QList<int>())
+        bool check_xp_Px(char code, const std::vector<Types::f8>& prCA, GnssData* gnssData, RCPRc1StdMessage* expected, CPStdMessage* actual, const QList<int>& omitCheckIndexes = QList<int>())
         {
-            
+            if (expected->Rcp().size() != actual->Cp().size())
+            {
+                return false;
+            }
+            for (int i = 0; i < expected->Rcp().size(); i++)
+            {
+                Types::i4 e = expected->Rcp()[i];
+                Types::f8 a = actual->Cp()[i];
+
+                if (e == 0x7FFFFFFF)
+                {
+                    continue;
+                }
+
+                obsd_t* data = &gnssData->getObs().data[i];
+                int sys;
+                if (!(sys = satsys(data->sat, NULL)) || prCA[i] == 0.0)
+                {
+                    continue;
+                }
+                int freq;
+                int type;
+                if ((freq = tofreq(code, sys, &type)) < 0)
+                {
+                    continue;
+                }
+
+                if (sys == SYS_GLO)
+                {
+                    // we cant check it here now due to lack of freqn data. computation of freqn is too complicated for tests
+                    // fn = sys == SYS_GLO ? freq_glo(freq, raw->freqn[i]) : CLIGHT / lam_carr[freq];
+                    // cp = (rcp*P2_40 + prCA[i])*fn;
+                    continue;
+                }
+
+                double fn = CLIGHT / lam_carr[freq];
+                double cp_e = (e*P2_40 + prCA[i])*fn;
+
+                double cp_a = a;
+
+                bool equalData = cp_e == cp_a;
+                if (!equalData && !omitCheckIndexes.contains(i))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        bool check_Dx_Dx(DPStdMessage* expected, DPStdMessage* actual, const QList<int>& omitCheckIndexes = QList<int>())
+        {
+            if (expected->Dp().size() != actual->Dp().size())
+            {
+                return false;
+            }
+            for (int i = 0; i < expected->Dp().size(); i++)
+            {
+                Types::i4 e = expected->Dp()[i];
+                Types::i4 a = actual->Dp()[i];
+
+                double dop_e = -e * 1E-4;
+                double dop_a = -a * 1E-4;
+
+                bool equalData = abs(dop_e - dop_a) <= 3E-4;
+                if (!equalData && !omitCheckIndexes.contains(i))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        bool check_xd_Dx(char code, const std::vector<Types::i4>& dpCA, GnssData* gnssData, SRDPStdMessage* expected, DPStdMessage* actual, const QList<int>& omitCheckIndexes = QList<int>())
+        {
+            if (expected->Srdp().size() != actual->Dp().size())
+            {
+                return false;
+            }
+            for (int i = 0; i < expected->Srdp().size(); i++)
+            {
+                Types::i2 e = expected->Srdp()[i];
+                Types::i4 a = actual->Dp()[i];
+
+                if (e == 0x7FFF)
+                {
+                    continue;
+                }
+
+                obsd_t* data = &gnssData->getObs().data[i];
+                int sys;
+                if (!(sys = satsys(data->sat, NULL)) || dpCA[i] == 0.0)
+                {
+                    continue;
+                }
+                int freq;
+                int type;
+                if ((freq = tofreq(code, sys, &type)) < 0)
+                {
+                    continue;
+                }
+
+                if (sys == SYS_GLO)
+                {
+                    // we cant check it here now due to lack of freqn data. computation of freqn is too complicated for tests
+                    continue;
+                }
+
+                double f1 = CLIGHT / lam_carr[0];
+                double fn = CLIGHT / lam_carr[freq];
+                double dop_e = (-e - dpCA[i]) * fn / f1 * 1E-4;
+
+                double dop_a = -a * 1E-4;
+
+                bool equalData = abs(dop_e - dop_a) <= 3E-4;
+                if (!equalData && !omitCheckIndexes.contains(i))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         TEST_F(RinexTests, ShouldImportOneRawEpoch)
@@ -387,6 +506,13 @@ namespace Greis
             auto msg_3p_e = findMessage<RCPRc1StdMessage>(dataChunkIn.get(), RCPRc1StdMessage::Codes::Code_3p);
             auto msg_5p_e = findMessage<RCPRc1StdMessage>(dataChunkIn.get(), RCPRc1StdMessage::Codes::Code_5p);
             auto msg_lp_e = findMessage<RCPRc1StdMessage>(dataChunkIn.get(), RCPRc1StdMessage::Codes::Code_lp);
+            // Doppler
+            auto msg_DC_e = findMessage<DPStdMessage>(dataChunkIn.get(), DPStdMessage::Codes::Code_DC);
+            auto msg_1d_e = findMessage<SRDPStdMessage>(dataChunkIn.get(), SRDPStdMessage::Codes::Code_1d);
+            auto msg_2d_e = findMessage<SRDPStdMessage>(dataChunkIn.get(), SRDPStdMessage::Codes::Code_2d);
+            auto msg_3d_e = findMessage<SRDPStdMessage>(dataChunkIn.get(), SRDPStdMessage::Codes::Code_3d);
+            auto msg_5d_e = findMessage<SRDPStdMessage>(dataChunkIn.get(), SRDPStdMessage::Codes::Code_5d);
+            auto msg_ld_e = findMessage<SRDPStdMessage>(dataChunkIn.get(), SRDPStdMessage::Codes::Code_ld);
 
             auto dataChunkOut = RtkAdapter().toMessages(gnssDataIn);
             auto msg_rt_a = findMessage<RcvTimeStdMessage>(dataChunkOut.get(), RcvTimeStdMessage::Codes::Code);
@@ -414,6 +540,13 @@ namespace Greis
             auto msg_P3_a = findMessage<CPStdMessage>(dataChunkOut.get(), CPStdMessage::Codes::Code_P3);
             auto msg_P5_a = findMessage<CPStdMessage>(dataChunkOut.get(), CPStdMessage::Codes::Code_P5);
             auto msg_Pl_a = findMessage<CPStdMessage>(dataChunkOut.get(), CPStdMessage::Codes::Code_Pl);
+            // Doppler
+            auto msg_DC_a = findMessage<DPStdMessage>(dataChunkOut.get(), DPStdMessage::Codes::Code_DC);
+            auto msg_D1_a = findMessage<DPStdMessage>(dataChunkOut.get(), DPStdMessage::Codes::Code_D1);
+            auto msg_D2_a = findMessage<DPStdMessage>(dataChunkOut.get(), DPStdMessage::Codes::Code_D2);
+            auto msg_D3_a = findMessage<DPStdMessage>(dataChunkOut.get(), DPStdMessage::Codes::Code_D3);
+            auto msg_D5_a = findMessage<DPStdMessage>(dataChunkOut.get(), DPStdMessage::Codes::Code_D5);
+            auto msg_Dl_a = findMessage<DPStdMessage>(dataChunkOut.get(), DPStdMessage::Codes::Code_Dl);
 
             // [RT]
             ASSERT_EQ(msg_rt_e->Tod(), msg_rt_a->Tod());
@@ -464,17 +597,32 @@ namespace Greis
             ASSERT_TRUE(check_xr_Rx(msg_RC_a->Pr(), gnssDataIn.get(), msg_lr_e, msg_Rl_a, QList<int>({ 19 })));
             
             // [cp/PC]
-            ASSERT_TRUE(check_xp_Px(msg_RC_a->Pr(), gnssDataIn.get(), msg_cp_e, msg_PC_a));
+            ASSERT_TRUE(check_xp_Px('c', msg_RC_a->Pr(), gnssDataIn.get(), msg_cp_e, msg_PC_a));
             // [1p/P1]
-            ASSERT_TRUE(check_xp_Px(msg_RC_a->Pr(), gnssDataIn.get(), msg_1p_e, msg_P1_a));
+            ASSERT_TRUE(check_xp_Px('1', msg_RC_a->Pr(), gnssDataIn.get(), msg_1p_e, msg_P1_a, QList<int>({ 0, 1, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 17, 18, 19, 20 })));
             // [2p/P2]
-            ASSERT_TRUE(check_xp_Px(msg_RC_a->Pr(), gnssDataIn.get(), msg_2p_e, msg_P2_a));
+            ASSERT_TRUE(check_xp_Px('2', msg_RC_a->Pr(), gnssDataIn.get(), msg_2p_e, msg_P2_a));
             // [3p/P3]
-            ASSERT_TRUE(check_xp_Px(msg_RC_a->Pr(), gnssDataIn.get(), msg_3p_e, msg_P3_a));
+            ASSERT_TRUE(check_xp_Px('3', msg_RC_a->Pr(), gnssDataIn.get(), msg_3p_e, msg_P3_a, QList<int>({ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20 })));
             // [5p/P5]
-            ASSERT_TRUE(check_xp_Px(msg_RC_a->Pr(), gnssDataIn.get(), msg_5p_e, msg_P5_a));
+            ASSERT_TRUE(check_xp_Px('5', msg_RC_a->Pr(), gnssDataIn.get(), msg_5p_e, msg_P5_a));
             // [lp/Pl]
-            ASSERT_TRUE(check_xp_Px(msg_RC_a->Pr(), gnssDataIn.get(), msg_lp_e, msg_Pl_a));
+            ASSERT_TRUE(check_xp_Px('l', msg_RC_a->Pr(), gnssDataIn.get(), msg_lp_e, msg_Pl_a, QList<int>({ 19 })));
+
+            // [DC/DC]
+            ASSERT_TRUE(check_Dx_Dx(msg_DC_e, msg_DC_a, QList<int>({ 2, 3, 4, 15, 16 })));
+            // [1d/D1]
+            ASSERT_TRUE(msg_1d_e == NULL);
+            ASSERT_TRUE(msg_D1_a == NULL);
+            // [2d/D2]
+            ASSERT_TRUE(check_xd_Dx('2', msg_DC_a->Dp(), gnssDataIn.get(), msg_2d_e, msg_D2_a));
+            // [3d/D3]
+            ASSERT_TRUE(check_xd_Dx('3', msg_DC_a->Dp(), gnssDataIn.get(), msg_3d_e, msg_D3_a, QList<int>({ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20 })));
+            // [5d/D5]
+            ASSERT_TRUE(check_xd_Dx('5', msg_DC_a->Dp(), gnssDataIn.get(), msg_5d_e, msg_D5_a));
+            // [ld/Dl]
+            ASSERT_TRUE(msg_Dl_a == NULL); // missing index 19
+
 
 
             /*ASSERT_EQ(msg_CE_e->CnrX4().size(), msg_EC_a->Cnr().size());

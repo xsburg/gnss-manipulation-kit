@@ -144,7 +144,7 @@ extern int checkpri(const char *opt, int sys, int code, int freq)
     return freq<NFREQ?freq:-1;
 }
 /* glonass carrier frequency -------------------------------------------------*/
-static double freq_glo(int freq, int freqn)
+extern double freq_glo(int freq, int freqn)
 {
     switch (freq) {
         case 0: return FREQ1_GLO+DFRQ1_GLO*freqn;

@@ -142,5 +142,6 @@ namespace Greis
         std::string opt;
     private:
         void writeEpochMessages(DataChunk* dataChunk, obsd_t* data, int n);
+        void writeTimeParameters(DataChunk* dataChunk, nav_t* nav);
     };
 }

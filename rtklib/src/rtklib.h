@@ -1536,6 +1536,7 @@ extern int input_lexrf (raw_t *raw, FILE *fp);
 extern int tofreq(char sig, int sys, int *type);
 extern int checkpri(const char *opt, int sys, int code, int freq);
 extern int settag(obsd_t *data, gtime_t time);
+extern double freq_glo(int freq, int freqn);
 
 extern int gen_ubx (const char *msg, unsigned char *buff);
 extern int gen_stq (const char *msg, unsigned char *buff);
