@@ -143,5 +143,6 @@ namespace Greis
     private:
         void writeEpochMessages(DataChunk* dataChunk, obsd_t* data, int n);
         void writeTimeParameters(DataChunk* dataChunk, nav_t* nav);
+        void writeEphemeris(DataChunk* dataChunk, eph_t* eph);
     };
 }

@@ -266,6 +266,13 @@ Greis::DataChunk::SharedPtr_t Greis::RtkAdapter::toMessages(GnssData::SharedPtr_
 
     // writeTimeParameters(dataChunk.get(), &gnssData->getNav());
 
+    nav_t *nav = &gnssData->getNav();
+
+    for (int k = 0; k < nav->n; k++)
+    {
+        writeEphemeris(dataChunk.get(), &nav->eph[k]);
+    }
+
     dataChunk->FlushEpoch();
     return dataChunk;
 }
@@ -578,12 +585,12 @@ void Greis::RtkAdapter::writeEpochMessages(DataChunk* dataChunk, obsd_t* data, i
     if (!strncmp(p, "QE", 2)) return decode_QE(raw); /* qzss ephemeris (ext) #1#
     if (!strncmp(p, "CN", 2)) return decode_CN(raw); /* beidou ephemeris (ext) #1#
 
-    if (!strncmp(p, "UO", 2)) return decode_UO(raw); /* gps utc time parameters #1#
+    ~+ if (!strncmp(p, "UO", 2)) return decode_UO(raw); /* gps utc time parameters #1#
     + if (!strncmp(p, "NU", 2)) return decode_NU(raw); /* glonass utc and gps time par #1#
     + if (!strncmp(p, "EU", 2)) return decode_EU(raw); /* galileo utc and gps time par #1#
     + if (!strncmp(p, "WU", 2)) return decode_WU(raw); /* waas utc time parameters #1#
     + if (!strncmp(p, "QU", 2)) return decode_QU(raw); /* qzss utc and gps time par #1#
-    if (!strncmp(p, "IO", 2)) return decode_IO(raw); /* ionospheric parameters #1#
+    (todo) if (!strncmp(p, "IO", 2)) return decode_IO(raw); /* ionospheric parameters #1#
 
     if (!strncmp(p, "GD", 2)) return decode_nD(raw, SYS_GPS); /* raw navigation data #1#
     if (!strncmp(p, "QD", 2)) return decode_nD(raw, SYS_QZS); /* raw navigation data #1#
@@ -651,4 +658,126 @@ void Greis::RtkAdapter::writeTimeParameters(DataChunk* dataChunk, nav_t* nav)
 
         dataChunk->AddMessage(std::move(msg));
     }
+}
+
+void Greis::RtkAdapter::writeEphemeris(DataChunk* dataChunk, eph_t* eph)
+{
+    int sys;
+    if (!(sys = satsys(eph->sat, nullptr)))
+    {
+        return;
+    }
+
+    auto msg = std::make_unique<GPSEphemeris0StdMessage>(fullSize);
+    // decode_GE -> gps SYS_GPS
+    // decode_EN -> galileo SYS_GAL
+    // decode_QE -> qzss SYS_QZS
+    // decode_CN -> beidou SYS_CMP
+    /*eph_t eph = { 0 };
+    double toc, sqrtA, tt;
+    char *msg;
+    int prn, tow, flag, week;
+    unsigned char *p = raw->buff + 5;
+
+    prn = U1(p);        p += 1;
+    tow = U4(p);        p += 4;
+    flag = U1(p);        p += 1;
+    eph.iodc = I2(p);        p += 2;
+    toc = I4(p);        p += 4;
+    eph.sva = I1(p);        p += 1;
+    eph.svh = U1(p);        p += 1;
+    week = I2(p);        p += 2;
+    eph.tgd[0] = R4(p);        p += 4;
+    eph.f2 = R4(p);        p += 4;
+    eph.f1 = R4(p);        p += 4;
+    eph.f0 = R4(p);        p += 4;
+    eph.toes = I4(p);        p += 4;
+    eph.iode = I2(p);        p += 2;
+    sqrtA = R8(p);        p += 8;
+    eph.e = R8(p);        p += 8;
+    eph.M0 = R8(p)*SC2RAD; p += 8;
+    eph.OMG0 = R8(p)*SC2RAD; p += 8;
+    eph.i0 = R8(p)*SC2RAD; p += 8;
+    eph.omg = R8(p)*SC2RAD; p += 8;
+    eph.deln = R4(p)*SC2RAD; p += 4;
+    eph.OMGd = R4(p)*SC2RAD; p += 4;
+    eph.idot = R4(p)*SC2RAD; p += 4;
+    eph.crc = R4(p);        p += 4;
+    eph.crs = R4(p);        p += 4;
+    eph.cuc = R4(p);        p += 4;
+    eph.cus = R4(p);        p += 4;
+    eph.cic = R4(p);        p += 4;
+    eph.cis = R4(p);        p += 4;
+    eph.A = sqrtA*sqrtA;
+
+    if (raw->outtype) {
+        msg = raw->msgtype + strlen(raw->msgtype);
+        sprintf(msg, " prn=%3d iode=%3d iodc=%3d toes=%6.0f", prn, eph.iode,
+            eph.iodc, eph.toes);
+    }
+    if (sys == SYS_GPS || sys == SYS_QZS) {
+        if (!(eph.sat = satno(sys, prn))) {
+            trace(2, "javad ephemeris satellite error: sys=%d prn=%d\n", sys, prn);
+            return -1;
+        }
+        eph.flag = (flag >> 1) & 1;
+        eph.code = (flag >> 2) & 3;
+        eph.fit = flag & 1;
+        eph.week = adjgpsweek(week);
+        eph.toe = gpst2time(eph.week, eph.toes);
+
+        /* for week-handover problem #1#
+        tt = timediff(eph.toe, raw->time);
+        if (tt<-302400.0) eph.week++;
+        else if (tt> 302400.0) eph.week--;
+        eph.toe = gpst2time(eph.week, eph.toes);
+
+        eph.toc = gpst2time(eph.week, toc);
+        eph.ttr = adjweek(eph.toe, tow);
+    }
+    else if (sys == SYS_GAL) {
+        if (!(eph.sat = satno(sys, prn))) {
+            trace(2, "javad ephemeris satellite error: sys=%d prn=%d\n", sys, prn);
+            return -1;
+        }
+        eph.tgd[1] = R4(p); p += 4;    /* BGD: E1-E5A (s) #1#
+        eph.tgd[2] = R4(p); p += 4 + 13; /* BGD: E1-E5B (s) #1#
+        eph.code = U1(p);          /* navtype: 0:E1B(INAV),1:E5A(FNAV) #1#
+        /*          3:GIOVE E1B,4:GIOVE E5A #1#
+
+        /* gst week -> gps week #1#
+        eph.week = week + 1024;
+        eph.toe = gpst2time(eph.week, eph.toes);
+
+        /* for week-handover problem #1#
+        tt = timediff(eph.toe, raw->time);
+        if (tt<-302400.0) eph.week++;
+        else if (tt> 302400.0) eph.week--;
+        eph.toe = gpst2time(eph.week, eph.toes);
+
+        eph.toc = gpst2time(eph.week, toc);
+        eph.ttr = adjweek(eph.toe, tow);
+    }
+    else if (sys == SYS_CMP) {
+        if (!(eph.sat = satno(sys, prn))) {
+            trace(2, "javad ephemeris satellite error: sys=%d prn=%d\n", sys, prn);
+            return -1;
+        }
+        eph.tgd[1] = R4(p); p += 4;    /* TGD2 (s) #1#
+        eph.code = U1(p);          /* type of nav data #1#
+
+        eph.week = week;
+        eph.toe = bdt2time(week, eph.toes); /* bdt -> gpst #1#
+        eph.toc = bdt2time(week, toc);      /* bdt -> gpst #1#
+        eph.ttr = adjweek(eph.toe, tow);
+    }
+    else return 0;
+
+    if (!strstr(raw->opt, "-EPHALL")) {
+        if (raw->nav.eph[eph.sat - 1].iode == eph.iode&&
+            raw->nav.eph[eph.sat - 1].iodc == eph.iodc) return 0; /* unchanged #1#
+    }
+    raw->nav.eph[eph.sat - 1] = eph;
+    raw->ephsat = eph.sat;
+    return 2;*/
 }
