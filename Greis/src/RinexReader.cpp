@@ -189,8 +189,7 @@ Greis::GnssData::SharedPtr_t Greis::RtkAdapter::toGnssData(DataChunk* dataChunk)
 
     std::vector<obs_t> obsEpochs;
     int obsTotalCount = 0;
-    std::vector<nav_t> navEpochs;
-    int ephTotalCount = 0;
+    std::vector<eph_t> ephAll;
 
     for (size_t i = 0; i < data.size(); i++)
     {
@@ -207,10 +206,7 @@ Greis::GnssData::SharedPtr_t Greis::RtkAdapter::toGnssData(DataChunk* dataChunk)
             break;
         case 2:
             // input ephemeris
-            nav_t tmp2;
-            copy_nav(&raw->nav, &tmp2);
-            navEpochs.push_back(tmp2);
-            ephTotalCount += raw->nav.n;
+            ephAll.push_back(raw->nav.eph[raw->ephsat - 1]);
             break;
         }
     }
@@ -233,16 +229,12 @@ Greis::GnssData::SharedPtr_t Greis::RtkAdapter::toGnssData(DataChunk* dataChunk)
     }
     // nav all
     nav_t navAll;
-    init_nav(&navAll, ephTotalCount);
-    navAll.n = ephTotalCount;
+    init_nav(&navAll, ephAll.size());
+    navAll.n = ephAll.size();
     index = 0;
-    for (auto& navEp : navEpochs)
+    for (auto& eph : ephAll)
     {
-        for (int i = 0; i < navEp.n; i++)
-        {
-            navAll.eph[index++] = navEp.eph[i];
-        }
-        free_nav(&navEp);
+        navAll.eph[index++] = eph;
     }
 
     GnssData::SharedPtr_t gnssData(new GnssData(obsAll, navAll));
@@ -315,7 +307,9 @@ void Greis::RtkAdapter::writeEpochMessages(DataChunk* dataChunk, obsd_t* data, i
         {
             // Glonass is a special case
             int slot = prn;
-            prn = 38; // TODO: find out the correct value
+            // http://www.novatel.com/support/known-solutions/glonass-slot-number-and-frequency-channel/
+            // When a PRN in a log is in the range 38 to 61, then that PRN represents a GLONASS Slot where the Slot shown is the actual GLONASS Slot Number plus 37.
+            prn = 37 + slot;
             slotData.push_back(slot);
         }
         if (satSys == SYS_GAL)
@@ -663,12 +657,126 @@ void Greis::RtkAdapter::writeTimeParameters(DataChunk* dataChunk, nav_t* nav)
 void Greis::RtkAdapter::writeEphemeris(DataChunk* dataChunk, eph_t* eph)
 {
     int sys;
-    if (!(sys = satsys(eph->sat, nullptr)))
+    int prn;
+    if (!(sys = satsys(eph->sat, &prn)))
     {
         return;
     }
+    if (sys == SYS_GLO)
+    {
+        // Glonass is a special case
+        int slot = prn;
+        // http://www.novatel.com/support/known-solutions/glonass-slot-number-and-frequency-channel/
+        // When a PRN in a log is in the range 38 to 61, then that PRN represents a GLONASS Slot where the Slot shown is the actual GLONASS Slot Number plus 37.
+        prn = 37 + slot;
+    }
+    if (sys == SYS_GAL)
+    {
+        prn += 70;
+    }
+    if (sys == SYS_CMP)
+    {
+        prn += 210;
+    }
 
-    auto msg = std::make_unique<GPSEphemeris0StdMessage>(fullSize);
+    auto reqData = std::make_unique<GpsEphReqDataCustomType>(122);
+
+    reqData->Sv() = prn;
+    //reqData->Tow()  <= below in the code
+    //reqData->Flags() <= below in the code
+    reqData->Iodc() = eph->iodc;
+    //reqData->Toc()  <= below in the code
+    reqData->Ura() = eph->sva;
+    reqData->HealthS() = eph->svh;
+    //reqData->Wn()  <= below in the code
+    reqData->Tgd() = eph->tgd[0];
+    reqData->Af2() = eph->f2;
+    reqData->Af1() = eph->f1;
+    reqData->Af0() = eph->f0;
+    reqData->Toe() = eph->toes;
+    reqData->Iode() = eph->iode;
+    reqData->RootA() = sqrt(eph->A);
+    reqData->Ecc() = eph->e;
+    reqData->M0() = eph->M0 / SC2RAD;
+    reqData->Omega0() = eph->OMG0 / SC2RAD;
+    reqData->Inc0() = eph->i0 / SC2RAD;
+    reqData->ArgPer() = eph->omg / SC2RAD;
+    reqData->Deln() = eph->deln / SC2RAD;
+    reqData->OmegaDot() = eph->OMGd / SC2RAD;
+    reqData->IncDot() = eph->idot / SC2RAD;
+    reqData->Crc() = eph->crc;
+    reqData->Crs() = eph->crs;
+    reqData->Cuc() = eph->cuc;
+    reqData->Cus() = eph->cus;
+    reqData->Cic() = eph->cic;
+    reqData->Cis() = eph->cis;
+
+    switch (sys)
+    {
+    case SYS_GPS:
+    case SYS_QZS:
+        // GPS, QZSS
+        {
+            // flag
+            Types::u1 flag = 0;
+            if (eph->fit)
+            {
+                flag |= 0x1;
+            }
+            flag |= (eph->code & 3) << 2;
+            flag |= (eph->flag & 1) << 1;
+            reqData->Flags() = flag;
+
+            // tow, toc, wn
+            int week;
+            double tow = time2gpst(eph->toe, &week);
+            reqData->Tow() = tow;
+            reqData->Wn() = week;
+            double toc = time2gpst(eph->toc, &week);
+            reqData->Toc() = toc;
+
+            if (sys == SYS_GPS)
+            {
+                auto gpsMsg = std::make_unique<GPSEphemeris0StdMessage>(StdMessage::HeadSize() + 123);
+                gpsMsg->Req() = std::move(reqData);
+                dataChunk->AddMessage(std::move(gpsMsg));
+            }
+        }
+        break;
+    case SYS_GAL:
+        // Galileo
+        break;
+    case SYS_CMP:
+        // BeiDou
+        break;
+    }
+    
+
+    /*switch (sys)
+    {
+    case SYS_GPS:
+    {GpsEphReqDataCustomType
+            auto msg = std::make_unique<GPSEphemeris0StdMessage>(fullSize);
+        }
+        break;
+    case SYS_GAL:
+    {GpsEphReqDataCustomType
+            auto msg = std::make_unique<GALEphemerisStdMessage>();
+        }
+        break;
+    case SYS_QZS:
+    {GPSEphemeris1CustomType, GpsEphReqDataCustomType
+            auto msg = std::make_unique<QZSSEphemerisStdMessage>(fullSize);
+        }
+        break;
+    case SYS_CMP:
+    {GpsEphReqDataCustomType
+            auto msg = std::make_unique<BeiDouEphemerisStdMessage>();
+        }
+        break;
+    }*/
+
+
     // decode_GE -> gps SYS_GPS
     // decode_EN -> galileo SYS_GAL
     // decode_QE -> qzss SYS_QZS

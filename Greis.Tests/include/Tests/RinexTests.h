@@ -513,6 +513,13 @@ namespace Greis
             auto msg_3d_e = findMessage<SRDPStdMessage>(dataChunkIn.get(), SRDPStdMessage::Codes::Code_3d);
             auto msg_5d_e = findMessage<SRDPStdMessage>(dataChunkIn.get(), SRDPStdMessage::Codes::Code_5d);
             auto msg_ld_e = findMessage<SRDPStdMessage>(dataChunkIn.get(), SRDPStdMessage::Codes::Code_ld);
+            // ephemeris
+            auto msg_GE_e = findMessage<GPSEphemeris0StdMessage>(dataChunkIn.get(), GPSEphemeris0StdMessage::Codes::Code_GE);
+            auto msg_NE_e = findMessage<GLOEphemerisStdMessage>(dataChunkIn.get(), GLOEphemerisStdMessage::Codes::Code_NE);
+            auto msg_EN_e = findMessage<GALEphemerisStdMessage>(dataChunkIn.get(), GALEphemerisStdMessage::Codes::Code_EN);
+            auto msg_WE_e = findMessage<SBASEhemerisStdMessage>(dataChunkIn.get(), SBASEhemerisStdMessage::Codes::Code_WE);
+            auto msg_QE_e = findMessage<QZSSEphemerisStdMessage>(dataChunkIn.get(), QZSSEphemerisStdMessage::Codes::Code_QE);
+            auto msg_CN_e = findMessage<BeiDouEphemerisStdMessage>(dataChunkIn.get(), BeiDouEphemerisStdMessage::Codes::Code_CN);
 
             auto dataChunkOut = RtkAdapter().toMessages(gnssDataIn);
             auto msg_rt_a = findMessage<RcvTimeStdMessage>(dataChunkOut.get(), RcvTimeStdMessage::Codes::Code);
@@ -547,6 +554,13 @@ namespace Greis
             auto msg_D3_a = findMessage<DPStdMessage>(dataChunkOut.get(), DPStdMessage::Codes::Code_D3);
             auto msg_D5_a = findMessage<DPStdMessage>(dataChunkOut.get(), DPStdMessage::Codes::Code_D5);
             auto msg_Dl_a = findMessage<DPStdMessage>(dataChunkOut.get(), DPStdMessage::Codes::Code_Dl);
+            // ephemeris
+            auto msg_GE_a = findMessage<GPSEphemeris0StdMessage>(dataChunkOut.get(), GPSEphemeris0StdMessage::Codes::Code_GE);
+            auto msg_NE_a = findMessage<GLOEphemerisStdMessage>(dataChunkOut.get(), GLOEphemerisStdMessage::Codes::Code_NE);
+            auto msg_EN_a = findMessage<GALEphemerisStdMessage>(dataChunkOut.get(), GALEphemerisStdMessage::Codes::Code_EN);
+            auto msg_WE_a = findMessage<SBASEhemerisStdMessage>(dataChunkOut.get(), SBASEhemerisStdMessage::Codes::Code_WE);
+            auto msg_QE_a = findMessage<QZSSEphemerisStdMessage>(dataChunkOut.get(), QZSSEphemerisStdMessage::Codes::Code_QE);
+            auto msg_CN_a = findMessage<BeiDouEphemerisStdMessage>(dataChunkOut.get(), BeiDouEphemerisStdMessage::Codes::Code_CN);
 
             // [RT]
             ASSERT_EQ(msg_rt_e->Tod(), msg_rt_a->Tod());
@@ -559,8 +573,10 @@ namespace Greis
             ASSERT_EQ(msg_si_e->Usi().size(), msg_si_a->Usi().size());
             for (int i = 0; i < msg_si_e->Usi().size(); i++)
             {
-                bool equalIndexes = msg_si_e->Usi()[i] == msg_si_a->Usi()[i];
-                bool glonassStubIndex = msg_si_a->Usi()[i] == 38;
+                auto e = msg_si_e->Usi()[i];
+                auto a = msg_si_a->Usi()[i];
+                bool equalIndexes = e == a;
+                bool glonassStubIndex = a > 37 && a < 71;
                 ASSERT_TRUE(equalIndexes || glonassStubIndex);
             }
             // [NN]
@@ -623,6 +639,40 @@ namespace Greis
             // [ld/Dl]
             ASSERT_TRUE(msg_Dl_a == NULL); // missing index 19
 
+            // GPS Ephemeris
+            EXPECT_TRUE(msg_GE_e->Req()->Sv() == msg_GE_a->Req()->Sv());
+            EXPECT_TRUE(msg_GE_e->Req()->Tow() == msg_GE_a->Req()->Tow());
+            {
+                Types::u1 flag_e = msg_GE_e->Req()->Flags();
+                Types::u1 flag_a = msg_GE_a->Req()->Flags();
+                EXPECT_TRUE((flag_e & flag_a) == flag_a);
+            }
+            EXPECT_TRUE(msg_GE_e->Req()->Iodc() == msg_GE_a->Req()->Iodc());
+            EXPECT_TRUE(msg_GE_e->Req()->Toc() == msg_GE_a->Req()->Toc());
+            EXPECT_TRUE(msg_GE_e->Req()->Ura() == msg_GE_a->Req()->Ura());
+            EXPECT_TRUE(msg_GE_e->Req()->HealthS() == msg_GE_a->Req()->HealthS());
+            EXPECT_TRUE(msg_GE_e->Req()->Wn() == msg_GE_a->Req()->Wn());
+            EXPECT_TRUE(msg_GE_e->Req()->Tgd() == msg_GE_a->Req()->Tgd());
+            EXPECT_TRUE(msg_GE_e->Req()->Af2() == msg_GE_a->Req()->Af2());
+            EXPECT_TRUE(msg_GE_e->Req()->Af1() == msg_GE_a->Req()->Af1());
+            EXPECT_TRUE(msg_GE_e->Req()->Af0() == msg_GE_a->Req()->Af0());
+            EXPECT_TRUE(msg_GE_e->Req()->Toe() == msg_GE_a->Req()->Toe());
+            EXPECT_TRUE(msg_GE_e->Req()->Iode() == msg_GE_a->Req()->Iode());
+            EXPECT_TRUE(msg_GE_e->Req()->RootA() == msg_GE_a->Req()->RootA());
+            EXPECT_TRUE(msg_GE_e->Req()->Ecc() == msg_GE_a->Req()->Ecc());
+            EXPECT_TRUE(msg_GE_e->Req()->M0() == msg_GE_a->Req()->M0());
+            EXPECT_TRUE(msg_GE_e->Req()->Omega0() == msg_GE_a->Req()->Omega0());
+            EXPECT_TRUE(msg_GE_e->Req()->Inc0() == msg_GE_a->Req()->Inc0());
+            EXPECT_TRUE(msg_GE_e->Req()->ArgPer() == msg_GE_a->Req()->ArgPer());
+            EXPECT_TRUE(msg_GE_e->Req()->Deln() == msg_GE_a->Req()->Deln());
+            EXPECT_TRUE(msg_GE_e->Req()->OmegaDot() == msg_GE_a->Req()->OmegaDot());
+            EXPECT_TRUE(msg_GE_e->Req()->IncDot() == msg_GE_a->Req()->IncDot());
+            EXPECT_TRUE(msg_GE_e->Req()->Crc() == msg_GE_a->Req()->Crc());
+            EXPECT_TRUE(msg_GE_e->Req()->Crs() == msg_GE_a->Req()->Crs());
+            EXPECT_TRUE(msg_GE_e->Req()->Cuc() == msg_GE_a->Req()->Cuc());
+            EXPECT_TRUE(msg_GE_e->Req()->Cus() == msg_GE_a->Req()->Cus());
+            EXPECT_TRUE(msg_GE_e->Req()->Cic() == msg_GE_a->Req()->Cic());
+            EXPECT_TRUE(msg_GE_e->Req()->Cis() == msg_GE_a->Req()->Cis());
 
 
             /*ASSERT_EQ(msg_CE_e->CnrX4().size(), msg_EC_a->Cnr().size());
