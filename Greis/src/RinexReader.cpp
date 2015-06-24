@@ -729,9 +729,9 @@ void Greis::RtkAdapter::writeEphemeris(DataChunk* dataChunk, eph_t* eph)
 
             // tow, toc, wn
             int week;
-            double tow = time2gpst(eph->toe, &week);
+            double tow = time2gpst(eph->ttr, &week);
             reqData->Tow() = tow;
-            reqData->Wn() = week;
+            reqData->Wn() = week - 1024;
             double toc = time2gpst(eph->toc, &week);
             reqData->Toc() = toc;
 
@@ -740,6 +740,13 @@ void Greis::RtkAdapter::writeEphemeris(DataChunk* dataChunk, eph_t* eph)
                 auto gpsMsg = std::make_unique<GPSEphemeris0StdMessage>(StdMessage::HeadSize() + 123);
                 gpsMsg->Req() = std::move(reqData);
                 dataChunk->AddMessage(std::move(gpsMsg));
+            }
+            else if (sys == SYS_QZS)
+            {
+                auto qzsMsg = std::make_unique<QZSSEphemerisStdMessage>(StdMessage::HeadSize() + 123);
+                qzsMsg->Gps() = std::make_unique<GPSEphemeris1CustomType>(122);
+                qzsMsg->Gps()->Req() = std::move(reqData);
+                dataChunk->AddMessage(std::move(qzsMsg));
             }
         }
         break;
