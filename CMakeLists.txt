@@ -86,6 +86,8 @@ add_subdirectory(Platform)
 add_subdirectory(Platform.Tests)
 add_subdirectory(DatabaseToJps)
 add_subdirectory(JpsToDatabase)
+add_subdirectory(db2rinex)
+add_subdirectory(rinex2db)
 add_subdirectory(jpslogd)
 
 # Tests

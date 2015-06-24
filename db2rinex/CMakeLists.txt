@@ -2,9 +2,9 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 
 # variables declaration
 
-SET(PROJECT rinex2db)
+SET(PROJECT db2rinex)
 
-SET(DEPENDS_ON_PROJECTS Common Greis)
+SET(DEPENDS_ON_PROJECTS Common Greis rtklib)
 
 FILE(GLOB_RECURSE HEADERS "include/*.h")
 
