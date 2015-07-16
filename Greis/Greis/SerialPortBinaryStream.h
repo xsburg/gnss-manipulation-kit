@@ -23,6 +23,8 @@ static int rate_to_constant(int baudrate) {
     }
 #undef B
 }
+#else
+#include <windows.h>
 #endif
 
 #include "IBinaryStream.h"
@@ -146,6 +148,15 @@ namespace Greis
             memcpy(data, _peekedData.data(), read);
             return read;
         }
+
+	void flushReadBuffers()
+	{
+		#ifdef Q_OS_WIN
+		PurgeComm(_serial.native(),PURGE_RXCLEAR);
+		#else
+		ioctl(_serial.native(), TCFLSH, 2);
+		#endif
+	}
 
         bool isOpen()
         {

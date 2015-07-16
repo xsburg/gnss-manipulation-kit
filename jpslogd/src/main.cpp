@@ -46,7 +46,29 @@ namespace jpslogd
             int dataChunkSize = sIniSettings.value("dataChunkSize", 250).toInt();
             sLogger.Info("Connecting Javad receiver on "+QString::fromStdString(portName)+" at "+QString::number(baudRate)+"bps...");
             serialPort = std::make_shared<SerialPortBinaryStream>(portName, baudRate);
-            // Setting parameters from [Receiver] section
+	    // Stop monitoring
+	    serialPort->write("\r\ndm\n\r");
+            qSleep(1000);
+	    serialPort->flushReadBuffers();
+            auto serialStream = SerialStreamReader(serialPort);
+	    
+
+            // Get recevier data
+            serialPort->write("\nprint,/par/rcv/id\n");
+            QString _receiverid = serialStream.readLine();
+            _receiverid = _receiverid.mid(6,-1);
+            serialPort->write("\nprint,/par/rcv/model\n");
+            QString _receivermodel = serialStream.readLine();
+            _receivermodel = _receivermodel.mid(6,-1);
+            serialPort->write("\nprint,/par/rcv/ver/main\n");
+            QString _receiverfw = serialStream.readLine();
+            _receiverfw = _receiverfw.mid(6,-1);
+            serialPort->write("\nprint,/par/rcv/ver/board\n");
+            QString _receiverboard = serialStream.readLine();
+            _receiverboard = _receiverboard.mid(6,-1);
+            sLogger.Info("Connected device is "+_receivermodel+", board "+_receiverboard+" (ID:"+_receiverid+", FW:"+_receiverfw+")");
+
+	    // Setting parameters from [Receiver] section
             QStringList commands;
             auto keys = sIniSettings.settings()->allKeys();
             for (auto key : keys)
@@ -62,30 +84,8 @@ namespace jpslogd
                 serialPort->write(cmd.toLatin1());
                 qSleep(500);
             }
-            // Disable running monitoring
-            serialPort->write("\n\n\ndm\n");
-            qSleep(1000);
-            serialPort->write("dm\r\n\r\ndm\r\n\n\rdm\r\n");
-            qSleep(2000);
-            serialPort->write("dm\n\r");
-            //
-            auto serialStream = SerialStreamReader(serialPort);
-            // Get recevier data
-            serialPort->write("\nprint,/par/rcv/id\n");
-            QString _receiverid = serialStream.readLine();
-            _receiverid = _receiverid.mid(6,-1);
-            serialPort->write("\nprint,/par/rcv/model\n");
-            QString _receivermodel = serialStream.readLine();
-            _receivermodel = _receivermodel.mid(6,-1);
-            serialPort->write("\nprint,/par/rcv/ver/main\n");
-            QString _receiverfw = serialStream.readLine();
-            _receiverfw = _receiverfw.mid(6,-1);
-            serialPort->write("\nprint,/par/rcv/ver/board\n");
-            QString _receiverboard = serialStream.readLine();
-            _receiverboard = _receiverboard.mid(6,-1);
-            sLogger.Info("Connected device is "+_receivermodel+", board "+_receiverboard+" (ID:"+_receiverid+", FW:"+_receiverfw+")");
             // Configure device for data output
-            serialPort->write("\nem,,def,/msg/jps/AZ,/msg/jps/r1,/msg/jps/r2,/msg/jps/RD{10.00,0.00,0.00,0x0002},/msg/jps/rc\n");
+		//            serialPort->write("\n");
             GreisMessageStream stream(serialPort, true, false);
             sLogger.Info("Configuring databases...");		
             // Preparing the acquisition sink

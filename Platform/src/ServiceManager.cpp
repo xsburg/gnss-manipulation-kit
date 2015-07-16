@@ -16,6 +16,7 @@ Platform::ServiceManager::ServiceManager(Connection::SharedPtr_t connection)
 QString Platform::ServiceManager::GetStatus()
 {
    sLogger.Debug("DBUS: getstatus");
+   return "{status: 'ok'}";
 }
 
 QString Platform::ServiceManager::GetConfigKey (const QString &key)
@@ -30,7 +31,6 @@ bool Platform::ServiceManager::SetConfigKeyPersistent (const QString &key, const
 
 void Platform::ServiceManager::newDBusConnection(const QDBusConnection &connection) {
    DBusPeerConnection = new QDBusConnection(connection);
-   DBusPeerConnection->registerService("ru.ifz.jpsutils.jpslogd"); 
    DBusPeerConnection->registerObject("/",this,QDBusConnection::ExportAllSlots);
 }
 
