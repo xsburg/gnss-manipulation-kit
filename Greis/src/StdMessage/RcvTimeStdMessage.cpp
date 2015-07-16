@@ -31,6 +31,22 @@ namespace Greis
         _isCorrect = true;
     }
 
+    RcvTimeStdMessage::RcvTimeStdMessage()
+    {
+        _id = "~~";
+        _bodySize = 5;
+        _isCorrect = true;
+    }
+
+    RcvTimeStdMessage::RcvTimeStdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 5;
+        _isCorrect = true;
+    }
+
+    const std::string RcvTimeStdMessage::Codes::Code = "~~";
+
     std::string RcvTimeStdMessage::ToString() const
     {
         return toString("RcvTimeStdMessage");

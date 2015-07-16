@@ -33,6 +33,15 @@ namespace Greis
         _isCorrect = true;
     }
 
+    SatAzimuthStdMessage::SatAzimuthStdMessage(int p_size)
+    {
+        _id = "AZ";
+        _bodySize = p_size - HeadSize();
+        _isCorrect = true;
+    }
+
+    const std::string SatAzimuthStdMessage::Codes::Code_AZ = "AZ";
+
     std::string SatAzimuthStdMessage::ToString() const
     {
         return toString("SatAzimuthStdMessage");

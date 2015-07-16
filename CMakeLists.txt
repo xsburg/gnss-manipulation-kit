@@ -81,10 +81,13 @@ add_subdirectory(Common)
 add_subdirectory(Common.Tests)
 add_subdirectory(Greis)
 add_subdirectory(Greis.Tests)
+add_subdirectory(rtklib)
 add_subdirectory(Platform)
 add_subdirectory(Platform.Tests)
 add_subdirectory(DatabaseToJps)
 add_subdirectory(JpsToDatabase)
+add_subdirectory(db2rinex)
+add_subdirectory(rinex2db)
 add_subdirectory(jpslogd)
 
 # Tests

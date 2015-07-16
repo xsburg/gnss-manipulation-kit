@@ -37,6 +37,22 @@ namespace Greis
         _isCorrect = true;
     }
 
+    SbasRawNavDataStdMessage::SbasRawNavDataStdMessage()
+    {
+        _id = "WD";
+        _bodySize = 40;
+        _isCorrect = true;
+    }
+
+    SbasRawNavDataStdMessage::SbasRawNavDataStdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 40;
+        _isCorrect = true;
+    }
+
+    const std::string SbasRawNavDataStdMessage::Codes::Code_WD = "WD";
+
     std::string SbasRawNavDataStdMessage::ToString() const
     {
         return toString("SbasRawNavDataStdMessage");

@@ -13,7 +13,14 @@ namespace Greis
 
         RmsStdMessage(const char* p_message, int p_length);
         RmsStdMessage(const std::string& p_id, int p_size);
-
+        RmsStdMessage();
+        RmsStdMessage(const std::string& p_id);
+        
+        struct Codes
+        {
+            static const std::string Code_SG;
+        };
+        
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }
         virtual EMessageId::Type IdNumber() const { return EMessageId::Rms; }

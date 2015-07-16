@@ -4,7 +4,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 
 SET(PROJECT Greis)
 
-SET(DEPENDS_ON_PROJECTS Common)
+SET(DEPENDS_ON_PROJECTS Common rtklib)
 
 FILE(GLOB_RECURSE HEADERS "${PROJECT}/*.h")
 FILE(GLOB ROOT_HEADERS "${PROJECT}/*.h")
@@ -46,6 +46,18 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT}")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT}/StdMessage")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT}/CustomType")
 
+# rtklib special things
+
+include_directories("../rtklib/src")
+
+add_definitions(-D_LIB)
+add_definitions(-DEXTLEX)
+add_definitions(-DENAGLO)
+add_definitions(-DENAGAL)
+add_definitions(-DENAQZS)
+add_definitions(-DENACMP)
+add_definitions(-DENALEO)
+
 # linking
 
 add_library(${PROJECT} STATIC ${HEADERS} ${SOURCES} ${MOC_SOURCES})
@@ -55,6 +67,6 @@ SET_TARGET_PROPERTIES(${PROJECT} PROPERTIES LINKER_LANGUAGE CXX)
 target_link_libraries(
     ${PROJECT}
     ${DEPENDS_ON_PROJECTS}
-    ${Boost_LIBRARIES}
+    ${Boost_LIBRARIES}                                  
     Qt5::Core
 	Qt5::Sql)

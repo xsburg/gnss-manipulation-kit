@@ -28,6 +28,15 @@ namespace Greis
         _isCorrect = true;
     }
 
+    LoggingHistoryStdMessage::LoggingHistoryStdMessage(int p_size)
+    {
+        _id = "LH";
+        _bodySize = p_size - HeadSize();
+        _isCorrect = true;
+    }
+
+    const std::string LoggingHistoryStdMessage::Codes::Code_LH = "LH";
+
     std::string LoggingHistoryStdMessage::ToString() const
     {
         return toString("LoggingHistoryStdMessage");

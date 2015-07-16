@@ -28,6 +28,15 @@ namespace Greis
         _isCorrect = true;
     }
 
+    RangeResidualStdMessage::RangeResidualStdMessage(int p_size)
+    {
+        _id = "rr";
+        _bodySize = p_size - HeadSize();
+        _isCorrect = true;
+    }
+
+    const std::string RangeResidualStdMessage::Codes::Code_rr = "rr";
+
     std::string RangeResidualStdMessage::ToString() const
     {
         return toString("RangeResidualStdMessage");

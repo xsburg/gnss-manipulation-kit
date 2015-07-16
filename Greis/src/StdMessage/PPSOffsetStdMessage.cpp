@@ -31,6 +31,9 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string PPSOffsetStdMessage::Codes::Code_ZA = "ZA";
+    const std::string PPSOffsetStdMessage::Codes::Code_ZB = "ZB";
+
     std::string PPSOffsetStdMessage::ToString() const
     {
         return toString("PPSOffsetStdMessage");

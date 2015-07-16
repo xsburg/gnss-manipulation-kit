@@ -51,6 +51,22 @@ namespace Greis
         _isCorrect = true;
     }
 
+    RotationMatrixAndVectorsStdMessage::RotationMatrixAndVectorsStdMessage()
+    {
+        _id = "mr";
+        _bodySize = 73;
+        _isCorrect = true;
+    }
+
+    RotationMatrixAndVectorsStdMessage::RotationMatrixAndVectorsStdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 73;
+        _isCorrect = true;
+    }
+
+    const std::string RotationMatrixAndVectorsStdMessage::Codes::Code_mr = "mr";
+
     std::string RotationMatrixAndVectorsStdMessage::ToString() const
     {
         return toString("RotationMatrixAndVectorsStdMessage");

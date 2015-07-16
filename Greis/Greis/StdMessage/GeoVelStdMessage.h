@@ -13,7 +13,14 @@ namespace Greis
 
         GeoVelStdMessage(const char* p_message, int p_length);
         GeoVelStdMessage(const std::string& p_id, int p_size);
-
+        GeoVelStdMessage();
+        GeoVelStdMessage(const std::string& p_id);
+        
+        struct Codes
+        {
+            static const std::string Code_VG;
+        };
+        
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }
         virtual EMessageId::Type IdNumber() const { return EMessageId::GeoVel; }

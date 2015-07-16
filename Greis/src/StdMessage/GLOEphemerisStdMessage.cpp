@@ -85,6 +85,15 @@ namespace Greis
         _isCorrect = true;
     }
 
+    GLOEphemerisStdMessage::GLOEphemerisStdMessage(int p_size)
+    {
+        _id = "NE";
+        _bodySize = p_size - HeadSize();
+        _isCorrect = true;
+    }
+
+    const std::string GLOEphemerisStdMessage::Codes::Code_NE = "NE";
+
     std::string GLOEphemerisStdMessage::ToString() const
     {
         return toString("GLOEphemerisStdMessage");

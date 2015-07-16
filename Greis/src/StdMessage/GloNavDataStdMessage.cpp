@@ -35,6 +35,15 @@ namespace Greis
         _isCorrect = true;
     }
 
+    GloNavDataStdMessage::GloNavDataStdMessage(int p_size)
+    {
+        _id = "LD";
+        _bodySize = p_size - HeadSize();
+        _isCorrect = true;
+    }
+
+    const std::string GloNavDataStdMessage::Codes::Code_LD = "LD";
+
     std::string GloNavDataStdMessage::ToString() const
     {
         return toString("GloNavDataStdMessage");

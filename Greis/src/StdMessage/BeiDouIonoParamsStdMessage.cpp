@@ -29,6 +29,22 @@ namespace Greis
         _isCorrect = true;
     }
 
+    BeiDouIonoParamsStdMessage::BeiDouIonoParamsStdMessage()
+    {
+        _id = "CI";
+        _bodySize = 39;
+        _isCorrect = true;
+    }
+
+    BeiDouIonoParamsStdMessage::BeiDouIonoParamsStdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 39;
+        _isCorrect = true;
+    }
+
+    const std::string BeiDouIonoParamsStdMessage::Codes::Code_CI = "CI";
+
     std::string BeiDouIonoParamsStdMessage::ToString() const
     {
         return toString("BeiDouIonoParamsStdMessage");

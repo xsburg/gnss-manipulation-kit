@@ -39,6 +39,22 @@ namespace Greis
         _isCorrect = true;
     }
 
+    GeoVelStdMessage::GeoVelStdMessage()
+    {
+        _id = "VG";
+        _bodySize = 18;
+        _isCorrect = true;
+    }
+
+    GeoVelStdMessage::GeoVelStdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 18;
+        _isCorrect = true;
+    }
+
+    const std::string GeoVelStdMessage::Codes::Code_VG = "VG";
+
     std::string GeoVelStdMessage::ToString() const
     {
         return toString("GeoVelStdMessage");

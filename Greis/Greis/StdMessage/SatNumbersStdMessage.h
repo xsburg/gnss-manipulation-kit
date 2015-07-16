@@ -13,7 +13,13 @@ namespace Greis
 
         SatNumbersStdMessage(const char* p_message, int p_length);
         SatNumbersStdMessage(const std::string& p_id, int p_size);
-
+        SatNumbersStdMessage(int p_size);
+        
+        struct Codes
+        {
+            static const std::string Code_NN;
+        };
+        
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }
         virtual EMessageId::Type IdNumber() const { return EMessageId::SatNumbers; }

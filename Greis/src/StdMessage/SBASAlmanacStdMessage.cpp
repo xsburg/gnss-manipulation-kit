@@ -55,6 +55,22 @@ namespace Greis
         _isCorrect = true;
     }
 
+    SBASAlmanacStdMessage::SBASAlmanacStdMessage()
+    {
+        _id = "WA";
+        _bodySize = 51;
+        _isCorrect = true;
+    }
+
+    SBASAlmanacStdMessage::SBASAlmanacStdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 51;
+        _isCorrect = true;
+    }
+
+    const std::string SBASAlmanacStdMessage::Codes::Code_WA = "WA";
+
     std::string SBASAlmanacStdMessage::ToString() const
     {
         return toString("SBASAlmanacStdMessage");

@@ -13,7 +13,14 @@ namespace Greis
 
         RotationAnglesStdMessage(const char* p_message, int p_length);
         RotationAnglesStdMessage(const std::string& p_id, int p_size);
-
+        RotationAnglesStdMessage();
+        RotationAnglesStdMessage(const std::string& p_id);
+        
+        struct Codes
+        {
+            static const std::string Code_AR;
+        };
+        
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }
         virtual EMessageId::Type IdNumber() const { return EMessageId::RotationAngles; }

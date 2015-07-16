@@ -13,7 +13,13 @@ namespace Greis
 
         LoggingHistoryStdMessage(const char* p_message, int p_length);
         LoggingHistoryStdMessage(const std::string& p_id, int p_size);
-
+        LoggingHistoryStdMessage(int p_size);
+        
+        struct Codes
+        {
+            static const std::string Code_LH;
+        };
+        
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }
         virtual EMessageId::Type IdNumber() const { return EMessageId::LoggingHistory; }

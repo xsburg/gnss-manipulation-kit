@@ -13,7 +13,14 @@ namespace Greis
 
         GLOTimeStdMessage(const char* p_message, int p_length);
         GLOTimeStdMessage(const std::string& p_id, int p_size);
-
+        GLOTimeStdMessage();
+        GLOTimeStdMessage(const std::string& p_id);
+        
+        struct Codes
+        {
+            static const std::string Code_NT;
+        };
+        
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }
         virtual EMessageId::Type IdNumber() const { return EMessageId::GLOTime; }

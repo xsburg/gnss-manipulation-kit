@@ -39,6 +39,15 @@ namespace Greis
         _isCorrect = true;
     }
 
+    ClockOffsetsStdMessage::ClockOffsetsStdMessage(int p_size)
+    {
+        _id = "rT";
+        _bodySize = p_size - HeadSize();
+        _isCorrect = true;
+    }
+
+    const std::string ClockOffsetsStdMessage::Codes::Code_rT = "rT";
+
     std::string ClockOffsetsStdMessage::ToString() const
     {
         return toString("ClockOffsetsStdMessage");

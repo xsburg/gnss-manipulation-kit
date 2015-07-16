@@ -33,6 +33,13 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string CPStdMessage::Codes::Code_PC = "PC";
+    const std::string CPStdMessage::Codes::Code_P1 = "P1";
+    const std::string CPStdMessage::Codes::Code_P2 = "P2";
+    const std::string CPStdMessage::Codes::Code_P3 = "P3";
+    const std::string CPStdMessage::Codes::Code_P5 = "P5";
+    const std::string CPStdMessage::Codes::Code_Pl = "Pl";
+
     std::string CPStdMessage::ToString() const
     {
         return toString("CPStdMessage");

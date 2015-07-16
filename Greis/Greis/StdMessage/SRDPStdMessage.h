@@ -13,7 +13,16 @@ namespace Greis
 
         SRDPStdMessage(const char* p_message, int p_length);
         SRDPStdMessage(const std::string& p_id, int p_size);
-
+        
+        struct Codes
+        {
+            static const std::string Code_1d;
+            static const std::string Code_2d;
+            static const std::string Code_3d;
+            static const std::string Code_5d;
+            static const std::string Code_ld;
+        };
+        
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }
         virtual EMessageId::Type IdNumber() const { return EMessageId::SRDP; }

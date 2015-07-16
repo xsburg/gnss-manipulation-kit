@@ -1,7 +1,7 @@
 #ifndef Exception_h__
 #define Exception_h__
 
-#include <QtCore/QtCore>
+#include <QtCore/QString>
 
 namespace Common
 {

@@ -33,6 +33,15 @@ namespace Greis
         _isCorrect = true;
     }
 
+    IonoDelayStdMessage::IonoDelayStdMessage(int p_size)
+    {
+        _id = "ID";
+        _bodySize = p_size - HeadSize();
+        _isCorrect = true;
+    }
+
+    const std::string IonoDelayStdMessage::Codes::Code_ID = "ID";
+
     std::string IonoDelayStdMessage::ToString() const
     {
         return toString("IonoDelayStdMessage");

@@ -13,7 +13,14 @@ namespace Greis
 
         HeadAndPitchStdMessage(const char* p_message, int p_length);
         HeadAndPitchStdMessage(const std::string& p_id, int p_size);
-
+        HeadAndPitchStdMessage();
+        HeadAndPitchStdMessage(const std::string& p_id);
+        
+        struct Codes
+        {
+            static const std::string Code_ha;
+        };
+        
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }
         virtual EMessageId::Type IdNumber() const { return EMessageId::HeadAndPitch; }

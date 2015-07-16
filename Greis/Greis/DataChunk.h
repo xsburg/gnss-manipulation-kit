@@ -27,6 +27,7 @@ namespace Greis
         QByteArray ToByteArray() const;
 
         void AddMessage(Message::UniquePtr_t msg);
+        void FlushEpoch();
 
         DataChunk();
     private:

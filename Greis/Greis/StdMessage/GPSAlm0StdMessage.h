@@ -13,7 +13,14 @@ namespace Greis
 
         GPSAlm0StdMessage(const char* p_message, int p_length);
         GPSAlm0StdMessage(const std::string& p_id, int p_size);
-
+        GPSAlm0StdMessage();
+        GPSAlm0StdMessage(const std::string& p_id);
+        
+        struct Codes
+        {
+            static const std::string Code_GA;
+        };
+        
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }
         virtual EMessageId::Type IdNumber() const { return EMessageId::GPSAlm0; }

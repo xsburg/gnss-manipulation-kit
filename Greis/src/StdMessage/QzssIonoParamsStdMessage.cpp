@@ -29,6 +29,22 @@ namespace Greis
         _isCorrect = true;
     }
 
+    QzssIonoParamsStdMessage::QzssIonoParamsStdMessage()
+    {
+        _id = "QI";
+        _bodySize = 39;
+        _isCorrect = true;
+    }
+
+    QzssIonoParamsStdMessage::QzssIonoParamsStdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 39;
+        _isCorrect = true;
+    }
+
+    const std::string QzssIonoParamsStdMessage::Codes::Code_QI = "QI";
+
     std::string QzssIonoParamsStdMessage::ToString() const
     {
         return toString("QzssIonoParamsStdMessage");

@@ -28,6 +28,15 @@ namespace Greis
         _isCorrect = true;
     }
 
+    QzssNavDataStdMessage::QzssNavDataStdMessage(int p_size)
+    {
+        _id = "QD";
+        _bodySize = p_size - HeadSize();
+        _isCorrect = true;
+    }
+
+    const std::string QzssNavDataStdMessage::Codes::Code_QD = "QD";
+
     std::string QzssNavDataStdMessage::ToString() const
     {
         return toString("QzssNavDataStdMessage");

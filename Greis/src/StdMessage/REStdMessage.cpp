@@ -31,6 +31,15 @@ namespace Greis
         _isCorrect = true;
     }
 
+    REStdMessage::REStdMessage(int p_size)
+    {
+        _id = "RE";
+        _bodySize = p_size - HeadSize();
+        _isCorrect = true;
+    }
+
+    const std::string REStdMessage::Codes::Code_RE = "RE";
+
     std::string REStdMessage::ToString() const
     {
         return toString("REStdMessage");

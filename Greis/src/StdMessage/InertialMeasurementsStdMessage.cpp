@@ -33,6 +33,22 @@ namespace Greis
         _isCorrect = true;
     }
 
+    InertialMeasurementsStdMessage::InertialMeasurementsStdMessage()
+    {
+        _id = "IM";
+        _bodySize = 25;
+        _isCorrect = true;
+    }
+
+    InertialMeasurementsStdMessage::InertialMeasurementsStdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 25;
+        _isCorrect = true;
+    }
+
+    const std::string InertialMeasurementsStdMessage::Codes::Code_IM = "IM";
+
     std::string InertialMeasurementsStdMessage::ToString() const
     {
         return toString("InertialMeasurementsStdMessage");

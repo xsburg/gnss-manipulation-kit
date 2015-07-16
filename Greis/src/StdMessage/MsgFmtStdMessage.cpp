@@ -37,6 +37,22 @@ namespace Greis
         _isCorrect = true;
     }
 
+    MsgFmtStdMessage::MsgFmtStdMessage()
+    {
+        _id = "MF";
+        _bodySize = 9;
+        _isCorrect = true;
+    }
+
+    MsgFmtStdMessage::MsgFmtStdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 9;
+        _isCorrect = true;
+    }
+
+    const std::string MsgFmtStdMessage::Codes::Code_MF = "MF";
+
     std::string MsgFmtStdMessage::ToString() const
     {
         return toString("MsgFmtStdMessage");

@@ -53,6 +53,15 @@ namespace Greis
         _isCorrect = true;
     }
 
+    GPSEphemeris0StdMessage::GPSEphemeris0StdMessage(int p_size)
+    {
+        _id = "GE";
+        _bodySize = p_size - HeadSize();
+        _isCorrect = true;
+    }
+
+    const std::string GPSEphemeris0StdMessage::Codes::Code_GE = "GE";
+
     std::string GPSEphemeris0StdMessage::ToString() const
     {
         return toString("GPSEphemeris0StdMessage");

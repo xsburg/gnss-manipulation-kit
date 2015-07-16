@@ -65,6 +65,15 @@ namespace Greis
         _isCorrect = true;
     }
 
+    GLOAlmanacStdMessage::GLOAlmanacStdMessage(int p_size)
+    {
+        _id = "NA";
+        _bodySize = p_size - HeadSize();
+        _isCorrect = true;
+    }
+
+    const std::string GLOAlmanacStdMessage::Codes::Code_NA = "NA";
+
     std::string GLOAlmanacStdMessage::ToString() const
     {
         return toString("GLOAlmanacStdMessage");

@@ -31,6 +31,22 @@ namespace Greis
         _isCorrect = true;
     }
 
+    LatencyStdMessage::LatencyStdMessage()
+    {
+        _id = "LT";
+        _bodySize = 2;
+        _isCorrect = true;
+    }
+
+    LatencyStdMessage::LatencyStdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 2;
+        _isCorrect = true;
+    }
+
+    const std::string LatencyStdMessage::Codes::Code_LT = "LT";
+
     std::string LatencyStdMessage::ToString() const
     {
         return toString("LatencyStdMessage");

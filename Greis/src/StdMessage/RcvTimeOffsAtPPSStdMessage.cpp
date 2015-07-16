@@ -33,6 +33,9 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string RcvTimeOffsAtPPSStdMessage::Codes::Code_YA = "YA";
+    const std::string RcvTimeOffsAtPPSStdMessage::Codes::Code_YB = "YB";
+
     std::string RcvTimeOffsAtPPSStdMessage::ToString() const
     {
         return toString("RcvTimeOffsAtPPSStdMessage");

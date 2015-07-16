@@ -33,6 +33,13 @@ namespace Greis
         _isCorrect = true;
     }
 
+    const std::string CNRStdMessage::Codes::Code_EC = "EC";
+    const std::string CNRStdMessage::Codes::Code_E1 = "E1";
+    const std::string CNRStdMessage::Codes::Code_E2 = "E2";
+    const std::string CNRStdMessage::Codes::Code_E3 = "E3";
+    const std::string CNRStdMessage::Codes::Code_E5 = "E5";
+    const std::string CNRStdMessage::Codes::Code_El = "El";
+
     std::string CNRStdMessage::ToString() const
     {
         return toString("CNRStdMessage");

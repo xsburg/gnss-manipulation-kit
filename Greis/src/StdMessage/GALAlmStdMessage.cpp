@@ -33,6 +33,22 @@ namespace Greis
         _isCorrect = true;
     }
 
+    GALAlmStdMessage::GALAlmStdMessage()
+    {
+        _id = "EA";
+        _bodySize = 49;
+        _isCorrect = true;
+    }
+
+    GALAlmStdMessage::GALAlmStdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 49;
+        _isCorrect = true;
+    }
+
+    const std::string GALAlmStdMessage::Codes::Code_EA = "EA";
+
     std::string GALAlmStdMessage::ToString() const
     {
         return toString("GALAlmStdMessage");

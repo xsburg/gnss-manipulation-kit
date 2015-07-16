@@ -41,6 +41,15 @@ namespace Greis
         _isCorrect = true;
     }
 
+    CompRawNavDataStdMessage::CompRawNavDataStdMessage(int p_size)
+    {
+        _id = "cd";
+        _bodySize = p_size - HeadSize();
+        _isCorrect = true;
+    }
+
+    const std::string CompRawNavDataStdMessage::Codes::Code_cd = "cd";
+
     std::string CompRawNavDataStdMessage::ToString() const
     {
         return toString("CompRawNavDataStdMessage");

@@ -82,3 +82,16 @@ Platform.Tests/Platform.Tests.vcxproj.filters
 Platform/Platform.vcxproj
 Platform/Platform.vcxproj.filters
 Platform/Platform.sln
+gpstk/
+rtklib/rtklib.dir/
+rtklib/rtklib.sln
+rtklib/rtklib.vcxproj
+rtklib/rtklib.vcxproj.filters
+rinex2db/rinex2db.dir/
+db2rinex/db2rinex.dir/
+db2rinex/db2rinex.sln
+db2rinex/db2rinex.vcxproj
+db2rinex/db2rinex.vcxproj.filters
+rinex2db/rinex2db.sln
+rinex2db/rinex2db.vcxproj
+rinex2db/rinex2db.vcxproj.filters

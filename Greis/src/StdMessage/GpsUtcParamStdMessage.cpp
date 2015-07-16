@@ -31,6 +31,22 @@ namespace Greis
         _isCorrect = true;
     }
 
+    GpsUtcParamStdMessage::GpsUtcParamStdMessage()
+    {
+        _id = "UO";
+        _bodySize = 24;
+        _isCorrect = true;
+    }
+
+    GpsUtcParamStdMessage::GpsUtcParamStdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 24;
+        _isCorrect = true;
+    }
+
+    const std::string GpsUtcParamStdMessage::Codes::Code_UO = "UO";
+
     std::string GpsUtcParamStdMessage::ToString() const
     {
         return toString("GpsUtcParamStdMessage");

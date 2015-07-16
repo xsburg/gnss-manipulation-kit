@@ -39,6 +39,22 @@ namespace Greis
         _isCorrect = true;
     }
 
+    SbasUtcParamStdMessage::SbasUtcParamStdMessage()
+    {
+        _id = "WU";
+        _bodySize = 32;
+        _isCorrect = true;
+    }
+
+    SbasUtcParamStdMessage::SbasUtcParamStdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 32;
+        _isCorrect = true;
+    }
+
+    const std::string SbasUtcParamStdMessage::Codes::Code_WU = "WU";
+
     std::string SbasUtcParamStdMessage::ToString() const
     {
         return toString("SbasUtcParamStdMessage");

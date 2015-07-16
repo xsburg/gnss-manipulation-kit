@@ -4,7 +4,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 
 SET(PROJECT Greis.Tests)
 
-SET(DEPENDS_ON_PROJECTS Common Greis)
+SET(DEPENDS_ON_PROJECTS Common Greis rtklib)
 
 FILE(GLOB_RECURSE HEADERS "include/*.h")
 
@@ -46,6 +46,18 @@ endforeach()
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT}")
+
+# rtklib special things
+
+include_directories("../rtklib/src")
+
+add_definitions(-D_LIB)
+add_definitions(-DEXTLEX)
+add_definitions(-DENAGLO)
+add_definitions(-DENAGAL)
+add_definitions(-DENAQZS)
+add_definitions(-DENACMP)
+add_definitions(-DENALEO)
 
 # linking
 

@@ -39,6 +39,22 @@ namespace Greis
         _isCorrect = true;
     }
 
+    VelStdMessage::VelStdMessage()
+    {
+        _id = "VE";
+        _bodySize = 18;
+        _isCorrect = true;
+    }
+
+    VelStdMessage::VelStdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 18;
+        _isCorrect = true;
+    }
+
+    const std::string VelStdMessage::Codes::Code_VE = "VE";
+
     std::string VelStdMessage::ToString() const
     {
         return toString("VelStdMessage");

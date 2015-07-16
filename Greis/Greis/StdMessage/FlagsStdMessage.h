@@ -13,7 +13,17 @@ namespace Greis
 
         FlagsStdMessage(const char* p_message, int p_length);
         FlagsStdMessage(const std::string& p_id, int p_size);
-
+        
+        struct Codes
+        {
+            static const std::string Code_FC;
+            static const std::string Code_F1;
+            static const std::string Code_F2;
+            static const std::string Code_F3;
+            static const std::string Code_F5;
+            static const std::string Code_Fl;
+        };
+        
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }
         virtual EMessageId::Type IdNumber() const { return EMessageId::Flags; }

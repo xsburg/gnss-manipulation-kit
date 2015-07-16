@@ -17,12 +17,14 @@ namespace Greis
 
         void Helpers::assertBinaryArray(const QByteArray& expected, const QByteArray& actual)
         {
+            auto expectedData = expected.data();
+            auto actualData = actual.data();
             int size = std::min(expected.size(), actual.size());
             bool bad = false;
             int badIndex = -1;
             for (int i = 0; i < size; ++i)
             {
-                if (expected[i] != actual[i])
+                if (expectedData[i] != actualData[i])
                 {
                     sLogger.Info(QString("Bytes mismatch at %1.").arg(i));
                     bad = true;

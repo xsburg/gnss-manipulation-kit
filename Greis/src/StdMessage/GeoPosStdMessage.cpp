@@ -39,6 +39,22 @@ namespace Greis
         _isCorrect = true;
     }
 
+    GeoPosStdMessage::GeoPosStdMessage()
+    {
+        _id = "PG";
+        _bodySize = 30;
+        _isCorrect = true;
+    }
+
+    GeoPosStdMessage::GeoPosStdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 30;
+        _isCorrect = true;
+    }
+
+    const std::string GeoPosStdMessage::Codes::Code_PG = "PG";
+
     std::string GeoPosStdMessage::ToString() const
     {
         return toString("GeoPosStdMessage");

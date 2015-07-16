@@ -13,7 +13,14 @@ namespace Greis
 
         RcvBeiDouTimeOffsetStdMessage(const char* p_message, int p_length);
         RcvBeiDouTimeOffsetStdMessage(const std::string& p_id, int p_size);
-
+        RcvBeiDouTimeOffsetStdMessage();
+        RcvBeiDouTimeOffsetStdMessage(const std::string& p_id);
+        
+        struct Codes
+        {
+            static const std::string Code_CO;
+        };
+        
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }
         virtual EMessageId::Type IdNumber() const { return EMessageId::RcvBeiDouTimeOffset; }

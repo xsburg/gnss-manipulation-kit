@@ -13,7 +13,17 @@ namespace Greis
 
         SPRStdMessage(const char* p_message, int p_length);
         SPRStdMessage(const std::string& p_id, int p_size);
-
+        
+        struct Codes
+        {
+            static const std::string Code_rc;
+            static const std::string Code_r1;
+            static const std::string Code_r2;
+            static const std::string Code_r3;
+            static const std::string Code_r5;
+            static const std::string Code_rl;
+        };
+        
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }
         virtual EMessageId::Type IdNumber() const { return EMessageId::SPR; }

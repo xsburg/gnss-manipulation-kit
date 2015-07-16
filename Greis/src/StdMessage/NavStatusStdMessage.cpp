@@ -35,6 +35,15 @@ namespace Greis
         _isCorrect = true;
     }
 
+    NavStatusStdMessage::NavStatusStdMessage(int p_size)
+    {
+        _id = "SS";
+        _bodySize = p_size - HeadSize();
+        _isCorrect = true;
+    }
+
+    const std::string NavStatusStdMessage::Codes::Code_SS = "SS";
+
     std::string NavStatusStdMessage::ToString() const
     {
         return toString("NavStatusStdMessage");

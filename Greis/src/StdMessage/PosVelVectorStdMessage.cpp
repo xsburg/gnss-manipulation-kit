@@ -51,6 +51,22 @@ namespace Greis
         _isCorrect = true;
     }
 
+    PosVelVectorStdMessage::PosVelVectorStdMessage()
+    {
+        _id = "rV";
+        _bodySize = 42;
+        _isCorrect = true;
+    }
+
+    PosVelVectorStdMessage::PosVelVectorStdMessage(const std::string& p_id)
+    {
+        _id = p_id;
+        _bodySize = 42;
+        _isCorrect = true;
+    }
+
+    const std::string PosVelVectorStdMessage::Codes::Code_rV = "rV";
+
     std::string PosVelVectorStdMessage::ToString() const
     {
         return toString("PosVelVectorStdMessage");

@@ -13,7 +13,17 @@ namespace Greis
 
         DPStdMessage(const char* p_message, int p_length);
         DPStdMessage(const std::string& p_id, int p_size);
-
+        
+        struct Codes
+        {
+            static const std::string Code_DC;
+            static const std::string Code_D1;
+            static const std::string Code_D2;
+            static const std::string Code_D3;
+            static const std::string Code_D5;
+            static const std::string Code_Dl;
+        };
+        
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }
         virtual EMessageId::Type IdNumber() const { return EMessageId::DP; }

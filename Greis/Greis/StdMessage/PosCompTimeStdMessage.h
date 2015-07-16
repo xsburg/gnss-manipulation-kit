@@ -13,7 +13,14 @@ namespace Greis
 
         PosCompTimeStdMessage(const char* p_message, int p_length);
         PosCompTimeStdMessage(const std::string& p_id, int p_size);
-
+        PosCompTimeStdMessage();
+        PosCompTimeStdMessage(const std::string& p_id);
+        
+        struct Codes
+        {
+            static const std::string Code_PT;
+        };
+        
         virtual std::string ToString() const;
         virtual std::string Id() const { return _id; }
         virtual EMessageId::Type IdNumber() const { return EMessageId::PosCompTime; }
