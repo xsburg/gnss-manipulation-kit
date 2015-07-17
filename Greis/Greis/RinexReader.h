@@ -17,7 +17,7 @@ namespace Greis
         {
             obs = { 0 };
             nav = { 0 };
-            sta = { "" };
+            sta = { 0 };
             destroyed = false;
         }
 
@@ -25,7 +25,7 @@ namespace Greis
         {
             obs = p_obs;
             nav = p_nav;
-            sta = { "" };
+            sta = { 0 };
             destroyed = false;
         }
 
