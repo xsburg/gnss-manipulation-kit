@@ -185,7 +185,7 @@ static gtime_t adjday(gtime_t time, double tod)
     return timeadd(epoch2time(ep),tod);
 }
 /* set time tag --------------------------------------------------------------*/
-static int settag(obsd_t *data, gtime_t time)
+extern int settag(obsd_t *data, gtime_t time)
 {
     char s1[64],s2[64];
     
