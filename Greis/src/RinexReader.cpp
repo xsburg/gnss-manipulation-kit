@@ -2,8 +2,11 @@
 #include <QtCore/QDir>
 #include <Greis/RinexReader.h>
 #include <Common/Exception.h>
+#include <Common/SmartPtr.h>
 #include <rtklib.h>
 #include <Greis/AllStdMessages.h>
+
+using Common::make_unique;
 
 // Implemented abstract method from rtklib
 extern int showmsg(char *format, ...)
@@ -274,8 +277,8 @@ void Greis::RtkAdapter::writeEpochMessages(DataChunk* dataChunk, obsd_t* data, i
     char* opt = "";//  "-RL1C -RL2C -GL1W -GL1X -GL2X -JL1Z -JL1X";
 
     // [RT], [RD]
-    auto rcvTime = std::make_unique<RcvTimeStdMessage>();
-    auto rcvDate = std::make_unique<RcvDateStdMessage>();
+    auto rcvTime = make_unique<RcvTimeStdMessage>();
+    auto rcvDate = make_unique<RcvDateStdMessage>();
 
     double ep[6] = { 0 };
     // date
@@ -295,7 +298,7 @@ void Greis::RtkAdapter::writeEpochMessages(DataChunk* dataChunk, obsd_t* data, i
     dataChunk->AddMessage(std::move(rcvDate));
 
     // [SI]
-    auto si = std::make_unique<SatIndexStdMessage>(StdMessage::HeadSize() + n + 1);
+    auto si = make_unique<SatIndexStdMessage>(StdMessage::HeadSize() + n + 1);
     std::vector<int> slotData;
     for (int i = 0; i < n; i++)
     {
@@ -328,7 +331,7 @@ void Greis::RtkAdapter::writeEpochMessages(DataChunk* dataChunk, obsd_t* data, i
     // [NN]
     if (slotData.size() > 0)
     {
-        auto nn = std::make_unique<SatNumbersStdMessage>(StdMessage::HeadSize() + slotData.size() + 1);
+        auto nn = make_unique<SatNumbersStdMessage>(StdMessage::HeadSize() + slotData.size() + 1);
         for (auto slot : slotData)
         {
             nn->Osn().push_back(slot);
@@ -352,7 +355,7 @@ void Greis::RtkAdapter::writeEpochMessages(DataChunk* dataChunk, obsd_t* data, i
         char code = codes[codeIndex];
         std::string codeId = cnrCodeIds[codeIndex];
         
-        auto msg = std::make_unique<CNRStdMessage>(codeId, StdMessage::HeadSize() + n + 1);
+        auto msg = make_unique<CNRStdMessage>(codeId, StdMessage::HeadSize() + n + 1);
         msg->Cnr().resize(n);
         for (int i = 0; i < n; i++)
         {
@@ -404,7 +407,7 @@ void Greis::RtkAdapter::writeEpochMessages(DataChunk* dataChunk, obsd_t* data, i
         char code = codes[codeIndex];
         std::string codeId = prCodeIds[codeIndex];
         
-        auto msg = std::make_unique<PRStdMessage>(codeId, StdMessage::HeadSize() + 8 * n + 1);
+        auto msg = make_unique<PRStdMessage>(codeId, StdMessage::HeadSize() + 8 * n + 1);
         msg->Pr().resize(n);
         for (int i = 0; i < n; i++)
         {
@@ -449,7 +452,7 @@ void Greis::RtkAdapter::writeEpochMessages(DataChunk* dataChunk, obsd_t* data, i
         char code = codes[codeIndex];
         std::string codeId = cpCodeIds[codeIndex];
         
-        auto msg = std::make_unique<CPStdMessage>(codeId, StdMessage::HeadSize() + 8 * n + 1);
+        auto msg = make_unique<CPStdMessage>(codeId, StdMessage::HeadSize() + 8 * n + 1);
         msg->Cp().resize(n);
         for (int i = 0; i < n; i++)
         {
@@ -494,7 +497,7 @@ void Greis::RtkAdapter::writeEpochMessages(DataChunk* dataChunk, obsd_t* data, i
         char code = codes[codeIndex];
         std::string codeId = dpCodeIds[codeIndex];
 
-        auto msg = std::make_unique<DPStdMessage>(codeId, StdMessage::HeadSize() + 4 * n + 1);
+        auto msg = make_unique<DPStdMessage>(codeId, StdMessage::HeadSize() + 4 * n + 1);
         bool emptyMessage = true;
         msg->Dp().resize(n);
         for (int i = 0; i < n; i++)
@@ -536,7 +539,7 @@ void Greis::RtkAdapter::writeEpochMessages(DataChunk* dataChunk, obsd_t* data, i
 
     // [TC] TODO: Not implemented
     {
-        auto msg = std::make_unique<TrackingTimeCAStdMessage>(StdMessage::HeadSize() + 2 * n + 1);
+        auto msg = make_unique<TrackingTimeCAStdMessage>(StdMessage::HeadSize() + 2 * n + 1);
         msg->Tt().resize(n);
         for (int i = 0; i < n; i++)
         {
@@ -618,9 +621,9 @@ void Greis::RtkAdapter::writeTimeParameters(DataChunk* dataChunk, nav_t* nav)
 {
     // [UO] gps utc time parameters
     {
-        auto msg = std::make_unique<GpsUtcParamStdMessage>();
+        auto msg = make_unique<GpsUtcParamStdMessage>();
 
-        msg->Utc() = std::make_unique<UtcOffsCustomType>(23);
+        msg->Utc() = make_unique<UtcOffsCustomType>(23);
         msg->Utc()->A0() = nav->utc_gps[0];
         msg->Utc()->A1() = nav->utc_gps[1];
         msg->Utc()->Tot() = nav->utc_gps[2];
@@ -679,7 +682,7 @@ void Greis::RtkAdapter::writeEphemeris(DataChunk* dataChunk, eph_t* eph)
         prn += 210;
     }
 
-    auto reqData = std::make_unique<GpsEphReqDataCustomType>(122);
+    auto reqData = make_unique<GpsEphReqDataCustomType>(122);
 
     reqData->Sv() = prn;
     //reqData->Tow()  <= below in the code
@@ -737,14 +740,14 @@ void Greis::RtkAdapter::writeEphemeris(DataChunk* dataChunk, eph_t* eph)
 
             if (sys == SYS_GPS)
             {
-                auto gpsMsg = std::make_unique<GPSEphemeris0StdMessage>(StdMessage::HeadSize() + 123);
+                auto gpsMsg = make_unique<GPSEphemeris0StdMessage>(StdMessage::HeadSize() + 123);
                 gpsMsg->Req() = std::move(reqData);
                 dataChunk->AddMessage(std::move(gpsMsg));
             }
             else if (sys == SYS_QZS)
             {
-                auto qzsMsg = std::make_unique<QZSSEphemerisStdMessage>(StdMessage::HeadSize() + 123);
-                qzsMsg->Gps() = std::make_unique<GPSEphemeris1CustomType>(122);
+                auto qzsMsg = make_unique<QZSSEphemerisStdMessage>(StdMessage::HeadSize() + 123);
+                qzsMsg->Gps() = make_unique<GPSEphemeris1CustomType>(122);
                 qzsMsg->Gps()->Req() = std::move(reqData);
                 dataChunk->AddMessage(std::move(qzsMsg));
             }
@@ -763,22 +766,22 @@ void Greis::RtkAdapter::writeEphemeris(DataChunk* dataChunk, eph_t* eph)
     {
     case SYS_GPS:
     {GpsEphReqDataCustomType
-            auto msg = std::make_unique<GPSEphemeris0StdMessage>(fullSize);
+            auto msg = make_unique<GPSEphemeris0StdMessage>(fullSize);
         }
         break;
     case SYS_GAL:
     {GpsEphReqDataCustomType
-            auto msg = std::make_unique<GALEphemerisStdMessage>();
+            auto msg = make_unique<GALEphemerisStdMessage>();
         }
         break;
     case SYS_QZS:
     {GPSEphemeris1CustomType, GpsEphReqDataCustomType
-            auto msg = std::make_unique<QZSSEphemerisStdMessage>(fullSize);
+            auto msg = make_unique<QZSSEphemerisStdMessage>(fullSize);
         }
         break;
     case SYS_CMP:
     {GpsEphReqDataCustomType
-            auto msg = std::make_unique<BeiDouEphemerisStdMessage>();
+            auto msg = make_unique<BeiDouEphemerisStdMessage>();
         }
         break;
     }*/
