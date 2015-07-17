@@ -264,7 +264,7 @@ static int decode_trackstat(unsigned int stat, int *sys, int *code, int *track,
     return freq;
 }
 /* check code priority and return obs position -------------------------------*/
-static int checkpri(const char *opt, int sys, int code, int freq)
+static int checkpri2(const char *opt, int sys, int code, int freq)
 {
     int nex=NEXOBS; /* number of extended obs data */
     
@@ -314,7 +314,7 @@ static int decode_rangecmpb(raw_t *raw)
                                    &parity,&halfc))<0) continue;
         
         /* obs position */
-        if ((pos=checkpri(raw->opt,sys,code,freq))<0) continue;
+        if ((pos=checkpri2(raw->opt,sys,code,freq))<0) continue;
         
         prn=U1(p+17);
         if (sys==SYS_GLO) prn-=37;
@@ -405,7 +405,7 @@ static int decode_rangeb(raw_t *raw)
                                    &parity,&halfc))<0) continue;
         
         /* obs position */
-        if ((pos=checkpri(raw->opt,sys,code,freq))<0) continue;
+        if ((pos=checkpri2(raw->opt,sys,code,freq))<0) continue;
         
         prn=U2(p);
         if (sys==SYS_GLO) prn-=37;
