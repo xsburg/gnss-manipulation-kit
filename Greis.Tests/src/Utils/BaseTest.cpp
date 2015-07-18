@@ -19,6 +19,11 @@ namespace Greis
         {
             sLogger.Info("Connecting to the test database...");
             this->_connection = Common::Connection::FromSettings("Db");
+            sLogger.Info(QString("{host: %1, port: %2, database: %3, user: %4}")
+                .arg(this->_connection->Hostname)
+                .arg(this->_connection->Port)
+                .arg(this->_connection->DatabaseName)
+                .arg(this->_connection->Username));
             this->_connection->Connect();
 
             this->_connection->DbHelper()->ExecuteQuery("SET autocommit=0;");
