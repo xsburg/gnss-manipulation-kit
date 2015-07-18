@@ -11,4 +11,4 @@
 #include "Tests/GreisMessageStreamTests.h"
 #include "Tests/MySqlSinkTests.h"
 #include "Tests/MySqlSourceTests.h"
-#include "Tests/RinexTests.h"
+//#include "Tests/RinexTests.h"
