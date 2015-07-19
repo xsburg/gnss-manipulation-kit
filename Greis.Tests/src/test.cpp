@@ -16,7 +16,7 @@ namespace Greis
         class RinexTests : public BaseTest
         {
         };
-
+      
                TEST_F(RinexTests, ShouldReadJavadFile)
         {
             // Arrange
