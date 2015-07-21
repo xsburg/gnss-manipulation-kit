@@ -10,6 +10,8 @@
 #include "Platform/SerialStreamReader.h"
 #include "Platform/ServiceManager.h"
 #include "Platform/ChainedSink.h"
+#include "Greis/LoggingBinaryStream.h"
+#include "Greis/FileBinaryStream.h"
 
 using namespace Common;
 using namespace Greis;
@@ -33,7 +35,7 @@ namespace jpslogd
 {
     bool startLoop()
     {
-        SerialPortBinaryStream::SharedPtr_t serialPort;
+        SerialPortBinaryStream::SharedPtr_t deviceBinaryStream;
         ChainedSink::UniquePtr_t dataCenterSink;
         ChainedSink::UniquePtr_t localSink;
 
@@ -43,8 +45,9 @@ namespace jpslogd
             unsigned int baudRate = sIniSettings.value("BaudRate", 1500000).toUInt();
             int inserterBatchSize = sIniSettings.value("inserterBatchSize", 250).toInt();
             int dataChunkSize = sIniSettings.value("dataChunkSize", 250).toInt();
+            QString rawDataLogFile = sIniSettings.value("rawDataLogFile", "").toString();
             sLogger.Info("Connecting Javad receiver on "+QString::fromStdString(portName)+" at "+QString::number(baudRate)+"bps...");
-            serialPort = std::make_shared<SerialPortBinaryStream>(portName, baudRate);
+            deviceBinaryStream = std::make_shared<SerialPortBinaryStream>(portName, baudRate);
             // Setting parameters from [Receiver] section
             QStringList commands;
             auto keys = sIniSettings.settings()->allKeys();
@@ -58,34 +61,46 @@ namespace jpslogd
             for (auto cmd : commands)
             {
                 sLogger.Info(QString("Running a command: %1").arg(cmd));
-                serialPort->write(cmd.toLatin1());
+                deviceBinaryStream->write(cmd.toLatin1());
                 qSleep(500);
             }
             // Disable running monitoring
-            serialPort->write("\n\n\ndm\n");
+            deviceBinaryStream->write("\n\n\ndm\n");
             qSleep(1000);
-            serialPort->write("dm\r\n\r\ndm\r\n\n\rdm\r\n");
+            deviceBinaryStream->write("dm\r\n\r\ndm\r\n\n\rdm\r\n");
             qSleep(2000);
-            serialPort->write("dm\n\r");
+            deviceBinaryStream->write("dm\n\r");
             //
-            auto serialStream = SerialStreamReader(serialPort);
+            auto serialStream = SerialStreamReader(deviceBinaryStream);
             // Get recevier data
-            serialPort->write("\nprint,/par/rcv/id\n");
+            deviceBinaryStream->write("\nprint,/par/rcv/id\n");
             QString _receiverid = serialStream.readLine();
             _receiverid = _receiverid.mid(6,-1);
-            serialPort->write("\nprint,/par/rcv/model\n");
+            deviceBinaryStream->write("\nprint,/par/rcv/model\n");
             QString _receivermodel = serialStream.readLine();
             _receivermodel = _receivermodel.mid(6,-1);
-            serialPort->write("\nprint,/par/rcv/ver/main\n");
+            deviceBinaryStream->write("\nprint,/par/rcv/ver/main\n");
             QString _receiverfw = serialStream.readLine();
             _receiverfw = _receiverfw.mid(6,-1);
-            serialPort->write("\nprint,/par/rcv/ver/board\n");
+            deviceBinaryStream->write("\nprint,/par/rcv/ver/board\n");
             QString _receiverboard = serialStream.readLine();
             _receiverboard = _receiverboard.mid(6,-1);
             sLogger.Info("Connected device is "+_receivermodel+", board "+_receiverboard+" (ID:"+_receiverid+", FW:"+_receiverfw+")");
             // Configure device for data output
-            serialPort->write("\nem,,def,/msg/jps/AZ,/msg/jps/r1,/msg/jps/r2,/msg/jps/RD{10.00,0.00,0.00,0x0002},/msg/jps/rc\n");
-            GreisMessageStream stream(serialPort, true, false);
+            deviceBinaryStream->write("\nem,,def,/msg/jps/AZ,/msg/jps/r1,/msg/jps/r2,/msg/jps/RD{10.00,0.00,0.00,0x0002},/msg/jps/rc\n");
+
+            // message stream creation based on raw data logger option
+            GreisMessageStream::SharedPtr_t messageStream;
+            if (rawDataLogFile.isEmpty())
+            {
+                messageStream = std::make_shared<GreisMessageStream>(deviceBinaryStream, true, false);
+            }
+            else
+            {
+                auto proxyStream = std::make_shared<LoggingBinaryStream>(deviceBinaryStream, std::make_shared<FileBinaryStream>(rawDataLogFile, Create));
+                messageStream = std::make_shared<GreisMessageStream>(proxyStream, true, false);
+            }
+
             sLogger.Info("Configuring databases...");		
             // Preparing the acquisition sink
             auto dataChunk = make_unique<DataChunk>();
@@ -116,7 +131,7 @@ namespace jpslogd
 
             int msgCounter = 0;
             Message::UniquePtr_t msg;
-            while((msg = stream.Next()).get())
+            while((msg = messageStream->Next()).get())
             {
                 serviceManager->HandleMessage(msg.get());
 
@@ -183,10 +198,10 @@ namespace jpslogd
                 localSink->Flush();
             }
 
-            if (serialPort.get() && serialPort->isOpen())
+            if (deviceBinaryStream.get() && deviceBinaryStream->isOpen())
             {
-                serialPort->write("\ndm\n");
-                serialPort->close();
+                deviceBinaryStream->write("\ndm\n");
+                deviceBinaryStream->close();
             }
 
             return false;
@@ -218,8 +233,13 @@ int main(int argc, char **argv)
 {
     try
     {
-        //std::setlocale(LC_ALL, "Russian_Russia.1251");
-        //std::locale::global(std::locale("Russian_Russia.1251"));
+#ifdef WIN32
+        std::setlocale(LC_ALL, "en_US.utf-8");
+        std::locale::global(std::locale("en-US"));
+#else
+        std::setlocale(LC_ALL, "en_US.UTF-8");
+        std::locale::global(std::locale("en_US.UTF-8"));
+#endif
 
         QCoreApplication a(argc, argv);
 
