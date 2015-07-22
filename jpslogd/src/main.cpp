@@ -48,6 +48,28 @@ namespace jpslogd
             QString rawDataLogFile = sIniSettings.value("rawDataLogFile", "").toString();
             sLogger.Info("Connecting Javad receiver on "+QString::fromStdString(portName)+" at "+QString::number(baudRate)+"bps...");
             deviceBinaryStream = std::make_shared<SerialPortBinaryStream>(portName, baudRate);
+            // Stop monitoring
+            deviceBinaryStream->write("\r\ndm\n\r");
+            deviceBinaryStream->purgeBuffers();
+            //
+            auto serialStream = SerialStreamReader(deviceBinaryStream);
+
+
+            // Get recevier data
+            deviceBinaryStream->write("\nprint,/par/rcv/id\n");
+            QString _receiverid = serialStream.readLine();
+            _receiverid = _receiverid.mid(6,-1);
+            deviceBinaryStream->write("\nprint,/par/rcv/model\n");
+            QString _receivermodel = serialStream.readLine();
+            _receivermodel = _receivermodel.mid(6,-1);
+            deviceBinaryStream->write("\nprint,/par/rcv/ver/main\n");
+            QString _receiverfw = serialStream.readLine();
+            _receiverfw = _receiverfw.mid(6,-1);
+            deviceBinaryStream->write("\nprint,/par/rcv/ver/board\n");
+            QString _receiverboard = serialStream.readLine();
+            _receiverboard = _receiverboard.mid(6,-1);
+            sLogger.Info("Connected device is "+_receivermodel+", board "+_receiverboard+" (ID:"+_receiverid+", FW:"+_receiverfw+")");
+
             // Setting parameters from [Receiver] section
             QStringList commands;
             auto keys = sIniSettings.settings()->allKeys();
@@ -64,30 +86,9 @@ namespace jpslogd
                 deviceBinaryStream->write(cmd.toLatin1());
                 qSleep(500);
             }
-            // Disable running monitoring
-            deviceBinaryStream->write("\n\n\ndm\n");
-            qSleep(1000);
-            deviceBinaryStream->write("dm\r\n\r\ndm\r\n\n\rdm\r\n");
-            qSleep(2000);
-            deviceBinaryStream->write("dm\n\r");
-            //
-            auto serialStream = SerialStreamReader(deviceBinaryStream);
-            // Get recevier data
-            deviceBinaryStream->write("\nprint,/par/rcv/id\n");
-            QString _receiverid = serialStream.readLine();
-            _receiverid = _receiverid.mid(6,-1);
-            deviceBinaryStream->write("\nprint,/par/rcv/model\n");
-            QString _receivermodel = serialStream.readLine();
-            _receivermodel = _receivermodel.mid(6,-1);
-            deviceBinaryStream->write("\nprint,/par/rcv/ver/main\n");
-            QString _receiverfw = serialStream.readLine();
-            _receiverfw = _receiverfw.mid(6,-1);
-            deviceBinaryStream->write("\nprint,/par/rcv/ver/board\n");
-            QString _receiverboard = serialStream.readLine();
-            _receiverboard = _receiverboard.mid(6,-1);
-            sLogger.Info("Connected device is "+_receivermodel+", board "+_receiverboard+" (ID:"+_receiverid+", FW:"+_receiverfw+")");
+
             // Configure device for data output
-            deviceBinaryStream->write("\nem,,def,/msg/jps/AZ,/msg/jps/r1,/msg/jps/r2,/msg/jps/RD{10.00,0.00,0.00,0x0002},/msg/jps/rc\n");
+            // serialPort->write("\n");
 
             // message stream creation based on raw data logger option
             GreisMessageStream::SharedPtr_t messageStream;
@@ -233,21 +234,12 @@ int main(int argc, char **argv)
 {
     try
     {
-#ifdef WIN32
-        std::setlocale(LC_ALL, "en_US.utf-8");
-        std::locale::global(std::locale("en-US"));
-#else
-        std::setlocale(LC_ALL, "en_US.UTF-8");
-        std::locale::global(std::locale("en_US.UTF-8"));
-#endif
-
         QCoreApplication a(argc, argv);
 
         QTextCodec* codec = QTextCodec::codecForName("UTF-8");
         QTextCodec::setCodecForLocale(codec);
         
         sIniSettings.Initialize(Path::Combine(Path::ApplicationDirPath(), "config.ini"));
-
         sLogger.Initialize(sIniSettings.value("LogLevel", 5).toInt());
 
         sLogger.Debug("The following sqldrivers are available:");
