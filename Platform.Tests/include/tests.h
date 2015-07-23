@@ -4,4 +4,5 @@
 
 #pragma once
 
+#include "Tests/MissingDataTests.h"
 #include "Tests/StatisticsTests.h"

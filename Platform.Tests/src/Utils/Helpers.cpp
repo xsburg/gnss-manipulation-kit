@@ -3,7 +3,9 @@
 #include <gtest/gtest.h>
 #include "Common/File.h"
 
-namespace Greis
+using namespace Greis;
+
+namespace Platform
 {
     namespace Tests
     {

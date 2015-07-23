@@ -10,7 +10,7 @@
 
 using namespace Common;
 
-namespace Greis
+namespace Platform
 {
     namespace Tests
     {
@@ -22,10 +22,10 @@ namespace Greis
             ~Helpers();
 
             void assertBinaryArray(const QByteArray& expected, const QByteArray& actual);
-            void assertMessages(const std::vector<Message::UniquePtr_t>& expectedMessages, const std::vector<Message::UniquePtr_t>& actualMessages);
-            void assertEpoch(Epoch* expected, Epoch* actual);
-            void assertDataChunk(DataChunk* expected, DataChunk* actual, bool assertHead);
-            void saveToFile(const QString& fileName, DataChunk* data);
+            void assertMessages(const std::vector<Greis::Message::UniquePtr_t>& expectedMessages, const std::vector<Greis::Message::UniquePtr_t>& actualMessages);
+            void assertEpoch(Greis::Epoch* expected, Greis::Epoch* actual);
+            void assertDataChunk(Greis::DataChunk* expected, Greis::DataChunk* actual, bool assertHead);
+            void saveToFile(const QString& fileName, Greis::DataChunk* data);
         };
     }
 }

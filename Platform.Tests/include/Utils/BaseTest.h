@@ -8,7 +8,7 @@
 #include "Common/Exception.h"
 #include "Common/Connection.h"
 
-namespace Greis
+namespace Platform
 {
     namespace Tests
     {

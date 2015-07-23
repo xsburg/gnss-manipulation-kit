@@ -1,7 +1,7 @@
 #include "Utils/BaseTest.h"
 #include "Common/File.h"
 
-namespace Greis
+namespace Platform
 {
     namespace Tests
     {

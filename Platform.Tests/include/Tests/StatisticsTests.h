@@ -11,7 +11,7 @@
 
 using namespace Common;
 
-namespace Greis
+namespace Platform
 {
     namespace Tests
     {
@@ -23,7 +23,7 @@ namespace Greis
         {
             // Arrange
             QString filename = this->ResolvePath("ifz-data-0.jps");
-            auto dataChunk = DataChunk::FromFile(filename);
+            auto dataChunk = Greis::DataChunk::FromFile(filename);
 
             // Act
             int count = 0;

@@ -33,6 +33,42 @@ void qSleep(int ms)
 
 namespace jpslogd
 {
+    struct ReceiverInfo
+    {
+        ReceiverInfo(const QString& receiverId, const QString& receiverModel, const QString& receiverFw, const QString& receiverBoard)
+            : receiverId(receiverId),
+              receiverModel(receiverModel),
+              receiverFw(receiverFw),
+              receiverBoard(receiverBoard)
+        {
+        }
+
+        QString receiverId;
+        QString receiverModel;
+        QString receiverFw;
+        QString receiverBoard;
+    };
+
+    ReceiverInfo logDeviceInfo(SerialPortBinaryStream::SharedPtr_t& deviceBinaryStream)
+    {
+        auto serialStream = SerialStreamReader(deviceBinaryStream);
+        // Get recevier data
+        deviceBinaryStream->write("\nprint,/par/rcv/id\n");
+        QString receiverId = serialStream.readLine();
+        receiverId = receiverId.mid(6, -1);
+        deviceBinaryStream->write("\nprint,/par/rcv/model\n");
+        QString receiverModel = serialStream.readLine();
+        receiverModel = receiverModel.mid(6, -1);
+        deviceBinaryStream->write("\nprint,/par/rcv/ver/main\n");
+        QString receiverFw = serialStream.readLine();
+        receiverFw = receiverFw.mid(6, -1);
+        deviceBinaryStream->write("\nprint,/par/rcv/ver/board\n");
+        QString receiverBoard = serialStream.readLine();
+        receiverBoard = receiverBoard.mid(6, -1);
+        sLogger.Info("Connected device is " + receiverModel + ", board " + receiverBoard + " (ID:" + receiverId + ", FW:" + receiverFw + ")");
+        return ReceiverInfo(receiverId, receiverModel, receiverFw, receiverBoard);
+    }
+
     bool startLoop()
     {
         SerialPortBinaryStream::SharedPtr_t deviceBinaryStream;
@@ -51,24 +87,8 @@ namespace jpslogd
             // Stop monitoring
             deviceBinaryStream->write("\r\ndm\n\r");
             deviceBinaryStream->purgeBuffers();
-            //
-            auto serialStream = SerialStreamReader(deviceBinaryStream);
-
-
-            // Get recevier data
-            deviceBinaryStream->write("\nprint,/par/rcv/id\n");
-            QString _receiverid = serialStream.readLine();
-            _receiverid = _receiverid.mid(6,-1);
-            deviceBinaryStream->write("\nprint,/par/rcv/model\n");
-            QString _receivermodel = serialStream.readLine();
-            _receivermodel = _receivermodel.mid(6,-1);
-            deviceBinaryStream->write("\nprint,/par/rcv/ver/main\n");
-            QString _receiverfw = serialStream.readLine();
-            _receiverfw = _receiverfw.mid(6,-1);
-            deviceBinaryStream->write("\nprint,/par/rcv/ver/board\n");
-            QString _receiverboard = serialStream.readLine();
-            _receiverboard = _receiverboard.mid(6,-1);
-            sLogger.Info("Connected device is "+_receivermodel+", board "+_receiverboard+" (ID:"+_receiverid+", FW:"+_receiverfw+")");
+            
+            auto receiverInfo = logDeviceInfo(deviceBinaryStream);
 
             // Setting parameters from [Receiver] section
             QStringList commands;
@@ -125,10 +145,10 @@ namespace jpslogd
             sLogger.Info("Configuring provisioning via local database...");
             auto serviceManager	 = make_unique<ServiceManager>(localConnection);
             // Set receiver properties
-            serviceManager->ServiceStatus["receiverid"]=_receiverid;
-            serviceManager->ServiceStatus["receiverfw"]=_receiverfw;
-            serviceManager->ServiceStatus["receivermodel"]=_receivermodel;
-            serviceManager->ServiceStatus["receiverboard"]=_receiverboard;
+            serviceManager->ServiceStatus["receiverid"] = receiverInfo.receiverId;
+            serviceManager->ServiceStatus["receiverfw"]= receiverInfo.receiverFw;
+            serviceManager->ServiceStatus["receivermodel"]= receiverInfo.receiverModel;
+            serviceManager->ServiceStatus["receiverboard"] = receiverInfo.receiverBoard;
 
             int msgCounter = 0;
             Message::UniquePtr_t msg;
@@ -182,8 +202,6 @@ namespace jpslogd
                             }
                         }
                     }
-                    // Update status table
-
                 }
             }
 
