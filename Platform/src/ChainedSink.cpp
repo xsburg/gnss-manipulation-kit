@@ -60,7 +60,7 @@ bool Platform::ChainedSink::Handle(Greis::DataChunk::UniquePtr_t dataChunk)
                 _sink->AddMessage(msgIt->get());
             }
         }
-        _sink->Flush(); //Added for testing purposes 19032013 Keir
+        //_sink->Flush(); //Added for testing purposes 19032013 Keir
         if (_autoCommit)
         {
             _connection->Database().commit();

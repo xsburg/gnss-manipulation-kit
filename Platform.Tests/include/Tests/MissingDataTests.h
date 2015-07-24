@@ -62,6 +62,8 @@ namespace Platform
             auto rawEndString = rawEnd.toString(Qt::ISODate);
 
             ASSERT_NE(databaseSize, rawSize);
+            ASSERT_EQ(databaseSize, 11);
+            ASSERT_EQ(rawSize, 16);
         }
 
         TEST_F(MissingDataTests, Sample1jpslogdEmu)
