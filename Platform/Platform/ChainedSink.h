@@ -16,10 +16,11 @@ namespace Platform
         Connection::SharedPtr_t _connection;
         int _inserterBatchSize;
         bool _isValid;
+        bool _autoCommit;
     public:
         SMART_PTR_T(ChainedSink);
 
-        ChainedSink(Connection::SharedPtr_t connection, int inserterBatchSize, ChainedSink::UniquePtr_t nextSink);
+        ChainedSink(Connection::SharedPtr_t connection, int inserterBatchSize, ChainedSink::UniquePtr_t nextSink, bool autoCommit = true);
 
         bool Connect();
 

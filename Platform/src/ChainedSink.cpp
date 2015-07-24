@@ -1,7 +1,7 @@
 #include "ChainedSink.h"
 
-Platform::ChainedSink::ChainedSink(Connection::SharedPtr_t connection, int inserterBatchSize, ChainedSink::UniquePtr_t nextSink)
-    : _nextChainedSink(std::move(nextSink)), _connection(connection), _inserterBatchSize(inserterBatchSize)
+Platform::ChainedSink::ChainedSink(Connection::SharedPtr_t connection, int inserterBatchSize, ChainedSink::UniquePtr_t nextSink, bool autoCommit)
+    : _nextChainedSink(std::move(nextSink)), _connection(connection), _inserterBatchSize(inserterBatchSize), _autoCommit(autoCommit)
 {
     Connect();
 }
@@ -10,14 +10,17 @@ bool Platform::ChainedSink::Connect()
 {
     try
     {
-        if (IsValid())
+        if (!_connection->Database().isOpen())
         {
-            return _isValid = true;
+            _connection->Connect();
+        }
+        if (!_sink.get())
+        {
+            _sink = make_unique<Greis::MySqlSink>(_connection.get(), _inserterBatchSize);
         }
 
-        _connection->Connect();
-        _sink = make_unique<Greis::MySqlSink>(_connection.get(), _inserterBatchSize);
-        return _isValid = true;
+        _isValid = true;
+        return true;
     }
     catch (DatabaseException& ex)
     {
@@ -40,7 +43,10 @@ bool Platform::ChainedSink::Handle(Greis::DataChunk::UniquePtr_t dataChunk)
 {
     try
     {
-        _connection->Database().transaction();
+        if (_autoCommit)
+        {
+            _connection->Database().transaction();
+        }
 
         for (auto it = dataChunk->Body().begin();
              it != dataChunk->Body().end();
@@ -55,7 +61,10 @@ bool Platform::ChainedSink::Handle(Greis::DataChunk::UniquePtr_t dataChunk)
             }
         }
         _sink->Flush(); //Added for testing purposes 19032013 Keir
-        _connection->Database().commit();
+        if (_autoCommit)
+        {
+            _connection->Database().commit();
+        }
     }
     catch (Exception& e)
     {
@@ -85,7 +94,10 @@ bool Platform::ChainedSink::Handle(Greis::DataChunk::UniquePtr_t dataChunk)
 
 void Platform::ChainedSink::Flush()
 {
-    _connection->Database().transaction();
+    if (_autoCommit)
+    {
+        _connection->Database().transaction();
+    }
 
     _sink->Flush();
     if (_nextChainedSink.get())
@@ -103,5 +115,8 @@ void Platform::ChainedSink::Flush()
         }
     }
 
-    _connection->Database().commit();
+    if (_autoCommit)
+    {
+        _connection->Database().commit();
+    }
 }
