@@ -75,6 +75,7 @@ namespace jpslogd
         SerialPortBinaryStream::SharedPtr_t deviceBinaryStream;
         ChainedSink::UniquePtr_t dataCenterSink;
         ChainedSink::UniquePtr_t localSink;
+        std::unique_ptr<DataChunk> dataChunk;
 
         try
         {
@@ -122,7 +123,7 @@ namespace jpslogd
 
             sLogger.Info("Configuring databases...");
             // Preparing the acquisition sink
-            auto dataChunk = make_unique<DataChunk>();
+            dataChunk = make_unique<DataChunk>();
             auto localConnection = Connection::FromSettings("LocalDatabase");
             if (localConnection->Driver == "" || localConnection->Hostname == "" || localConnection->Username == "")
             {
@@ -190,19 +191,23 @@ namespace jpslogd
                     if (serviceManager->IsRestartRequiredFlag)
                     {
                         serviceManager->IsRestartRequiredFlag = false;
+                        localSink->Handle(std::move(dataChunk));
                         localSink->Flush();
                         return false;
                     }
                     if (serviceManager->IsShutdownRequiredFlag)
                     {
                         serviceManager->IsShutdownRequiredFlag = false;
+                        localSink->Handle(std::move(dataChunk));
                         localSink->Flush();
                         return true;
                     }
                     if (serviceManager->IsPausedFlag)
                     {
                         const int sleepIntervalInMilliseconds = 1000;
+                        localSink->Handle(std::move(dataChunk));
                         localSink->Flush();
+                        dataChunk = make_unique<Greis::DataChunk>();
                         while (serviceManager->IsPausedFlag)
                         {
                             qSleep(sleepIntervalInMilliseconds);
@@ -232,6 +237,10 @@ namespace jpslogd
 
             if (localSink.get())
             {
+                if (dataChunk.get())
+                {
+                    localSink->Handle(std::move(dataChunk));
+                }
                 localSink->Flush();
             }
 
@@ -257,6 +266,10 @@ namespace jpslogd
             }
             if (localSink.get())
             {
+                if (dataChunk.get())
+                {
+                    localSink->Handle(std::move(dataChunk));
+                }
                 localSink->Flush();
             }
             return false;
