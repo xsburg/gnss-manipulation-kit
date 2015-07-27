@@ -74,7 +74,7 @@ namespace Platform
                 rawDataChunk = Greis::DataChunk::FromFile(rawDataFileName, true);
                 Greis::IBinaryStream::SharedPtr_t deviceBinaryStream = std::make_shared<Greis::FileBinaryStream>(rawDataFileName);
                 auto dataChunk = make_unique<Greis::DataChunk>();
-                ChainedSink::UniquePtr_t localSink = make_unique<ChainedSink>(this->Connection(), 25, nullptr, false);
+                ChainedSink::UniquePtr_t localSink = ChainedSink::UniquePtr_t(new ChainedSink(this->Connection(), 25, ChainedSink::UniquePtr_t(nullptr), false));
                 int dataChunkSize = 250;
                 ASSERT_TRUE(localSink->IsValid());
                 Greis::GreisMessageStream::SharedPtr_t messageStream = std::make_shared<Greis::GreisMessageStream>(deviceBinaryStream, true, false);
