@@ -1,13 +1,12 @@
 #pragma once
 
 #include <vector>
-#include <cmath>
 #include <gtest/gtest.h>
 #include <boost/thread.hpp>
 #include "Utils/BaseTest.h"
+#include "Utils/Helpers.h"
 #include "Common/SmartPtr.h"
 #include "Greis/DataChunk.h"
-#include <Platform/ServiceManager.h>
 #include <Platform/ChainedSink.h>
 #include <Greis/FileBinaryStream.h>
 #include <Greis/MySqlSource.h>
@@ -69,12 +68,10 @@ namespace Platform
         TEST_F(MissingDataTests, Sample1jpslogdEmu)
         {
             // Arrange
-            {
-                auto source = std::make_shared<Greis::MySqlSource>(this->Connection().get());
-                ASSERT_EQ(source->ReadAll()->Body().size(), 0);
-            }
+            Greis::DataChunk::UniquePtr_t rawDataChunk;
             {
                 QString rawDataFileName = this->ResolvePath("samples/1/rawData.jps");
+                rawDataChunk = Greis::DataChunk::FromFile(rawDataFileName, true);
                 Greis::IBinaryStream::SharedPtr_t deviceBinaryStream = std::make_shared<Greis::FileBinaryStream>(rawDataFileName);
                 auto dataChunk = make_unique<Greis::DataChunk>();
                 ChainedSink::UniquePtr_t localSink = make_unique<ChainedSink>(this->Connection(), 25, nullptr, false);
@@ -89,23 +86,38 @@ namespace Platform
                     dataChunk->AddMessage(std::move(msg));
                     if (msgCounter++ > dataChunkSize)
                     {
+                        auto dataChunk2 = make_unique<Greis::DataChunk>();
+                        for (auto& msg : dataChunk->UnfinishedEpoch()->Messages)
+                        {
+                            dataChunk2->AddMessage(std::move(msg));
+                        }
                         localSink->Handle(std::move(dataChunk));
-                        dataChunk = make_unique<Greis::DataChunk>();
+                        dataChunk = std::move(dataChunk2);
                         msgCounter = 0;
                     }
                 }
+                localSink->Handle(std::move(dataChunk));
                 localSink->Flush();
             }
 
             // Act
+            auto dateStart = QDateTime(QDate(2015, 7, 23), QTime(21, 03, 30), Qt::UTC);
+            auto dateEnd = QDateTime(QDate(2015, 7, 23), QTime(21, 11, 0), Qt::UTC);
             auto source = std::make_shared<Greis::MySqlSource>(this->Connection().get());
-            auto actualChunk = source->ReadRange(QDateTime(QDate(2015, 7, 23), QTime(21, 03, 30), Qt::UTC), QDateTime(QDate(2015, 7, 23), QTime(21, 11, 0), Qt::UTC));
+            auto actualChunk = source->ReadRange(dateStart, dateEnd);
 
             // Assert
-            int expectedRawSize = 16;
-            int expectedFailedDbSize = 11;
+            int expectedSize = 16;
             auto actualSize = actualChunk->Body().size();
-            ASSERT_EQ(actualSize, expectedFailedDbSize);
+            ASSERT_EQ(actualSize, expectedSize);
+            int rawStartIndex = findEpochIndex(rawDataChunk.get(), dateStart);
+            int rawEndIndex = findEpochIndex(rawDataChunk.get(), dateEnd);
+            for (int i = rawStartIndex; i <= rawEndIndex; i++)
+            {
+                auto& expectedEpoch = rawDataChunk->Body()[i];
+                auto &actualEpoch = actualChunk->Body()[i - rawStartIndex];
+                sHelpers.assertEpoch(expectedEpoch.get(), actualEpoch.get());
+            }
         }
     }
 }

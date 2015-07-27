@@ -30,4 +30,4 @@ namespace Platform
     }
 }
 
-#define sHelpers SINGLETON_INSTANCE(::Greis::Tests::Helpers)
+#define sHelpers SINGLETON_INSTANCE(::Platform::Tests::Helpers)
