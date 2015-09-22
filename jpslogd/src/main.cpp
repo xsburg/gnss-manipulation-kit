@@ -44,6 +44,10 @@ namespace jpslogd
         {
         }
 
+        ReceiverInfo()
+        {
+        }
+
         QString receiverId;
         QString receiverModel;
         QString receiverFw;
@@ -84,29 +88,42 @@ namespace jpslogd
             int inserterBatchSize = sIniSettings.value("inserterBatchSize", 250).toInt();
             int dataChunkSize = sIniSettings.value("dataChunkSize", 250).toInt();
             QString rawDataLogFile = sIniSettings.value("rawDataLogFile", "").toString();
+            bool skipDeviceConfig = sIniSettings.value("skipDeviceConfig", false).toBool();
+
             sLogger.Info("Connecting Javad receiver on " + QString::fromStdString(portName) + " at " + QString::number(baudRate) + "bps...");
+
             deviceBinaryStream = std::make_shared<SerialPortBinaryStream>(portName, baudRate);
-            // Stop monitoring
-            deviceBinaryStream->write("\r\ndm\n\r");
-            deviceBinaryStream->purgeBuffers();
-
-            auto receiverInfo = logDeviceInfo(deviceBinaryStream);
-
-            // Setting parameters from [Receiver] section
-            QStringList commands;
-            auto keys = sIniSettings.settings()->allKeys();
-            for (auto key : keys)
+            ReceiverInfo receiverInfo;
+            if (!skipDeviceConfig)
             {
-                if (key.startsWith("Receiver/command"))
+                // Stop monitoring
+                deviceBinaryStream->write("\r\ndm\n\r");
+                deviceBinaryStream->purgeBuffers();
+
+                receiverInfo = logDeviceInfo(deviceBinaryStream);
+
+                // Setting parameters from [Receiver] section
+                QStringList commands;
+                auto keys = sIniSettings.settings()->allKeys();
+                for (auto key : keys)
                 {
-                    commands.append(sIniSettings.value(key).toString());
+                    if (key.startsWith("Receiver/command"))
+                    {
+                        commands.append(sIniSettings.value(key).toString());
+                    }
                 }
-            }
-            for (auto cmd : commands)
+                for (auto cmd : commands)
+                {
+                    sLogger.Info(QString("Running a command: %1").arg(cmd));
+                    deviceBinaryStream->write(cmd.toLatin1());
+                    qSleep(500);
+                }
+            } else
             {
-                sLogger.Info(QString("Running a command: %1").arg(cmd));
-                deviceBinaryStream->write(cmd.toLatin1());
-                qSleep(500);
+                receiverInfo.receiverBoard = "Unknown";
+                receiverInfo.receiverFw = "Unknown";
+                receiverInfo.receiverId = "Unknown";
+                receiverInfo.receiverModel = "Unknown";
             }
 
             // message stream creation based on raw data logger option
@@ -117,7 +134,9 @@ namespace jpslogd
             }
             else
             {
-                auto proxyStream = std::make_shared<LoggingBinaryStream>(deviceBinaryStream, std::make_shared<FileBinaryStream>(rawDataLogFile, Create));
+                auto now = QDateTime::currentDateTimeUtc();
+                QString fileName = QString("%1-%2Z.txt").arg(rawDataLogFile).arg(now.toString("yyyy-MM-dd_HH_mm_ss_zzz"));
+                auto proxyStream = std::make_shared<LoggingBinaryStream>(deviceBinaryStream, std::make_shared<FileBinaryStream>(fileName, Create));
                 messageStream = std::make_shared<GreisMessageStream>(proxyStream, true, false);
             }
 
