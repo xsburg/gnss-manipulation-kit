@@ -20,7 +20,7 @@ namespace Platform
     public:
         SMART_PTR_T(ChainedSink);
 
-        ChainedSink(Connection::SharedPtr_t connection, int inserterBatchSize, ChainedSink::UniquePtr_t nextSink, bool autoCommit = true);
+        ChainedSink(Connection::SharedPtr_t connection, int inserterBatchSize, ChainedSink::UniquePtr_t nextSink, bool autoCommit);
 
         bool Connect();
 

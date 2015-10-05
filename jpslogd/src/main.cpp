@@ -157,8 +157,8 @@ namespace jpslogd
             auto remoteConnection = Connection::FromSettings("RemoteDatabase");
             if (remoteConnection->Driver != "")
             {
-                dataCenterSink = make_unique<ChainedSink>(remoteConnection, inserterBatchSize, nullptr);
-                localSink = make_unique<ChainedSink>(localConnection, inserterBatchSize, std::move(dataCenterSink));
+                dataCenterSink = make_unique<ChainedSink>(remoteConnection, inserterBatchSize, nullptr, true);
+                localSink = make_unique<ChainedSink>(localConnection, inserterBatchSize, std::move(dataCenterSink), true);
                 if (!dataCenterSink->IsValid())
                 {
                     return true;
@@ -167,7 +167,7 @@ namespace jpslogd
             }
             else
             {
-                localSink = make_unique<ChainedSink>(localConnection, inserterBatchSize, nullptr);
+                localSink = make_unique<ChainedSink>(localConnection, inserterBatchSize, nullptr, true);
             }
             if (!localSink->IsValid())
             {
