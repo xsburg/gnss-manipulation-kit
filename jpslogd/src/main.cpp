@@ -175,18 +175,22 @@ namespace jpslogd
             }
 
             sLogger.Info("Configuring provisioning via local database...");
+#ifdef STATISTICS_AND_COMMANDS
             auto serviceManager = make_unique<ServiceManager>(localConnection);
             // Set receiver properties
             serviceManager->ServiceStatus["receiverid"] = receiverInfo.receiverId;
             serviceManager->ServiceStatus["receiverfw"] = receiverInfo.receiverFw;
             serviceManager->ServiceStatus["receivermodel"] = receiverInfo.receiverModel;
             serviceManager->ServiceStatus["receiverboard"] = receiverInfo.receiverBoard;
+#endif
 
             int msgCounter = 0;
             Message::UniquePtr_t msg;
             while ((msg = messageStream->Next()).get())
             {
+#ifdef STATISTICS_AND_COMMANDS
                 serviceManager->HandleMessage(msg.get());
+#endif
 
                 dataChunk->AddMessage(std::move(msg));
                 if (msgCounter++ > dataChunkSize)
@@ -205,6 +209,7 @@ namespace jpslogd
                 {
                     sLogger.Debug("Another 100 has been received.");
 
+#ifdef STATISTICS_AND_COMMANDS
                     // Checking for the control commands
                     serviceManager->HandlePendingCommands();
                     if (serviceManager->IsRestartRequiredFlag)
@@ -243,6 +248,7 @@ namespace jpslogd
                             }
                         }
                     }
+#endif
                 }
             }
 

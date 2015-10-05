@@ -45,6 +45,23 @@ namespace Common
         _rowsAdded++;
     }
 
+    void DataBatchInserter::Clear()
+    {
+        foreach(DataBatchInserter::SharedPtr_t child, _children)
+        {
+            child->Clear();
+        }
+
+        if (_rowsAdded == 0)
+        {
+            return;
+        }
+        _rowsAdded = 0;
+        int size = _boundValues.size();
+        _boundValues.clear();
+        _boundValues.resize(size);
+    }
+
     void DataBatchInserter::Flush()
     {
         if (_rowsAdded > 0)
@@ -93,10 +110,7 @@ namespace Common
             } else {
                 sLogger.Trace(QString("%1 records has been added into `%2`.").arg(_rowsAdded).arg(_tableName));
             }
-            _rowsAdded = 0;
-            int size = _boundValues.size();
-            _boundValues.clear();
-            _boundValues.resize(size);
+            Clear();
         }
     }
 }

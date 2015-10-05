@@ -60,7 +60,6 @@ bool Platform::ChainedSink::Handle(Greis::DataChunk::UniquePtr_t dataChunk)
                 _sink->AddMessage(msgIt->get());
             }
         }
-        //_sink->Flush(); //Added for testing purposes 19032013 Keir
         if (_autoCommit)
         {
             _connection->Database().commit();
@@ -68,8 +67,16 @@ bool Platform::ChainedSink::Handle(Greis::DataChunk::UniquePtr_t dataChunk)
     }
     catch (Exception& e)
     {
-        _connection->Database().rollback();
-        sLogger.Error("Transaction has been rolled back.");
+        if (_autoCommit)
+        {
+            _connection->Database().rollback();
+            _sink->Clear();
+            sLogger.Error("Transaction has been rolled back. All pending data was lost (but it's still consistent!)");
+        }
+        else
+        {
+            sLogger.Error("Failed to handle data (transaction is disabled so we do nothing).");
+        }
         sLogger.Error(e.what());
         return false;
     }

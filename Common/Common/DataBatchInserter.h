@@ -37,7 +37,7 @@ namespace Common
         const QList<DataBatchInserter::SharedPtr_t>& GetChildren() const { return _children; }
 
         void AddRow(const QList<QVariant>& values);
-
+        void Clear();
         // execute all pending queries
         void Flush();
 
