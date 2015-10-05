@@ -119,5 +119,66 @@ namespace Platform
                 sHelpers.assertEpoch(expectedEpoch.get(), actualEpoch.get());
             }
         }
+
+        TEST_F(MissingDataTests, ShouldRecoverAfterExceptionAndContinueRegistration)
+        {
+            // Arrange
+            QString fileName = this->ResolvePath("ifz-data-epoch.jps");
+            auto expectedChunk = Greis::DataChunk::FromFile(fileName);
+
+            // Act
+            {
+                // Saving to the database
+                auto sink = make_unique<Greis::MySqlSink>(this->Connection().get(), 1000);
+                sink->AddJpsFile(expectedChunk.get());
+                sink->Flush();
+                // Rolling back
+                this->Connection()->Database().rollback();
+                this->Connection()->Database().transaction();
+                sink->Clear();
+                // Saving and flushing the data all over again
+                sink->AddJpsFile(expectedChunk.get());
+                sink->Flush();
+            }
+            Greis::DataChunk::UniquePtr_t actualChunk;
+            {
+                // Reading from the database
+                auto source = make_unique<Greis::MySqlSource>(this->Connection().get());
+                actualChunk = source->ReadAll();
+            }
+
+            // Assert
+            sHelpers.assertDataChunk(expectedChunk.get(), actualChunk.get(), true);
+        }
+
+        TEST_F(MissingDataTests, ShouldRecoverAfterExceptionButHasNoDataFlushed)
+        {
+            // Arrange
+            QString fileName = this->ResolvePath("ifz-data-epoch.jps");
+            auto expectedChunk = Greis::DataChunk::FromFile(fileName);
+
+            // Act
+            {
+                // Saving to the database
+                auto sink = make_unique<Greis::MySqlSink>(this->Connection().get(), 1000);
+                sink->AddJpsFile(expectedChunk.get());
+                sink->Flush();
+                // Rolling back
+                this->Connection()->Database().rollback();
+                this->Connection()->Database().transaction();
+                sink->Clear();
+                // This flushing should insert no records
+                sink->Flush();
+            }
+            Greis::DataChunk::UniquePtr_t actualChunk;
+            {
+                // Reading from the database
+                auto source = make_unique<Greis::MySqlSource>(this->Connection().get());
+                actualChunk = source->ReadAll();
+            }
+
+            // Assert
+            ASSERT_EQ(actualChunk->Body().size(), 0);
+        }
     }
 }
