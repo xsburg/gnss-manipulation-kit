@@ -299,6 +299,13 @@ namespace jpslogd
             }
             return false;
         }
+        catch (std::exception ex)
+        {
+            auto msg = QString(ex.what());
+            sLogger.Error("Something bad has happened (std::exception). Queueing restart.");
+            sLogger.Error(QString("Exception what(): %1").arg(msg));
+            return false;
+        }
         catch (...)
         {
             sLogger.Error("Something bad has happened. Queueing restart.");
