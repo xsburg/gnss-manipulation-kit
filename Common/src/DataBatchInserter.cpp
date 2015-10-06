@@ -3,7 +3,7 @@
 
 namespace Common
 {
-    DataBatchInserter::DataBatchInserter(const QString& insertQuery, int boundColumnsCount, Connection* connection, 
+    DataBatchInserter::DataBatchInserter(const QString& insertQuery, int boundColumnsCount, Connection::SharedPtr_t connection, 
                                          const QString& tableName, int batchSize)
     {
         _insertQuery = insertQuery;

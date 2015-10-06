@@ -296,6 +296,20 @@ namespace jpslogd
 
             return false;
         }
+        catch (DatabaseException& ex)
+        {
+            sLogger.Error("Something bad has happened (Common::Exception). Queueing restart.");
+            sLogger.Error(QString("Exception what(): %1").arg(ex.what()));
+            sLogger.Error(QString("Since the exception affects database connection, the data won't be flushed. We have to lose it."));
+
+            if (deviceBinaryStream.get() && deviceBinaryStream->isOpen())
+            {
+                deviceBinaryStream->write("\ndm\n");
+                deviceBinaryStream->close();
+            }
+
+            return false;
+        }
         catch (boost::system::system_error& bex)
         {
             if (bex.code().value() == 2)
@@ -318,13 +332,13 @@ namespace jpslogd
             }
             return false;
         }
-        catch (Common::Exception ex)
+        catch (Common::Exception& ex)
         {
             sLogger.Error("Something bad has happened (Common::Exception). Queueing restart.");
             sLogger.Error(QString("Exception what(): %1").arg(ex.what()));
             return false;
         }
-        catch (std::exception ex)
+        catch (std::exception& ex)
         {
             auto msg = QString(ex.what());
             sLogger.Error("Something bad has happened (std::exception). Queueing restart.");

@@ -16,7 +16,7 @@ bool Platform::ChainedSink::Connect()
         }
         if (!_sink.get())
         {
-            _sink = make_unique<Greis::MySqlSink>(_connection.get(), _inserterBatchSize);
+            _sink = make_unique<Greis::MySqlSink>(_connection, _inserterBatchSize);
         }
 
         _isValid = true;

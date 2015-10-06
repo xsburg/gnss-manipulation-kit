@@ -20,14 +20,14 @@ namespace Common
         QString _tableName;
         int _rowsAdded;
         int _batchSize;
-        Connection* _connection;
+        Connection::SharedPtr_t _connection;
         DatabaseHelper* _dbHelper;
         QVector<QVariantList> _boundValues;
         QList<DataBatchInserter::SharedPtr_t> _children;
     public:
         // insertQuery: "INSERT INTO <table name>(<column name>[, <column name>]) VALUES (?, ?, ?)"
         // connection: pointer to connection class
-        DataBatchInserter(const QString& insertQuery, int boundColumnsCount, Connection* connection, 
+        DataBatchInserter(const QString& insertQuery, int boundColumnsCount, Connection::SharedPtr_t connection, 
                           const QString& tableName = "", int batchSize = 1000);
 
         ~DataBatchInserter();

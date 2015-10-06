@@ -103,7 +103,7 @@ namespace Platform
             // Act
             auto dateStart = QDateTime(QDate(2015, 7, 23), QTime(21, 03, 30), Qt::UTC);
             auto dateEnd = QDateTime(QDate(2015, 7, 23), QTime(21, 11, 0), Qt::UTC);
-            auto source = std::make_shared<Greis::MySqlSource>(this->Connection().get());
+            auto source = std::make_shared<Greis::MySqlSource>(this->Connection());
             auto actualChunk = source->ReadRange(dateStart, dateEnd);
 
             // Assert
@@ -129,7 +129,7 @@ namespace Platform
             // Act
             {
                 // Saving to the database
-                auto sink = make_unique<Greis::MySqlSink>(this->Connection().get(), 1000);
+                auto sink = make_unique<Greis::MySqlSink>(this->Connection(), 1000);
                 sink->AddJpsFile(expectedChunk.get());
                 sink->Flush();
                 // Rolling back
@@ -143,7 +143,7 @@ namespace Platform
             Greis::DataChunk::UniquePtr_t actualChunk;
             {
                 // Reading from the database
-                auto source = make_unique<Greis::MySqlSource>(this->Connection().get());
+                auto source = make_unique<Greis::MySqlSource>(this->Connection());
                 actualChunk = source->ReadAll();
             }
 
@@ -160,7 +160,7 @@ namespace Platform
             // Act
             {
                 // Saving to the database
-                auto sink = make_unique<Greis::MySqlSink>(this->Connection().get(), 1000);
+                auto sink = make_unique<Greis::MySqlSink>(this->Connection(), 1000);
                 sink->AddJpsFile(expectedChunk.get());
                 sink->Flush();
                 // Rolling back
@@ -173,7 +173,7 @@ namespace Platform
             Greis::DataChunk::UniquePtr_t actualChunk;
             {
                 // Reading from the database
-                auto source = make_unique<Greis::MySqlSource>(this->Connection().get());
+                auto source = make_unique<Greis::MySqlSource>(this->Connection());
                 actualChunk = source->ReadAll();
             }
 

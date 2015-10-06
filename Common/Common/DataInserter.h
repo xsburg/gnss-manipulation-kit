@@ -15,13 +15,13 @@ namespace Common
         QString _resultInsertQuery;
         QString _insertTemplate;
         int _rowsAdded;
-        Connection* _connection;
+        Connection::SharedPtr_t _connection;
         DatabaseHelper* _dbHelper;
         QList<QVariant> _boundValues;
     public:
         // insertTemplate: "INSERT INTO <table name>(<column name>[, <column name>]) VALUES "
         // connection: pointer to connection class
-        DataInserter(const QString& insertTemplate, Connection* connection)
+        DataInserter(const QString& insertTemplate, Connection::SharedPtr_t connection)
         {
             _insertTemplate = insertTemplate;
             _resultInsertQuery = insertTemplate;
