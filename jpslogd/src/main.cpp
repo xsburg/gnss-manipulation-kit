@@ -1,6 +1,4 @@
 #include <QtCore/QtCore>
-#include <clocale>
-#include <locale>
 #include "Common/Logger.h"
 #include "Common/SmartPtr.h"
 #include "Common/Path.h"
@@ -13,9 +11,29 @@
 #include "Greis/LoggingBinaryStream.h"
 #include "Greis/FileBinaryStream.h"
 
+#ifndef Q_OS_WIN
+// backtrace
+#include <execinfo.h>
+#endif
+
 using namespace Common;
 using namespace Greis;
 using namespace Platform;
+
+#ifndef Q_OS_WIN
+    void handler(int sig) {
+        void *arr[10];
+        size_t size;
+
+        // get void*'s for all entries on the stack
+        size = backtrace(arr, 10);
+
+        // print out all the frames to stderr
+        fprintf(stderr, "Error: signal %d:\n", sig);
+        backtrace_symbols_fd(arr, size, STDERR_FILENO);
+        exit(1);
+    }
+#endif
 
 
 #ifdef Q_OS_WIN
@@ -80,6 +98,7 @@ namespace jpslogd
         ChainedSink::UniquePtr_t dataCenterSink;
         ChainedSink::UniquePtr_t localSink;
         std::unique_ptr<DataChunk> dataChunk;
+        bool success = false;
 
         try
         {
@@ -146,7 +165,7 @@ namespace jpslogd
             auto localConnection = Connection::FromSettings("LocalDatabase");
             if (localConnection->Driver == "" || localConnection->Hostname == "" || localConnection->Username == "")
             {
-                sLogger.Fatal("Cannot configure local database, check configuraion.");
+                sLogger.Fatal("Cannot configure local database, check configuration.");
                 throw new GreisException("Local database configuration missing.");
             }
             else
@@ -299,6 +318,12 @@ namespace jpslogd
             }
             return false;
         }
+        catch (Common::Exception ex)
+        {
+            sLogger.Error("Something bad has happened (Common::Exception). Queueing restart.");
+            sLogger.Error(QString("Exception what(): %1").arg(ex.what()));
+            return false;
+        }
         catch (std::exception ex)
         {
             auto msg = QString(ex.what());
@@ -316,6 +341,9 @@ namespace jpslogd
 
 int main(int argc, char** argv)
 {
+#ifndef Q_OS_WIN
+    signal(SIGSEGV, handler);
+#endif
     try
     {
         QCoreApplication a(argc, argv);
