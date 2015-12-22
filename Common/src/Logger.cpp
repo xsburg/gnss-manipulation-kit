@@ -19,7 +19,9 @@ namespace Common
     {
         if (this->logLevel >= 5)
         {
+            _outLock.lock();
             std::cerr << message.toStdString() << std::endl;
+            _outLock.unlock();
         }
     }
 
@@ -27,7 +29,9 @@ namespace Common
     {
         if (this->logLevel >= 4)
         {
+            _outLock.lock();
             std::cerr << message.toStdString() << std::endl;
+            _outLock.unlock();
         }
     }
 
@@ -35,7 +39,9 @@ namespace Common
     {
         if (this->logLevel >= 3)
         {
+            _outLock.lock();
             std::cout << message.toStdString() << std::endl;
+            _outLock.unlock();
         }
     }
 
@@ -43,7 +49,9 @@ namespace Common
     {
         if (this->logLevel >= 2)
         {
+            _outLock.lock();
             std::cerr << message.toStdString() << std::endl;
+            _outLock.unlock();
         }
     }
 
@@ -51,7 +59,9 @@ namespace Common
     {
         if (this->logLevel >= 1)
         {
+            _outLock.lock();
             std::cerr << message.toStdString() << std::endl;
+            _outLock.unlock();
         }
     }
 
@@ -59,7 +69,9 @@ namespace Common
     {
         if (this->logLevel >= 0)
         {
+            _outLock.lock();
             std::cerr << "FATAL:" << message.toStdString() << std::endl;
+            _outLock.unlock();
         }
     }
 }

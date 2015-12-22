@@ -215,9 +215,9 @@ namespace jpslogd
                 if (msgCounter++ > dataChunkSize)
                 {
                     auto dataChunk2 = make_unique<Greis::DataChunk>();
-                    for (auto& msg : dataChunk->UnfinishedEpoch()->Messages)
+                    for (auto& m : dataChunk->UnfinishedEpoch()->Messages)
                     {
-                        dataChunk2->AddMessage(std::move(msg));
+                        dataChunk2->AddMessage(std::move(m));
                     }
                     localSink->Handle(std::move(dataChunk));
                     dataChunk = std::move(dataChunk2);

@@ -17,6 +17,7 @@ namespace Platform
         int _inserterBatchSize;
         bool _isValid;
         bool _autoCommit;
+        QFuture<void> _lastFlush;
     public:
         SMART_PTR_T(ChainedSink);
 

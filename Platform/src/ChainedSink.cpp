@@ -48,16 +48,14 @@ bool Platform::ChainedSink::Handle(Greis::DataChunk::UniquePtr_t dataChunk)
             _connection->Database().transaction();
         }
 
-        for (auto it = dataChunk->Body().begin();
-             it != dataChunk->Body().end();
-             ++it)
+        for (auto& epoch : dataChunk->Body())
         {
-            _sink->AddEpoch((*it)->DateTime);
-            for (auto msgIt = (*it)->Messages.begin();
-                 msgIt != (*it)->Messages.end();
-                 ++msgIt)
+            _sink->AddEpoch(epoch.get());
+            // Here we flush data but perform sync-wait for the last flush
+            if (_sink->NeedsFlush())
             {
-                _sink->AddMessage(msgIt->get());
+                _lastFlush.waitForFinished();
+                _lastFlush = _sink->FlushAsync();
             }
         }
         if (_autoCommit)

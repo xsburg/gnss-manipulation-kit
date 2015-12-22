@@ -32,8 +32,10 @@ namespace Greis
         void AddEpoch(Epoch* epoch);
         void AddEpoch(QDateTime dateTime);
         void AddMessage(Message* msg);
+        bool NeedsFlush();
 
         void Flush();
+        QFuture<void> FlushAsync();
         void Clear();
     private:
         void construct();

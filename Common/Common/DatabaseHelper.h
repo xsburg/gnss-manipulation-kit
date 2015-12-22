@@ -19,6 +19,11 @@ namespace Common
         {
         }
 
+        QSqlDatabase& Database()
+        {
+            return _db;
+        }
+
         static void ThrowIfError(const QSqlQuery& query);
 
         inline QSqlQuery CreateQuery()

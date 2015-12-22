@@ -197,6 +197,7 @@ int main(int argc, char **argv)
                 auto sink = make_unique<MySqlSink>(connection, inserterBatchSize);
                 
                 // Data reading loop
+                QFuture<void> lastFlush;
                 bool hasMore;
                 do
                 {
@@ -205,10 +206,16 @@ int main(int argc, char **argv)
                     for (auto& epoch : file->Body())
                     {
                         sink->AddEpoch(epoch.get());
+                        if (sink->NeedsFlush())
+                        {
+                            lastFlush.waitForFinished();
+                            lastFlush = sink->FlushAsync();
+                        }
                     }
                     file->Body().clear();
                 } while (hasMore);
 
+                lastFlush.waitForFinished();
                 sink->Flush();
             }
             if (wrapIntoTransaction)

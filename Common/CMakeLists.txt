@@ -40,6 +40,7 @@ target_link_libraries(
     ${DEPENDS_ON_PROJECTS}
     ${Boost_LIBRARIES}
     Qt5::Core
+    Qt5::Concurrent
     debug ${GTEST_DEBUG_LIBS}
     optimized ${GTEST_RELEASE_LIBS}
     ${Pthread})

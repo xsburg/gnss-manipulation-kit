@@ -57,4 +57,5 @@ target_link_libraries(
     ${DEPENDS_ON_PROJECTS}
     ${Boost_LIBRARIES}
     Qt5::Core
+    Qt5::Concurrent
 	Qt5::Sql)

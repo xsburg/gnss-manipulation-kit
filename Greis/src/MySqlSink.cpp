@@ -3,6 +3,7 @@
 #include "AllStdMessages.h"
 #include <string>
 #include "RawStdMessage.h"
+#include <QtConcurrent>
 
 using namespace Common;
 
@@ -45,10 +46,27 @@ namespace Greis
 
     void MySqlSink::Flush()
     {
+        QFutureSynchronizer<void> insertersFlush;
+        insertersFlush.addFuture(_rawMessageInserter->Flush());
         foreach (DataBatchInserter::SharedPtr_t inserter, _msgInserters)
         {
-            inserter->Flush();
+            insertersFlush.addFuture(inserter->Flush());
         }
+        insertersFlush.waitForFinished();
+    }
+
+    QFuture<void> MySqlSink::FlushAsync()
+    {
+        auto insertersFlush = std::make_shared<QFutureSynchronizer<void>>();
+        insertersFlush->addFuture(_rawMessageInserter->Flush());
+        foreach (DataBatchInserter::SharedPtr_t inserter, _msgInserters)
+        {
+            insertersFlush->addFuture(inserter->Flush());
+        }
+        return QtConcurrent::run([insertersFlush]()
+        {
+            insertersFlush->waitForFinished();
+        });
     }
 
     void MySqlSink::Clear()
@@ -63,9 +81,9 @@ namespace Greis
 
     void MySqlSink::AddJpsFile( DataChunk* file )
     {
-        for (auto epochIt = file->Body().cbegin(); epochIt != file->Body().cend(); ++epochIt)
+        for (auto& epoch : file->Body())
         {
-            AddEpoch((*epochIt).get());
+            AddEpoch(epoch.get());
         }
     }
 
@@ -118,6 +136,22 @@ namespace Greis
         serializeMessage(stdMsg, fields);
         auto inserter = _msgInserters[stdMsg->IdNumber()];
         inserter->AddRow(fields);
+    }
+
+    bool MySqlSink::NeedsFlush()
+    {
+        if (_rawMessageInserter->NeedsFlush())
+        {
+            return true;
+        }
+        for (auto& inserter : _msgInserters)
+        {
+            if (inserter->NeedsFlush())
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     int MySqlSink::addCustomType( CustomType* ct )

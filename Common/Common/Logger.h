@@ -6,6 +6,7 @@
 //#include <log4cxx/logger.h>
 //#include <log4cxx/log4cxx.h>
 #include <QtCore/QString>
+#include "SpinLock.h"
 
 namespace Common
 {
@@ -16,6 +17,7 @@ namespace Common
         //log4cxx::LoggerPtr _logger;
 
         int logLevel;
+        SpinLock _outLock;
     public:
         Logger() {}
 

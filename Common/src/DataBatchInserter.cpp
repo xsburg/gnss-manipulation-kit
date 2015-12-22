@@ -1,5 +1,6 @@
 #include "DataBatchInserter.h"
 #include "Logger.h"
+#include <QtConcurrent>
 
 namespace Common
 {
@@ -17,12 +18,27 @@ namespace Common
 
     DataBatchInserter::~DataBatchInserter()
     {
-        Flush();
     }
 
     void DataBatchInserter::AddChild(DataBatchInserter::SharedPtr_t child)
     {
         _children.push_back(child);
+    }
+
+    bool DataBatchInserter::NeedsFlush()
+    {
+        if (_rowsAdded >= _batchSize)
+        {
+            return true;
+        }
+        for (auto& child : _children)
+        {
+            if (child->NeedsFlush())
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     void DataBatchInserter::AddRow(const QList<QVariant>& values)
@@ -32,10 +48,6 @@ namespace Common
             throw InvalidOperationException(
                 QString("Invalid elements count in `AddRow(values)` array. Actual: %1. Expected: %2.").
                 arg(values.size()).arg(_boundValues.size()));
-        }
-        if (_rowsAdded >= _batchSize)
-        {
-            Flush();
         }
 
         for (int i = 0; i < _boundValues.size(); ++i)
@@ -62,13 +74,14 @@ namespace Common
         _boundValues.resize(size);
     }
 
-    void DataBatchInserter::Flush()
+    QFuture<void> DataBatchInserter::Flush()
     {
         if (_rowsAdded > 0)
         {
+            auto childrenFlush = std::make_shared<QFutureSynchronizer<void>>();
             foreach (DataBatchInserter::SharedPtr_t child, _children)
             {
-                child->Flush();
+                childrenFlush->addFuture(child->Flush());
             }
 
             auto insertQueryTmp = _insertQuery;
@@ -84,10 +97,11 @@ namespace Common
                 insertQueryTmp.append(valuesTmp);
             }
 
-            QSqlQuery query = _dbHelper->ExecuteQuery("");
+            auto query = std::make_shared<QSqlQuery>(_dbHelper->Database());
+            _dbHelper->ThrowIfError(*query.get());
             //sLogger.Debug(insertQueryTmp);
-            query.prepare(insertQueryTmp);
-            DatabaseHelper::ThrowIfError(query);
+            query->prepare(insertQueryTmp);
+            DatabaseHelper::ThrowIfError(*query.get());
             int varsCount = 0;
 
             auto colSize = _boundValues.size();
@@ -95,22 +109,30 @@ namespace Common
             {
                 for (int j = 0; j < colSize; j++)
                 {
-                    query.addBindValue(_boundValues[j][i]);
+                    query->addBindValue(_boundValues[j][i]);
                     varsCount++;
                 }
             }
-
             auto valid = varsCount == _boundValues.size() * _rowsAdded;
-            query.exec();
-            DatabaseHelper::ThrowIfError(query);
-
-            if (_tableName.isEmpty() || _tableName.isNull())
-            {
-                sLogger.Trace(QString("%1 records has been added.").arg(_rowsAdded));
-            } else {
-                sLogger.Trace(QString("%1 records has been added into `%2`.").arg(_rowsAdded).arg(_tableName));
-            }
             Clear();
+
+            return QtConcurrent::run([childrenFlush, query, this]()
+            {
+                childrenFlush->waitForFinished();
+                query->exec();
+                DatabaseHelper::ThrowIfError(*query.get());
+                if (_tableName.isEmpty() || _tableName.isNull())
+                {
+                    sLogger.Trace(QString("%1 records has been added.").arg(_rowsAdded));
+                }
+                else {
+                    sLogger.Trace(QString("%1 records has been added into `%2`.").arg(_rowsAdded).arg(_tableName));
+                }
+            });
+        }
+        else
+        {
+            return QFuture<void>();
         }
     }
 }

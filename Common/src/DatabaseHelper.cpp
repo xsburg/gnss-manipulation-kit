@@ -1,5 +1,6 @@
 #include "DatabaseHelper.h"
 #include "DatabaseException.h"
+#include <Logger.h>
 
 namespace Common
 {
@@ -8,6 +9,7 @@ namespace Common
         if (query.lastError().isValid())
         {
             auto text = query.lastError().text();
+            sLogger.Error("DatabaseException: " + text);
             throw DatabaseException(text);
         }
     }
@@ -39,8 +41,9 @@ namespace Common
         QSqlQuery query = ExecuteQuery(queryString, db);
         if (!query.next())
         {
-            throw DatabaseException(QString("The query '%1' has returned 0 records. One record was expected.").
-                arg(queryString));
+            QString text = QString("The query '%1' has returned 0 records. One record was expected.").arg(queryString);
+            sLogger.Error("DatabaseException: " + text);
+            throw DatabaseException(text);
         }
         return query;
     }
@@ -51,8 +54,10 @@ namespace Common
         QSqlQuery query = ExecuteQuery(queryString, bindValues, db);
         if (!query.next())
         {
-            throw DatabaseException(QString("The query '%1' has returned 0 records. One record was expected.").
-                arg(queryString));
+            QString text = QString("The query '%1' has returned 0 records. One record was expected.").
+                arg(queryString);
+            sLogger.Error("DatabaseException: " + text);
+            throw DatabaseException(text);
         }
         return query;
     }
@@ -63,7 +68,9 @@ namespace Common
         QVariant value = query.value(0);
         if (!value.isValid())
         {
-            throw DatabaseException(QString("The query '%1' has returned invalid value for index 0.").arg(queryString));
+            QString text = QString("The query '%1' has returned invalid value for index 0.").arg(queryString);
+            sLogger.Error("DatabaseException: " + text);
+            throw DatabaseException(text);
         }
         return value;
     }
@@ -75,7 +82,9 @@ namespace Common
         QVariant value = query.value(0);
         if (!value.isValid())
         {
-            throw DatabaseException(QString("The query '%1' has returned invalid value for index 0.").arg(queryString));
+            QString text = QString("The query '%1' has returned invalid value for index 0.").arg(queryString);
+            sLogger.Error("DatabaseException: " + text);
+            throw DatabaseException(text);
         }
         return value;
     }
