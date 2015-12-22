@@ -30,7 +30,7 @@ namespace Greis
             {
                 // Saving to the database
                 auto sink = make_unique<MySqlSink>(this->Connection(), 1000);
-                sink->AddJpsFile(expectedChunk.get());
+                sink->AddDataChunk(expectedChunk.get());
                 sink->Flush();
             }
             DataChunk::UniquePtr_t actualChunk;
@@ -73,7 +73,7 @@ namespace Greis
             {
                 // Saving to the database
                 auto sink = make_unique<MySqlSink>(this->Connection(), 1000);
-                sink->AddJpsFile(expectedChunk.get());
+                sink->AddDataChunk(expectedChunk.get());
                 sink->Flush();
             }
             DataChunk::UniquePtr_t actualChunk;
@@ -97,7 +97,7 @@ namespace Greis
             {
                 // Saving to the database
                 auto sink = make_unique<MySqlSink>(this->Connection(), 1000);
-                sink->AddJpsFile(expectedChunk.get());
+                sink->AddDataChunk(expectedChunk.get());
                 sink->Flush();
             }
             DataChunk::UniquePtr_t actualChunk;
@@ -121,7 +121,7 @@ namespace Greis
             {
                 // Saving to the database
                 auto sink = make_unique<MySqlSink>(this->Connection(), 1000);
-                sink->AddJpsFile(expectedChunk.get());
+                sink->AddDataChunk(expectedChunk.get());
                 sink->Flush();
             }
             DataChunk::UniquePtr_t actualChunk;

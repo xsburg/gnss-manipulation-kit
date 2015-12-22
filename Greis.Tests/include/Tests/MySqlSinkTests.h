@@ -32,7 +32,7 @@ namespace Greis
 
             {
                 auto sink = make_unique<MySqlSink>(this->Connection(), inserterBatchSize);
-                sink->AddJpsFile(file.get());
+                sink->AddDataChunk(file.get());
                 sink->Flush();
             }
             sLogger.Info(QString("Insertion completed."));

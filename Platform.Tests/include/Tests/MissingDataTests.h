@@ -74,7 +74,7 @@ namespace Platform
                 rawDataChunk = Greis::DataChunk::FromFile(rawDataFileName, true);
                 Greis::IBinaryStream::SharedPtr_t deviceBinaryStream = std::make_shared<Greis::FileBinaryStream>(rawDataFileName);
                 auto dataChunk = make_unique<Greis::DataChunk>();
-                ChainedSink::UniquePtr_t localSink = ChainedSink::UniquePtr_t(new ChainedSink(this->Connection(), 25, ChainedSink::UniquePtr_t(nullptr), false));
+                ChainedSink::UniquePtr_t localSink = ChainedSink::UniquePtr_t(new ChainedSink(this->Connection(), 25));
                 int dataChunkSize = 250;
                 ASSERT_TRUE(localSink->IsValid());
                 Greis::GreisMessageStream::SharedPtr_t messageStream = std::make_shared<Greis::GreisMessageStream>(deviceBinaryStream, true, false);
@@ -130,14 +130,14 @@ namespace Platform
             {
                 // Saving to the database
                 auto sink = make_unique<Greis::MySqlSink>(this->Connection(), 1000);
-                sink->AddJpsFile(expectedChunk.get());
+                sink->AddDataChunk(expectedChunk.get());
                 sink->Flush();
                 // Rolling back
                 this->Connection()->Database().rollback();
                 this->Connection()->Database().transaction();
                 sink->Clear();
                 // Saving and flushing the data all over again
-                sink->AddJpsFile(expectedChunk.get());
+                sink->AddDataChunk(expectedChunk.get());
                 sink->Flush();
             }
             Greis::DataChunk::UniquePtr_t actualChunk;
@@ -161,7 +161,7 @@ namespace Platform
             {
                 // Saving to the database
                 auto sink = make_unique<Greis::MySqlSink>(this->Connection(), 1000);
-                sink->AddJpsFile(expectedChunk.get());
+                sink->AddDataChunk(expectedChunk.get());
                 sink->Flush();
                 // Rolling back
                 this->Connection()->Database().rollback();

@@ -28,7 +28,7 @@ namespace Greis
         MySqlSink(Connection::SharedPtr_t connection, int inserterBatchSize = 10000);
         ~MySqlSink();
 
-        void AddJpsFile(DataChunk* file);
+        void AddDataChunk(DataChunk* file);
         void AddEpoch(Epoch* epoch);
         void AddEpoch(QDateTime dateTime);
         void AddMessage(Message* msg);

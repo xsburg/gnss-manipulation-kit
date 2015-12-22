@@ -57,6 +57,7 @@ namespace Greis
 
     QFuture<void> MySqlSink::FlushAsync()
     {
+        // TODO
         auto insertersFlush = std::make_shared<QFutureSynchronizer<void>>();
         insertersFlush->addFuture(_rawMessageInserter->Flush());
         foreach (DataBatchInserter::SharedPtr_t inserter, _msgInserters)
@@ -79,7 +80,7 @@ namespace Greis
         }
     }
 
-    void MySqlSink::AddJpsFile( DataChunk* file )
+    void MySqlSink::AddDataChunk( DataChunk* file )
     {
         for (auto& epoch : file->Body())
         {

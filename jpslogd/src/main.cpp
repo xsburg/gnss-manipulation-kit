@@ -96,7 +96,7 @@ namespace jpslogd
     {
         SerialPortBinaryStream::SharedPtr_t deviceBinaryStream;
         ChainedSink::UniquePtr_t dataCenterSink;
-        ChainedSink::UniquePtr_t localSink;
+        MySqlSink::UniquePtr_t sink;
         std::unique_ptr<DataChunk> dataChunk;
         bool success = false;
 
@@ -176,21 +176,20 @@ namespace jpslogd
             auto remoteConnection = Connection::FromSettings("RemoteDatabase");
             if (remoteConnection->Driver != "")
             {
-                dataCenterSink = make_unique<ChainedSink>(remoteConnection, inserterBatchSize, nullptr, true);
+                sLogger.Error("The application does not support double connection anymore due to performance reasons.");
+                return true;
+                /*dataCenterSink = make_unique<ChainedSink>(remoteConnection, inserterBatchSize, nullptr, true);
                 localSink = make_unique<ChainedSink>(localConnection, inserterBatchSize, std::move(dataCenterSink), true);
                 if (!dataCenterSink->IsValid())
                 {
                     return true;
                 }
-                sLogger.Info("Using remote database " + localConnection->DatabaseName + " on " + localConnection->Hostname);
+                sLogger.Info("Using remote database " + localConnection->DatabaseName + " on " + localConnection->Hostname);*/
             }
             else
             {
-                localSink = make_unique<ChainedSink>(localConnection, inserterBatchSize, nullptr, true);
-            }
-            if (!localSink->IsValid())
-            {
-                return true;
+                localConnection->Connect();
+                sink = make_unique<MySqlSink>(localConnection, inserterBatchSize);
             }
 
             sLogger.Info("Configuring provisioning via local database...");
@@ -219,7 +218,8 @@ namespace jpslogd
                     {
                         dataChunk2->AddMessage(std::move(m));
                     }
-                    localSink->Handle(std::move(dataChunk));
+                    sink->AddDataChunk(dataChunk.get());
+                    sink->FlushAsync();
                     dataChunk = std::move(dataChunk2);
                     msgCounter = 0;
                 }
@@ -271,21 +271,23 @@ namespace jpslogd
                 }
             }
 
-            localSink->Handle(std::move(dataChunk));
-            localSink->Flush();
+            sink->AddDataChunk(dataChunk.get());
+            dataChunk.reset();
+            sink->Flush();
             return true;
         }
         catch (GreisException& ex)
         {
             sLogger.Error("An error has occurred: " + ex.what());
 
-            if (localSink.get())
+            if (sink.get())
             {
                 if (dataChunk.get())
                 {
-                    localSink->Handle(std::move(dataChunk));
+                    sink->AddDataChunk(dataChunk.get());
+                    dataChunk.reset();
                 }
-                localSink->Flush();
+                sink->Flush();
             }
 
             if (deviceBinaryStream.get() && deviceBinaryStream->isOpen())
@@ -322,13 +324,14 @@ namespace jpslogd
             {
                 sLogger.Error("No connection to receiver, code: " + QString::number(bex.code().value()));
             }
-            if (localSink.get())
+            if (sink.get())
             {
                 if (dataChunk.get())
                 {
-                    localSink->Handle(std::move(dataChunk));
+                    sink->AddDataChunk(dataChunk.get());
+                    dataChunk.reset();
                 }
-                localSink->Flush();
+                sink->Flush();
             }
             return false;
         }
