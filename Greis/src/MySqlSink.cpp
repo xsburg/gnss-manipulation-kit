@@ -1,9 +1,6 @@
 #include "MySqlSink.h"
 #include "Common/Connection.h"
-#include "AllStdMessages.h"
-#include <string>
 #include "RawStdMessage.h"
-#include <QtConcurrent>
 
 using namespace Common;
 
@@ -11,6 +8,8 @@ namespace Greis
 {
     void MySqlSink::construct()
     {
+        _flushQueue = std::make_shared<QFutureSynchronizer<void>>();
+
         _lastEpochId = _dbHelper->ExecuteSingleValueQuery(QString("SELECT MAX(`id`) FROM `epoch`")).toInt();
         _epochInserter = DataBatchInserter::SharedPtr_t(new DataBatchInserter(
             "INSERT INTO `epoch` (id, unixTime) VALUES (?, ?)", 2, _connection, "epoch", _inserterBatchSize));
@@ -46,28 +45,17 @@ namespace Greis
 
     void MySqlSink::Flush()
     {
-        QFutureSynchronizer<void> insertersFlush;
-        insertersFlush.addFuture(_rawMessageInserter->Flush());
-        foreach (DataBatchInserter::SharedPtr_t inserter, _msgInserters)
-        {
-            insertersFlush.addFuture(inserter->Flush());
-        }
-        insertersFlush.waitForFinished();
+        FlushAsync();
+        _flushQueue->waitForFinished();
     }
 
-    QFuture<void> MySqlSink::FlushAsync()
+    void MySqlSink::FlushAsync()
     {
-        // TODO
-        auto insertersFlush = std::make_shared<QFutureSynchronizer<void>>();
-        insertersFlush->addFuture(_rawMessageInserter->Flush());
+        _flushQueue->addFuture(_rawMessageInserter->Flush());
         foreach (DataBatchInserter::SharedPtr_t inserter, _msgInserters)
         {
-            insertersFlush->addFuture(inserter->Flush());
+            _flushQueue->addFuture(inserter->Flush());
         }
-        return QtConcurrent::run([insertersFlush]()
-        {
-            insertersFlush->waitForFinished();
-        });
     }
 
     void MySqlSink::Clear()

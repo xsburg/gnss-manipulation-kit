@@ -52,4 +52,17 @@ namespace Common
         sIniSettings.setValue(_settingsPrefix + ".Hostname", Hostname);
         sIniSettings.setValue(_settingsPrefix + ".Port", Port);
     }
+
+    Connection::SharedPtr_t Connection::Clone()
+    {
+        Connection::SharedPtr_t ci = std::make_shared<Connection>();
+        ci->_settingsPrefix = _settingsPrefix;
+        ci->Driver = Driver;
+        ci->DatabaseName = DatabaseName;
+        ci->Username = Username;
+        ci->Password = Password;
+        ci->Hostname = Hostname;
+        ci->Port = Port;
+        return ci;
+    }
 }

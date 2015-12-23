@@ -6,9 +6,6 @@
 #include <QtCore/QMap>
 #include "Common/Connection.h"
 #include "Common/SmartPtr.h"
-#include "Common/NotSupportedException.h"
-#include "Common/NotImplementedException.h"
-#include "Common/DataInserter.h"
 #include "Common/DataBatchInserter.h"
 #include "EMessageId.h"
 #include "ECustomTypeId.h"
@@ -35,7 +32,7 @@ namespace Greis
         bool NeedsFlush();
 
         void Flush();
-        QFuture<void> FlushAsync();
+        void FlushAsync();
         void Clear();
     private:
         void construct();
@@ -59,6 +56,7 @@ namespace Greis
             return _serializer.SerializeIds(ids);
         }
     private:
+        std::shared_ptr<QFutureSynchronizer<void>> _flushQueue;
         Connection::SharedPtr_t _connection;
         DatabaseHelper* _dbHelper;
         int _inserterBatchSize;

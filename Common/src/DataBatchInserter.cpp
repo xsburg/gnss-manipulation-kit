@@ -97,36 +97,56 @@ namespace Common
                 insertQueryTmp.append(valuesTmp);
             }
 
-            auto query = std::make_shared<QSqlQuery>(_dbHelper->Database());
-            _dbHelper->ThrowIfError(*query.get());
-            //sLogger.Debug(insertQueryTmp);
-            query->prepare(insertQueryTmp);
-            DatabaseHelper::ThrowIfError(*query.get());
-            int varsCount = 0;
-
-            auto colSize = _boundValues.size();
-            for (int i = 0; i < _rowsAdded; i++)
+            // data copy
+            QVector<QVariantList> boundValuesCopy;
+            for (auto& valList : _boundValues)
             {
-                for (int j = 0; j < colSize; j++)
+                QVariantList listCopy;
+                for (auto& val : valList)
                 {
-                    query->addBindValue(_boundValues[j][i]);
-                    varsCount++;
+                    listCopy.append(val);
                 }
+                boundValuesCopy.append(listCopy);
             }
-            auto valid = varsCount == _boundValues.size() * _rowsAdded;
+            int rowsAdded = _rowsAdded;
+
             Clear();
 
-            return QtConcurrent::run([childrenFlush, query, this]()
+            return QtConcurrent::run([childrenFlush, boundValuesCopy, rowsAdded, insertQueryTmp, this]()
             {
                 childrenFlush->waitForFinished();
+                // New connection build
+                auto newConnection = _connection->Clone();
+                newConnection->Connect();
+
+                auto query = std::make_shared<QSqlQuery>(newConnection->DbHelper()->Database());
+                newConnection->DbHelper()->ThrowIfError(*query.get());
+                //newConnection->Database().transaction();
+                //sLogger.Debug(insertQueryTmp);
+                query->prepare(insertQueryTmp);
+                DatabaseHelper::ThrowIfError(*query.get());
+                int varsCount = 0;
+
+                auto colSize = boundValuesCopy.size();
+                for (int i = 0; i < rowsAdded; i++)
+                {
+                    for (int j = 0; j < colSize; j++)
+                    {
+                        query->addBindValue(boundValuesCopy[j][i]);
+                        varsCount++;
+                    }
+                }
+                auto valid = varsCount == boundValuesCopy.size() * rowsAdded;
+
+                // Execution
                 query->exec();
                 DatabaseHelper::ThrowIfError(*query.get());
                 if (_tableName.isEmpty() || _tableName.isNull())
                 {
-                    sLogger.Trace(QString("%1 records has been added.").arg(_rowsAdded));
+                    sLogger.Trace(QString("%1 records has been added.").arg(rowsAdded));
                 }
                 else {
-                    sLogger.Trace(QString("%1 records has been added into `%2`.").arg(_rowsAdded).arg(_tableName));
+                    sLogger.Trace(QString("%1 records has been added into `%2`.").arg(rowsAdded).arg(_tableName));
                 }
             });
         }

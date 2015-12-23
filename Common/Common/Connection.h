@@ -39,6 +39,7 @@ namespace Common
     
         static Connection::SharedPtr_t FromSettings(const QString& settingsPrefix);
         void ToSettings();
+        Connection::SharedPtr_t Clone();
     private:
         Connection(const Connection& con);
         Connection &operator =(const Connection &);

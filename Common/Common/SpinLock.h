@@ -17,11 +17,17 @@ namespace Common
     class SpinLock {
         std::atomic_flag locked;
     public:
+        SpinLock()
+        {
+            unlock();
+        }
+
         void lock() {
             while (locked.test_and_set(std::memory_order_acquire)) {
                 std::this_thread::yield();
             }
         }
+        
         void unlock() {
             locked.clear(std::memory_order_release);
         }
