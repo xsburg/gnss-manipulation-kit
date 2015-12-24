@@ -1,4 +1,4 @@
-#include "Common/Connection.h"
+#include "Common/ConnectionPool.h"
 #include "Common/Logger.h"
 #include "Greis/AllStdMessages.h"
 #include "Greis/MySqlSink.h"
@@ -7,9 +7,10 @@ using namespace Common;
 
 namespace Greis
 {
-    MySqlSink::MySqlSink(Connection::SharedPtr_t connection, int inserterBatchSize)
+    MySqlSink::MySqlSink(ConnectionPool::SharedPtr_t connectionPool, int inserterBatchSize)
     {
-        _connection = connection;
+        _connectionPool = connectionPool;
+        _connection = connectionPool->getConnectionForCurrentThread();
         _dbHelper = _connection->DbHelper();
         _inserterBatchSize = inserterBatchSize;
         
@@ -17,412 +18,412 @@ namespace Greis
 
         auto angularVelocityInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_AngularVelocity` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `time`, `x`, `y`, `z`, `rms`, `flags`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            12, _connection, "msg_AngularVelocity", _inserterBatchSize);
+            12, _connectionPool, "msg_AngularVelocity", _inserterBatchSize);
         auto antNameInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_AntName` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `name`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "msg_AntName", _inserterBatchSize);
+            7, _connectionPool, "msg_AntName", _inserterBatchSize);
         auto baseInfoInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_BaseInfo` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `x`, `y`, `z`, `id_sugar`, `solType`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            11, _connection, "msg_BaseInfo", _inserterBatchSize);
+            11, _connectionPool, "msg_BaseInfo", _inserterBatchSize);
         auto baselineInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_Baseline` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `x`, `y`, `z`, `sigma`, `solType`, `time`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            12, _connection, "msg_Baseline", _inserterBatchSize);
+            12, _connectionPool, "msg_Baseline", _inserterBatchSize);
         auto baselinesInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_Baselines` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `bl0`, `bl1`, `bl2`, `rms`, `solType`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            11, _connection, "msg_Baselines", _inserterBatchSize);
+            11, _connectionPool, "msg_Baselines", _inserterBatchSize);
         auto beiDouAlmInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_BeiDouAlm` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `gps`) VALUES (?, ?, ?, ?, ?, ?)", 
-            6, _connection, "msg_BeiDouAlm", _inserterBatchSize);
+            6, _connectionPool, "msg_BeiDouAlm", _inserterBatchSize);
         auto beiDouEphemerisInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_BeiDouEphemeris` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `req`, `tgd2`, `navType`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            9, _connection, "msg_BeiDouEphemeris", _inserterBatchSize);
+            9, _connectionPool, "msg_BeiDouEphemeris", _inserterBatchSize);
         auto beiDouIonoParamsInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_BeiDouIonoParams` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `par`) VALUES (?, ?, ?, ?, ?, ?)", 
-            6, _connection, "msg_BeiDouIonoParams", _inserterBatchSize);
+            6, _connectionPool, "msg_BeiDouIonoParams", _inserterBatchSize);
         auto beiDouUtcParamInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_BeiDouUtcParam` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `utc`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "msg_BeiDouUtcParam", _inserterBatchSize);
+            7, _connectionPool, "msg_BeiDouUtcParam", _inserterBatchSize);
         auto calBandsDelayInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_CalBandsDelay` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `d`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "msg_CalBandsDelay", _inserterBatchSize);
+            7, _connectionPool, "msg_CalBandsDelay", _inserterBatchSize);
         auto clockOffsetsInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_ClockOffsets` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `sample`, `reserved`, `recSize`, `Offs`, `crc16`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            10, _connection, "msg_ClockOffsets", _inserterBatchSize);
+            10, _connectionPool, "msg_ClockOffsets", _inserterBatchSize);
         auto cNRInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_CNR` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `cnr`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "msg_CNR", _inserterBatchSize);
+            7, _connectionPool, "msg_CNR", _inserterBatchSize);
         auto cNR4Inserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_CNR_4` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `cnrX4`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "msg_CNR_4", _inserterBatchSize);
+            7, _connectionPool, "msg_CNR_4", _inserterBatchSize);
         auto compRawNavDataInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_CompRawNavData` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `prn`, `time`, `type`, `len`, `data`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            11, _connection, "msg_CompRawNavData", _inserterBatchSize);
+            11, _connectionPool, "msg_CompRawNavData", _inserterBatchSize);
         auto cPInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_CP` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `cp`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "msg_CP", _inserterBatchSize);
+            7, _connectionPool, "msg_CP", _inserterBatchSize);
         auto dopsInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_Dops` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `hdop`, `vdop`, `tdop`, `solType`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            10, _connection, "msg_Dops", _inserterBatchSize);
+            10, _connectionPool, "msg_Dops", _inserterBatchSize);
         auto dPInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_DP` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `dp`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "msg_DP", _inserterBatchSize);
+            7, _connectionPool, "msg_DP", _inserterBatchSize);
         auto epochEndInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_EpochEnd` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `cs`) VALUES (?, ?, ?, ?, ?, ?)", 
-            6, _connection, "msg_EpochEnd", _inserterBatchSize);
+            6, _connectionPool, "msg_EpochEnd", _inserterBatchSize);
         auto epochTimeInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_EpochTime` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `tod`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "msg_EpochTime", _inserterBatchSize);
+            7, _connectionPool, "msg_EpochTime", _inserterBatchSize);
         auto eRInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_ER` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `error`) VALUES (?, ?, ?, ?, ?, ?)", 
-            6, _connection, "msg_ER", _inserterBatchSize);
+            6, _connectionPool, "msg_ER", _inserterBatchSize);
         auto eventInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_Event` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `time`, `type`, `data`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            9, _connection, "msg_Event", _inserterBatchSize);
+            9, _connectionPool, "msg_Event", _inserterBatchSize);
         auto extEventInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_ExtEvent` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `ms`, `ns`, `timeScale`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            9, _connection, "msg_ExtEvent", _inserterBatchSize);
+            9, _connectionPool, "msg_ExtEvent", _inserterBatchSize);
         auto fileIdInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_FileId` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `id_sugar`, `description`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "msg_FileId", _inserterBatchSize);
+            7, _connectionPool, "msg_FileId", _inserterBatchSize);
         auto flagsInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_Flags` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `flags`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "msg_Flags", _inserterBatchSize);
+            7, _connectionPool, "msg_Flags", _inserterBatchSize);
         auto fullRotationMatrixInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_FullRotationMatrix` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `q00`, `q01`, `q02`, `q10`, `q11`, `q12`, `q20`, `q21`, `q22`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            15, _connection, "msg_FullRotationMatrix", _inserterBatchSize);
+            15, _connectionPool, "msg_FullRotationMatrix", _inserterBatchSize);
         auto gALAlmInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_GALAlm` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `gps`, `iod`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 
-            8, _connection, "msg_GALAlm", _inserterBatchSize);
+            8, _connectionPool, "msg_GALAlm", _inserterBatchSize);
         auto gALEphemerisInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_GALEphemeris` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `req`, `bgdE1E5a`, `bgdE1E5b`, `ai0`, `ai1`, `ai2`, `sfi`, `navType`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            14, _connection, "msg_GALEphemeris", _inserterBatchSize);
+            14, _connectionPool, "msg_GALEphemeris", _inserterBatchSize);
         auto galRawNavDataInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_GalRawNavData` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `prn`, `time`, `type`, `len`, `data`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            11, _connection, "msg_GalRawNavData", _inserterBatchSize);
+            11, _connectionPool, "msg_GalRawNavData", _inserterBatchSize);
         auto galUtcGpsParamInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_GalUtcGpsParam` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `utc`, `a0g`, `a1g`, `t0g`, `wn0g`, `flags`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            12, _connection, "msg_GalUtcGpsParam", _inserterBatchSize);
+            12, _connectionPool, "msg_GalUtcGpsParam", _inserterBatchSize);
         auto geoPosInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_GeoPos` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `lat`, `lon`, `alt`, `pSigma`, `solType`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            11, _connection, "msg_GeoPos", _inserterBatchSize);
+            11, _connectionPool, "msg_GeoPos", _inserterBatchSize);
         auto geoVelInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_GeoVel` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `lat`, `lon`, `alt`, `pSigma`, `solType`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            11, _connection, "msg_GeoVel", _inserterBatchSize);
+            11, _connectionPool, "msg_GeoVel", _inserterBatchSize);
         auto gLOAlmanacInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_GLOAlmanac` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `sv`, `frqNum`, `dna`, `tlam`, `flags`, `tauN`, `tauSys`, `ecc`, `lambda`, `argPer`, `delT`, `delTdt`, `deli`, `n4`, `navType`, `gammaN`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            22, _connection, "msg_GLOAlmanac", _inserterBatchSize);
+            22, _connectionPool, "msg_GLOAlmanac", _inserterBatchSize);
         auto gloDelaysInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_GloDelays` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `del`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "msg_GloDelays", _inserterBatchSize);
+            7, _connectionPool, "msg_GloDelays", _inserterBatchSize);
         auto gLOEphemerisInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_GLOEphemeris` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `sv`, `frqNum`, `dne`, `tk`, `tb`, `health`, `age`, `flags`, `r`, `v`, `w`, `tauSys`, `tau`, `gamma`, `fDelTauN`, `nFt`, `nN4`, `flags2`, `navType`, `beta`, `tauSysDot`, `ec`, `ee`, `fc`, `fe`, `reserv`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            32, _connection, "msg_GLOEphemeris", _inserterBatchSize);
+            32, _connectionPool, "msg_GLOEphemeris", _inserterBatchSize);
         auto gloNavDataInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_GloNavData` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `recSize`, `dat`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 
-            8, _connection, "msg_GloNavData", _inserterBatchSize);
+            8, _connectionPool, "msg_GloNavData", _inserterBatchSize);
         auto gloRawNavDataInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_GloRawNavData` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `num`, `fcn`, `time`, `type`, `len`, `data`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            12, _connection, "msg_GloRawNavData", _inserterBatchSize);
+            12, _connectionPool, "msg_GloRawNavData", _inserterBatchSize);
         auto gLOTimeInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_GLOTime` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `tod`, `dn`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 
-            8, _connection, "msg_GLOTime", _inserterBatchSize);
+            8, _connectionPool, "msg_GLOTime", _inserterBatchSize);
         auto gloUtcGpsParamInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_GloUtcGpsParam` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `tauSys`, `tauGps`, `B1`, `B2`, `KP`, `N4`, `Dn`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            13, _connection, "msg_GloUtcGpsParam", _inserterBatchSize);
+            13, _connectionPool, "msg_GloUtcGpsParam", _inserterBatchSize);
         auto gPSAlm0Inserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_GPSAlm0` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `sv`, `wna`, `toa`, `healthA`, `healthS`, `config`, `af1`, `af0`, `rootA`, `ecc`, `m0`, `omega0`, `argPer`, `deli`, `omegaDot`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            21, _connection, "msg_GPSAlm0", _inserterBatchSize);
+            21, _connectionPool, "msg_GPSAlm0", _inserterBatchSize);
         auto gPSEphemeris0Inserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_GPSEphemeris0` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `req`, `cNavType`, `lTope`, `lTopc`, `dADot`, `fDelnDot`, `cURAoe`, `cURAoc`, `cURAoc1`, `cURAoc2`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            16, _connection, "msg_GPSEphemeris0", _inserterBatchSize);
+            16, _connectionPool, "msg_GPSEphemeris0", _inserterBatchSize);
         auto gpsNavData0Inserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_GpsNavData0` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `recSize`, `dat`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 
-            8, _connection, "msg_GpsNavData0", _inserterBatchSize);
+            8, _connectionPool, "msg_GpsNavData0", _inserterBatchSize);
         auto gpsRawNavData0Inserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_GpsRawNavData0` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `prn`, `time`, `type`, `len`, `data`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            11, _connection, "msg_GpsRawNavData0", _inserterBatchSize);
+            11, _connectionPool, "msg_GpsRawNavData0", _inserterBatchSize);
         auto gPSTimeInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_GPSTime` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `tow`, `wn`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 
-            8, _connection, "msg_GPSTime", _inserterBatchSize);
+            8, _connectionPool, "msg_GPSTime", _inserterBatchSize);
         auto gpsUtcParamInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_GpsUtcParam` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `utc`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "msg_GpsUtcParam", _inserterBatchSize);
+            7, _connectionPool, "msg_GpsUtcParam", _inserterBatchSize);
         auto headAndPitchInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_HeadAndPitch` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `heading`, `pitch`, `solType`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            9, _connection, "msg_HeadAndPitch", _inserterBatchSize);
+            9, _connectionPool, "msg_HeadAndPitch", _inserterBatchSize);
         auto iAmpInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_IAmp` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `amp`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "msg_IAmp", _inserterBatchSize);
+            7, _connectionPool, "msg_IAmp", _inserterBatchSize);
         auto inertialMeasurementsInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_InertialMeasurements` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `accelerations`, `angularVelocities`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 
-            8, _connection, "msg_InertialMeasurements", _inserterBatchSize);
+            8, _connectionPool, "msg_InertialMeasurements", _inserterBatchSize);
         auto ionoDelayInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_IonoDelay` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `delay`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "msg_IonoDelay", _inserterBatchSize);
+            7, _connectionPool, "msg_IonoDelay", _inserterBatchSize);
         auto ionoParams0Inserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_IonoParams0` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `tot`, `wn`, `alpha0`, `alpha1`, `alpha2`, `alpha3`, `beta0`, `beta1`, `beta2`, `beta3`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            16, _connection, "msg_IonoParams0", _inserterBatchSize);
+            16, _connectionPool, "msg_IonoParams0", _inserterBatchSize);
         auto latencyInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_Latency` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `lt`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "msg_Latency", _inserterBatchSize);
+            7, _connectionPool, "msg_Latency", _inserterBatchSize);
         auto loggingHistoryInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_LoggingHistory` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `svsCount`, `targetStream`, `issue`, `bitsCount`, `lastBitTime`, `uids`, `pad`, `hist`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            13, _connection, "msg_LoggingHistory", _inserterBatchSize);
+            13, _connectionPool, "msg_LoggingHistory", _inserterBatchSize);
         auto msgFmtInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_MsgFmt` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `id_sugar`, `majorVer`, `minorVer`, `order`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            10, _connection, "msg_MsgFmt", _inserterBatchSize);
+            10, _connectionPool, "msg_MsgFmt", _inserterBatchSize);
         auto navStatusInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_NavStatus` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `ns`, `solType`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 
-            8, _connection, "msg_NavStatus", _inserterBatchSize);
+            8, _connectionPool, "msg_NavStatus", _inserterBatchSize);
         auto paramsInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_Params` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `params`, `delim`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 
-            8, _connection, "msg_Params", _inserterBatchSize);
+            8, _connectionPool, "msg_Params", _inserterBatchSize);
         auto posInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_Pos` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `x`, `y`, `z`, `sigma`, `solType`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            11, _connection, "msg_Pos", _inserterBatchSize);
+            11, _connectionPool, "msg_Pos", _inserterBatchSize);
         auto posCompTimeInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_PosCompTime` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `pt`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "msg_PosCompTime", _inserterBatchSize);
+            7, _connectionPool, "msg_PosCompTime", _inserterBatchSize);
         auto posCovInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_PosCov` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `xx`, `yy`, `zz`, `tt`, `xy`, `xz`, `xt`, `yz`, `yt`, `zt`, `solType`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            17, _connection, "msg_PosCov", _inserterBatchSize);
+            17, _connectionPool, "msg_PosCov", _inserterBatchSize);
         auto posStatInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_PosStat` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `solType`, `gpsLocked`, `gloLocked`, `gpsAvail`, `gloAvail`, `gpsUsed`, `gloUsed`, `fixProg`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            14, _connection, "msg_PosStat", _inserterBatchSize);
+            14, _connectionPool, "msg_PosStat", _inserterBatchSize);
         auto posVelInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_PosVel` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `x`, `y`, `z`, `pSigma`, `vx`, `vy`, `vz`, `vSigma`, `solType`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            15, _connection, "msg_PosVel", _inserterBatchSize);
+            15, _connectionPool, "msg_PosVel", _inserterBatchSize);
         auto posVelVectorInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_PosVelVector` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `sample`, `delta`, `word1`, `word2`, `word3`, `word4`, `word5`, `word6`, `word7`, `word8`, `word9`, `crc16`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            17, _connection, "msg_PosVelVector", _inserterBatchSize);
+            17, _connectionPool, "msg_PosVelVector", _inserterBatchSize);
         auto pPSOffsetInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_PPSOffset` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `offs`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "msg_PPSOffset", _inserterBatchSize);
+            7, _connectionPool, "msg_PPSOffset", _inserterBatchSize);
         auto pRInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_PR` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `pr`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "msg_PR", _inserterBatchSize);
+            7, _connectionPool, "msg_PR", _inserterBatchSize);
         auto qAmpInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_QAmp` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `amp`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "msg_QAmp", _inserterBatchSize);
+            7, _connectionPool, "msg_QAmp", _inserterBatchSize);
         auto qZSSAlmInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_QZSSAlm` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `gps`) VALUES (?, ?, ?, ?, ?, ?)", 
-            6, _connection, "msg_QZSSAlm", _inserterBatchSize);
+            6, _connectionPool, "msg_QZSSAlm", _inserterBatchSize);
         auto qZSSEphemerisInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_QZSSEphemeris` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `gps`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "msg_QZSSEphemeris", _inserterBatchSize);
+            7, _connectionPool, "msg_QZSSEphemeris", _inserterBatchSize);
         auto qzssIonoParamsInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_QzssIonoParams` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `par`) VALUES (?, ?, ?, ?, ?, ?)", 
-            6, _connection, "msg_QzssIonoParams", _inserterBatchSize);
+            6, _connectionPool, "msg_QzssIonoParams", _inserterBatchSize);
         auto qzssNavDataInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_QzssNavData` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `data`) VALUES (?, ?, ?, ?, ?, ?)", 
-            6, _connection, "msg_QzssNavData", _inserterBatchSize);
+            6, _connectionPool, "msg_QzssNavData", _inserterBatchSize);
         auto qzssRawNavDataInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_QzssRawNavData` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `data`) VALUES (?, ?, ?, ?, ?, ?)", 
-            6, _connection, "msg_QzssRawNavData", _inserterBatchSize);
+            6, _connectionPool, "msg_QzssRawNavData", _inserterBatchSize);
         auto qzssUtcParamInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_QzssUtcParam` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `utc`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "msg_QzssUtcParam", _inserterBatchSize);
+            7, _connectionPool, "msg_QzssUtcParam", _inserterBatchSize);
         auto rangeResidualInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_RangeResidual` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `res`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "msg_RangeResidual", _inserterBatchSize);
+            7, _connectionPool, "msg_RangeResidual", _inserterBatchSize);
         auto rawMeasInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_RawMeas` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `sample`, `scale`, `reftime`, `clock`, `flags`, `svd`, `crc16`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            12, _connection, "msg_RawMeas", _inserterBatchSize);
+            12, _connectionPool, "msg_RawMeas", _inserterBatchSize);
         auto rCPRc1Inserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_RCP_rc1` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `rcp`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "msg_RCP_rc1", _inserterBatchSize);
+            7, _connectionPool, "msg_RCP_rc1", _inserterBatchSize);
         auto rCPRC0Inserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_RCP_RC0` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `rcp`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "msg_RCP_RC0", _inserterBatchSize);
+            7, _connectionPool, "msg_RCP_RC0", _inserterBatchSize);
         auto rcvBeiDouTimeOffsetInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_RcvBeiDouTimeOffset` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `val`, `sval`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 
-            8, _connection, "msg_RcvBeiDouTimeOffset", _inserterBatchSize);
+            8, _connectionPool, "msg_RcvBeiDouTimeOffset", _inserterBatchSize);
         auto rcvDateInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_RcvDate` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `year`, `month`, `day`, `base`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            10, _connection, "msg_RcvDate", _inserterBatchSize);
+            10, _connectionPool, "msg_RcvDate", _inserterBatchSize);
         auto rcvGALTimeOffsetInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_RcvGALTimeOffset` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `val`, `sval`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 
-            8, _connection, "msg_RcvGALTimeOffset", _inserterBatchSize);
+            8, _connectionPool, "msg_RcvGALTimeOffset", _inserterBatchSize);
         auto rcvGLOTimeOffsetInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_RcvGLOTimeOffset` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `val`, `sval`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 
-            8, _connection, "msg_RcvGLOTimeOffset", _inserterBatchSize);
+            8, _connectionPool, "msg_RcvGLOTimeOffset", _inserterBatchSize);
         auto rcvGPSTimeOffsetInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_RcvGPSTimeOffset` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `val`, `sval`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 
-            8, _connection, "msg_RcvGPSTimeOffset", _inserterBatchSize);
+            8, _connectionPool, "msg_RcvGPSTimeOffset", _inserterBatchSize);
         auto rcvOscOffsInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_RcvOscOffs` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `val`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "msg_RcvOscOffs", _inserterBatchSize);
+            7, _connectionPool, "msg_RcvOscOffs", _inserterBatchSize);
         auto rcvQZSSTimeOffsetInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_RcvQZSSTimeOffset` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `val`, `sval`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 
-            8, _connection, "msg_RcvQZSSTimeOffset", _inserterBatchSize);
+            8, _connectionPool, "msg_RcvQZSSTimeOffset", _inserterBatchSize);
         auto rcvSBASTimeOffsetInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_RcvSBASTimeOffset` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `val`, `sval`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 
-            8, _connection, "msg_RcvSBASTimeOffset", _inserterBatchSize);
+            8, _connectionPool, "msg_RcvSBASTimeOffset", _inserterBatchSize);
         auto rcvTimeInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_RcvTime` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `tod`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "msg_RcvTime", _inserterBatchSize);
+            7, _connectionPool, "msg_RcvTime", _inserterBatchSize);
         auto rcvTimeAccuracyInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_RcvTimeAccuracy` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `acc`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "msg_RcvTimeAccuracy", _inserterBatchSize);
+            7, _connectionPool, "msg_RcvTimeAccuracy", _inserterBatchSize);
         auto rcvTimeOffsAtPPSInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_RcvTimeOffsAtPPS` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `offs`, `timeScale`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 
-            8, _connection, "msg_RcvTimeOffsAtPPS", _inserterBatchSize);
+            8, _connectionPool, "msg_RcvTimeOffsAtPPS", _inserterBatchSize);
         auto rcvTimeOffsetInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_RcvTimeOffset` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `val`, `sval`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 
-            8, _connection, "msg_RcvTimeOffset", _inserterBatchSize);
+            8, _connectionPool, "msg_RcvTimeOffset", _inserterBatchSize);
         auto rcvTimeOffsetDotInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_RcvTimeOffsetDot` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `val`, `sval`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 
-            8, _connection, "msg_RcvTimeOffsetDot", _inserterBatchSize);
+            8, _connectionPool, "msg_RcvTimeOffsetDot", _inserterBatchSize);
         auto rEInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_RE` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `reply`) VALUES (?, ?, ?, ?, ?, ?)", 
-            6, _connection, "msg_RE", _inserterBatchSize);
+            6, _connectionPool, "msg_RE", _inserterBatchSize);
         auto refEpochInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_RefEpoch` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `sample`, `scale`, `reftime`, `crc16`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            9, _connection, "msg_RefEpoch", _inserterBatchSize);
+            9, _connectionPool, "msg_RefEpoch", _inserterBatchSize);
         auto rmsInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_Rms` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `hpos`, `vpos`, `hvel`, `vvel`, `solType`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            11, _connection, "msg_Rms", _inserterBatchSize);
+            11, _connectionPool, "msg_Rms", _inserterBatchSize);
         auto rotationAnglesInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_RotationAngles` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `time`, `pitch`, `roll`, `heading`, `pitchRms`, `rollRms`, `headingRms`, `flags`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            14, _connection, "msg_RotationAngles", _inserterBatchSize);
+            14, _connectionPool, "msg_RotationAngles", _inserterBatchSize);
         auto rotationMatrixInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_RotationMatrix` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `time`, `q00`, `q01`, `q02`, `q12`, `rms`, `solType`, `flag`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            14, _connection, "msg_RotationMatrix", _inserterBatchSize);
+            14, _connectionPool, "msg_RotationMatrix", _inserterBatchSize);
         auto rotationMatrixAndVectorsInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_RotationMatrixAndVectors` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `time`, `q00`, `q01`, `q02`, `q12`, `rms`, `solType`, `flag`, `bl0`, `bl1`, `bl2`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            17, _connection, "msg_RotationMatrixAndVectors", _inserterBatchSize);
+            17, _connectionPool, "msg_RotationMatrixAndVectors", _inserterBatchSize);
         auto rPRInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_RPR` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `rpr`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "msg_RPR", _inserterBatchSize);
+            7, _connectionPool, "msg_RPR", _inserterBatchSize);
         auto satAzimuthInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_SatAzimuth` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `azim`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "msg_SatAzimuth", _inserterBatchSize);
+            7, _connectionPool, "msg_SatAzimuth", _inserterBatchSize);
         auto satElevationInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_SatElevation` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `elev`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "msg_SatElevation", _inserterBatchSize);
+            7, _connectionPool, "msg_SatElevation", _inserterBatchSize);
         auto satIndexInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_SatIndex` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `usi`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "msg_SatIndex", _inserterBatchSize);
+            7, _connectionPool, "msg_SatIndex", _inserterBatchSize);
         auto satNumbersInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_SatNumbers` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `osn`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "msg_SatNumbers", _inserterBatchSize);
+            7, _connectionPool, "msg_SatNumbers", _inserterBatchSize);
         auto sBASAlmanacInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_SBASAlmanac` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `waasPrn`, `gpsPrn`, `id_sugar`, `healthS`, `tod`, `xg`, `yg`, `zg`, `vxg`, `vyg`, `vzg`, `tow`, `wn`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            19, _connection, "msg_SBASAlmanac", _inserterBatchSize);
+            19, _connectionPool, "msg_SBASAlmanac", _inserterBatchSize);
         auto sBASEhemerisInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_SBASEhemeris` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `waasPrn`, `gpsPrn`, `iod`, `acc`, `tod`, `xg`, `yg`, `zg`, `vxg`, `vyg`, `vzg`, `vvxg`, `vvyg`, `vvzg`, `agf0`, `agf1`, `tow`, `wn`, `flags`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            25, _connection, "msg_SBASEhemeris", _inserterBatchSize);
+            25, _connectionPool, "msg_SBASEhemeris", _inserterBatchSize);
         auto sbasRawNavDataInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_SbasRawNavData` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `prn`, `time`, `reserv`, `data`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            10, _connection, "msg_SbasRawNavData", _inserterBatchSize);
+            10, _connectionPool, "msg_SbasRawNavData", _inserterBatchSize);
         auto sbasUtcParamInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_SbasUtcParam` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `utc`, `utcsi`, `tow`, `wn`, `flags`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            11, _connection, "msg_SbasUtcParam", _inserterBatchSize);
+            11, _connectionPool, "msg_SbasUtcParam", _inserterBatchSize);
         auto sCInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_SC` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `smooth`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "msg_SC", _inserterBatchSize);
+            7, _connectionPool, "msg_SC", _inserterBatchSize);
         auto sCPInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_SCP` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `scp`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "msg_SCP", _inserterBatchSize);
+            7, _connectionPool, "msg_SCP", _inserterBatchSize);
         auto security0Inserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_Security0` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `data`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "msg_Security0", _inserterBatchSize);
+            7, _connectionPool, "msg_Security0", _inserterBatchSize);
         auto security1Inserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_Security1` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `data`, `crc16`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "msg_Security1", _inserterBatchSize);
+            7, _connectionPool, "msg_Security1", _inserterBatchSize);
         auto solutionTimeInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_SolutionTime` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `time`, `solType`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 
-            8, _connection, "msg_SolutionTime", _inserterBatchSize);
+            8, _connectionPool, "msg_SolutionTime", _inserterBatchSize);
         auto spectrum0Inserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_Spectrum0` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `currFrq`, `finalFrq`, `n`, `m`, `s`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            11, _connection, "msg_Spectrum0", _inserterBatchSize);
+            11, _connectionPool, "msg_Spectrum0", _inserterBatchSize);
         auto spectrum1Inserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_Spectrum1` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `currFrq`, `finalFrq`, `n`, `m`, `s`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            11, _connection, "msg_Spectrum1", _inserterBatchSize);
+            11, _connectionPool, "msg_Spectrum1", _inserterBatchSize);
         auto sPRInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_SPR` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `spr`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "msg_SPR", _inserterBatchSize);
+            7, _connectionPool, "msg_SPR", _inserterBatchSize);
         auto sRDPInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_SRDP` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `srdp`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "msg_SRDP", _inserterBatchSize);
+            7, _connectionPool, "msg_SRDP", _inserterBatchSize);
         auto sRPRInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_SRPR` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `srpr`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "msg_SRPR", _inserterBatchSize);
+            7, _connectionPool, "msg_SRPR", _inserterBatchSize);
         auto sSInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_SS` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `smooth`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "msg_SS", _inserterBatchSize);
+            7, _connectionPool, "msg_SS", _inserterBatchSize);
         auto trackingTimeInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_TrackingTime` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `tt`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "msg_TrackingTime", _inserterBatchSize);
+            7, _connectionPool, "msg_TrackingTime", _inserterBatchSize);
         auto trackingTimeCAInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_TrackingTimeCA` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `tt`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "msg_TrackingTimeCA", _inserterBatchSize);
+            7, _connectionPool, "msg_TrackingTimeCA", _inserterBatchSize);
         auto velInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_Vel` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `x`, `y`, `z`, `sigma`, `solType`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            11, _connection, "msg_Vel", _inserterBatchSize);
+            11, _connectionPool, "msg_Vel", _inserterBatchSize);
         auto velCovInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_VelCov` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `xx`, `yy`, `zz`, `tt`, `xy`, `xz`, `xt`, `yz`, `yt`, `zt`, `solType`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            17, _connection, "msg_VelCov", _inserterBatchSize);
+            17, _connectionPool, "msg_VelCov", _inserterBatchSize);
         auto velocityResidualInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_VelocityResidual` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `res`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "msg_VelocityResidual", _inserterBatchSize);
+            7, _connectionPool, "msg_VelocityResidual", _inserterBatchSize);
         auto wrapperInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `msg_Wrapper` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `idMessageCode`, `bodySize`, `id_sugar`, `data`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 
-            8, _connection, "msg_Wrapper", _inserterBatchSize);
+            8, _connectionPool, "msg_Wrapper", _inserterBatchSize);
         auto bandDelayInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `ct_BandDelay` (`id`, `idEpoch`, `unixTimeEpoch`, `bodySize`, `band`, `signal`, `delay`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "ct_BandDelay", _inserterBatchSize);
+            7, _connectionPool, "ct_BandDelay", _inserterBatchSize);
         auto clkOffsInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `ct_ClkOffs` (`id`, `idEpoch`, `unixTimeEpoch`, `bodySize`, `word1`, `word2`) VALUES (?, ?, ?, ?, ?, ?)", 
-            6, _connection, "ct_ClkOffs", _inserterBatchSize);
+            6, _connectionPool, "ct_ClkOffs", _inserterBatchSize);
         auto extSpecDataInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `ct_ExtSpecData` (`id`, `idEpoch`, `unixTimeEpoch`, `bodySize`, `spec`, `agcmin`, `agcmax`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "ct_ExtSpecData", _inserterBatchSize);
+            7, _connectionPool, "ct_ExtSpecData", _inserterBatchSize);
         auto gPSAlm1Inserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `ct_GPSAlm1` (`id`, `idEpoch`, `unixTimeEpoch`, `bodySize`, `sv`, `wna`, `toa`, `healthA`, `healthS`, `config`, `af1`, `af0`, `rootA`, `ecc`, `m0`, `omega0`, `argPer`, `deli`, `omegaDot`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            19, _connection, "ct_GPSAlm1", _inserterBatchSize);
+            19, _connectionPool, "ct_GPSAlm1", _inserterBatchSize);
         auto gPSEphemeris1Inserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `ct_GPSEphemeris1` (`id`, `idEpoch`, `unixTimeEpoch`, `bodySize`, `req`, `cNavType`, `lTope`, `lTopc`, `dADot`, `fDelnDot`, `cURAoe`, `cURAoc`, `cURAoc1`, `cURAoc2`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            14, _connection, "ct_GPSEphemeris1", _inserterBatchSize);
+            14, _connectionPool, "ct_GPSEphemeris1", _inserterBatchSize);
         auto gpsEphReqDataInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `ct_GpsEphReqData` (`id`, `idEpoch`, `unixTimeEpoch`, `bodySize`, `sv`, `tow`, `flags`, `iodc`, `toc`, `ura`, `healthS`, `wn`, `tgd`, `af2`, `af1`, `af0`, `toe`, `iode`, `rootA`, `ecc`, `m0`, `omega0`, `inc0`, `argPer`, `deln`, `omegaDot`, `incDot`, `crc`, `crs`, `cuc`, `cus`, `cic`, `cis`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            33, _connection, "ct_GpsEphReqData", _inserterBatchSize);
+            33, _connectionPool, "ct_GpsEphReqData", _inserterBatchSize);
         auto gpsNavData1Inserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `ct_GpsNavData1` (`id`, `idEpoch`, `unixTimeEpoch`, `bodySize`, `recSize`, `dat`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "ct_GpsNavData1", _inserterBatchSize);
+            7, _connectionPool, "ct_GpsNavData1", _inserterBatchSize);
         auto gpsRawNavData1Inserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `ct_GpsRawNavData1` (`id`, `idEpoch`, `unixTimeEpoch`, `bodySize`, `prn`, `time`, `type`, `len`, `data`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            10, _connection, "ct_GpsRawNavData1", _inserterBatchSize);
+            10, _connectionPool, "ct_GpsRawNavData1", _inserterBatchSize);
         auto headerInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `ct_Header` (`id`, `idEpoch`, `unixTimeEpoch`, `bodySize`, `refrange`, `usi`, `num`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "ct_Header", _inserterBatchSize);
+            7, _connectionPool, "ct_Header", _inserterBatchSize);
         auto ionoParams1Inserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `ct_IonoParams1` (`id`, `idEpoch`, `unixTimeEpoch`, `bodySize`, `tot`, `wn`, `alpha0`, `alpha1`, `alpha2`, `alpha3`, `beta0`, `beta1`, `beta2`, `beta3`, `cs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            15, _connection, "ct_IonoParams1", _inserterBatchSize);
+            15, _connectionPool, "ct_IonoParams1", _inserterBatchSize);
         auto slotRecInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `ct_SlotRec` (`id`, `idEpoch`, `unixTimeEpoch`, `bodySize`, `svstOrDelrange`, `word1`, `flags`, `lock`, `word2`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            9, _connection, "ct_SlotRec", _inserterBatchSize);
+            9, _connectionPool, "ct_SlotRec", _inserterBatchSize);
         auto smoothInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `ct_Smooth` (`id`, `idEpoch`, `unixTimeEpoch`, `bodySize`, `value`, `interval`) VALUES (?, ?, ?, ?, ?, ?)", 
-            6, _connection, "ct_Smooth", _inserterBatchSize);
+            6, _connectionPool, "ct_Smooth", _inserterBatchSize);
         auto specDataInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `ct_SpecData` (`id`, `idEpoch`, `unixTimeEpoch`, `bodySize`, `spec`) VALUES (?, ?, ?, ?, ?)", 
-            5, _connection, "ct_SpecData", _inserterBatchSize);
+            5, _connectionPool, "ct_SpecData", _inserterBatchSize);
         auto svData0Inserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `ct_SvData0` (`id`, `idEpoch`, `unixTimeEpoch`, `bodySize`, `prn`, `cnt`, `data`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "ct_SvData0", _inserterBatchSize);
+            7, _connectionPool, "ct_SvData0", _inserterBatchSize);
         auto svData1Inserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `ct_SvData1` (`id`, `idEpoch`, `unixTimeEpoch`, `bodySize`, `fcn1`, `cnt`, `data`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "ct_SvData1", _inserterBatchSize);
+            7, _connectionPool, "ct_SvData1", _inserterBatchSize);
         auto svData2Inserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `ct_SvData2` (`id`, `idEpoch`, `unixTimeEpoch`, `bodySize`, `header`, `slot`) VALUES (?, ?, ?, ?, ?, ?)", 
-            6, _connection, "ct_SvData2", _inserterBatchSize);
+            6, _connectionPool, "ct_SvData2", _inserterBatchSize);
         auto svDelayInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `ct_SvDelay` (`id`, `idEpoch`, `unixTimeEpoch`, `bodySize`, `fcn`, `phase`, `range`) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            7, _connection, "ct_SvDelay", _inserterBatchSize);
+            7, _connectionPool, "ct_SvDelay", _inserterBatchSize);
         auto utcOffsInserter = std::make_shared<DataBatchInserter>(
             "INSERT INTO `ct_UtcOffs` (`id`, `idEpoch`, `unixTimeEpoch`, `bodySize`, `a0`, `a1`, `tot`, `wnt`, `dtls`, `dn`, `wnlsf`, `dtlsf`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            12, _connection, "ct_UtcOffs", _inserterBatchSize);
+            12, _connectionPool, "ct_UtcOffs", _inserterBatchSize);
 
         angularVelocityInserter->AddChild(_epochInserter);
         antNameInserter->AddChild(_epochInserter);

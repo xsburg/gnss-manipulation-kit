@@ -3,10 +3,7 @@
 
 #include <QtCore/QtCore>
 #include <boost/utility.hpp>
-#include "Exception.h"
-#include "Connection.h"
-#include "DatabaseHelper.h"
-#include "InvalidOperationException.h"
+#include "ConnectionPool.h"
 #include "SmartPtr.h"
 
 namespace Common 
@@ -20,14 +17,13 @@ namespace Common
         QString _tableName;
         int _rowsAdded;
         int _batchSize;
-        Connection::SharedPtr_t _connection;
-        DatabaseHelper* _dbHelper;
+        ConnectionPool::SharedPtr_t _connectionPool;
         QVector<QVariantList> _boundValues;
         QList<DataBatchInserter::SharedPtr_t> _children;
     public:
         // insertQuery: "INSERT INTO <table name>(<column name>[, <column name>]) VALUES (?, ?, ?)"
         // connection: pointer to connection class
-        DataBatchInserter(const QString& insertQuery, int boundColumnsCount, Connection::SharedPtr_t connection, 
+        DataBatchInserter(const QString& insertQuery, int boundColumnsCount, ConnectionPool::SharedPtr_t connectionPool,
                           const QString& tableName = "", int batchSize = 1000);
 
         ~DataBatchInserter();

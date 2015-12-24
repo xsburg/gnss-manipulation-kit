@@ -12,14 +12,14 @@ namespace Platform
     class ChainedSink
     {
         Greis::MySqlSink::UniquePtr_t _sink;
-        Connection::SharedPtr_t _connection;
+        ConnectionPool::SharedPtr_t _connectionPool;
         int _inserterBatchSize;
         bool _isValid;
         QFuture<void> _lastFlush;
     public:
         SMART_PTR_T(ChainedSink);
 
-        ChainedSink(Connection::SharedPtr_t connection, int inserterBatchSize);
+        ChainedSink(ConnectionPool::SharedPtr_t connectionPool, int inserterBatchSize);
 
         bool Connect();
 

@@ -22,7 +22,7 @@ namespace Greis
     public:
         SMART_PTR_T(MySqlSink);
 
-        MySqlSink(Connection::SharedPtr_t connection, int inserterBatchSize = 10000);
+        MySqlSink(ConnectionPool::SharedPtr_t connectionPool, int inserterBatchSize = 10000);
         ~MySqlSink();
 
         void AddDataChunk(DataChunk* file);
@@ -58,6 +58,7 @@ namespace Greis
     private:
         std::shared_ptr<QFutureSynchronizer<void>> _flushQueue;
         Connection::SharedPtr_t _connection;
+        ConnectionPool::SharedPtr_t _connectionPool;
         DatabaseHelper* _dbHelper;
         int _inserterBatchSize;
 

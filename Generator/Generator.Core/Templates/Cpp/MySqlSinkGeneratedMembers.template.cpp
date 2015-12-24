@@ -1,4 +1,4 @@
-#include "Common/Connection.h"
+#include "Common/ConnectionPool.h"
 #include "Common/Logger.h"
 #include "Greis/AllStdMessages.h"
 #include "Greis/MySqlSink.h"
@@ -7,9 +7,10 @@ using namespace Common;
 
 namespace Greis
 {
-    MySqlSink::MySqlSink(Connection::SharedPtr_t connection, int inserterBatchSize)
+    MySqlSink::MySqlSink(ConnectionPool::SharedPtr_t connectionPool, int inserterBatchSize)
     {
-        _connection = connection;
+        _connectionPool = connectionPool;
+        _connection = connectionPool->getConnectionForCurrentThread();
         _dbHelper = _connection->DbHelper();
         _inserterBatchSize = inserterBatchSize;
         

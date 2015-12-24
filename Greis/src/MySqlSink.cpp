@@ -12,11 +12,11 @@ namespace Greis
 
         _lastEpochId = _dbHelper->ExecuteSingleValueQuery(QString("SELECT MAX(`id`) FROM `epoch`")).toInt();
         _epochInserter = DataBatchInserter::SharedPtr_t(new DataBatchInserter(
-            "INSERT INTO `epoch` (id, unixTime) VALUES (?, ?)", 2, _connection, "epoch", _inserterBatchSize));
+            "INSERT INTO `epoch` (id, unixTime) VALUES (?, ?)", 2, _connectionPool, "epoch", _inserterBatchSize));
 
         _rawMessageInserter = DataBatchInserter::SharedPtr_t(new DataBatchInserter(
             "INSERT INTO `rawBinaryMessages` (`idEpoch`, `epochIndex`, `unixTimeEpoch`, `code`, `bodySize`, `data`) VALUES (?, ?, ?, ?, ?, ?)", 
-            6, _connection, "rawBinaryMessages", _inserterBatchSize));
+            6, _connectionPool, "rawBinaryMessages", _inserterBatchSize));
         _rawMessageInserter->AddChild(_epochInserter);
 
         auto query = _dbHelper->ExecuteQuery("SELECT id, code FROM messageCode");

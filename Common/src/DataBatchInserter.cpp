@@ -1,15 +1,19 @@
 #include "DataBatchInserter.h"
 #include "Logger.h"
 #include <QtConcurrent>
+#include "InvalidOperationException.h"
 
 namespace Common
 {
-    DataBatchInserter::DataBatchInserter(const QString& insertQuery, int boundColumnsCount, Connection::SharedPtr_t connection, 
-                                         const QString& tableName, int batchSize)
+    DataBatchInserter::DataBatchInserter(
+        const QString& insertQuery, 
+        int boundColumnsCount, 
+        ConnectionPool::SharedPtr_t connectionPool, 
+        const QString& tableName,
+        int batchSize)
+        : _connectionPool(connectionPool)
     {
         _insertQuery = insertQuery;
-        _connection = connection;
-        _dbHelper = _connection->DbHelper();
         _rowsAdded = 0;
         _batchSize = batchSize;
         _boundValues.resize(boundColumnsCount);
@@ -116,11 +120,10 @@ namespace Common
             {
                 childrenFlush->waitForFinished();
                 // New connection build
-                auto newConnection = _connection->Clone();
-                newConnection->Connect();
+                auto connection = _connectionPool->getConnectionForCurrentThread();
 
-                auto query = std::make_shared<QSqlQuery>(newConnection->DbHelper()->Database());
-                newConnection->DbHelper()->ThrowIfError(*query.get());
+                auto query = std::make_shared<QSqlQuery>(connection->Database());
+                connection->DbHelper()->ThrowIfError(*query.get());
                 //newConnection->Database().transaction();
                 //sLogger.Debug(insertQueryTmp);
                 query->prepare(insertQueryTmp);

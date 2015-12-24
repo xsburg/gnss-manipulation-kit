@@ -572,7 +572,7 @@ namespace Generator.Core
 
                 var inserterVar = string.Format("auto {0} = std::make_shared<DataBatchInserter>(\r\n{1}    " +
                                                 "\"{2}\", \r\n{1}    " + 
-                                                "{4}, _connection, \"{3}\", _inserterBatchSize);",
+                                                "{4}, _connectionPool, \"{3}\", _inserterBatchSize);",
                                                 this.GetInserterVarName(ct), codeIntend, insertCommand, tableName,
                                                 fieldsCount);
                 inserterVars.Add(inserterVar);
