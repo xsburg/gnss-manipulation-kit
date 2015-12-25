@@ -85,7 +85,7 @@ void applyArguments(QStringList& args, Connection* connection)
 int main(int argc, char **argv)
 {
     bool wrapIntoTransaction;
-    Connection::SharedPtr_t connection;
+    //Connection::SharedPtr_t connection;
     try
     {
         QCoreApplication a(argc, argv);
@@ -114,11 +114,11 @@ int main(int argc, char **argv)
         wrapIntoTransaction = sIniSettings.value("WrapIntoTransaction", false).toBool();
         bool skipInvalid = sIniSettings.value("skipInvalid", false).toBool();
         int inserterBatchSize = sIniSettings.value("inserterBatchSize", 10000).toInt();
-        connection = Connection::FromSettings("LocalDatabase");
+        auto connection = Connection::FromSettings("LocalDatabase");
         applyArguments(args, connection.get());
-        connection->Connect();
-        
-        auto _dbHelper = connection->DbHelper();
+        auto connectionPool = std::make_shared<ConnectionPool>(connection);
+        //auto _dbHelper = connection->DbHelper();
+
         /*auto query = _dbHelper->ExecuteQuery("SET autocommit=0");
         DatabaseHelper::ThrowIfError(query);
         query = _dbHelper->ExecuteQuery("SET unique_checks=0");
@@ -128,51 +128,6 @@ int main(int argc, char **argv)
 
         foreach (QString filename, args)
         {
-            //QFile file2(filename);
-            //file2.open(QIODevice::ReadOnly);
-            //while (!file2.atEnd()) {
-            //    QVariantList tests;
-            //    int i = 0;
-            //    while (!file2.atEnd() && i < 1000) {
-            //        QByteArray data = file2.read(1000);
-            //        tests << data;
-            //        i++;
-            //    }
-
-            //    if (i == 0)
-            //    {
-            //        break;
-            //    }
-
-            //    QSqlQuery query = _dbHelper->ExecuteQuery("");
-
-            //    auto _insertQuery = QString("INSERT INTO `test_blob` (test,test2) VALUES ");
-            //    for (int j = 0; j < i - 1; j++)
-            //    {
-            //        _insertQuery.append("(?,?),");
-            //    }
-            //    _insertQuery.append("(?,?)");
-
-            //    sLogger.Debug(_insertQuery);
-            //    sLogger.Debug(QString::number(i));
-            //    query.prepare(_insertQuery);
-            //    DatabaseHelper::ThrowIfError(query);
-
-            //    foreach (QVariant v, tests)
-            //    {
-            //        query.addBindValue(v);
-            //        query.addBindValue(123);
-            //    }
-
-            //    //query.addBindValue(tests);
-            //    //if (i >= 5)
-            //    {
-            //        //query.execBatch();
-            //        query.exec();
-            //        DatabaseHelper::ThrowIfError(query);
-            //    }
-            //}
-            
                 /*auto query = _dbHelper->ExecuteQuery("COMMIT");
                 DatabaseHelper::ThrowIfError(query);
                 query = _dbHelper->ExecuteQuery("SET foreign_key_checks=1");
@@ -191,10 +146,10 @@ int main(int argc, char **argv)
             if (wrapIntoTransaction)
             {
                 sLogger.Info("Starting a new transaction...");
-                connection->Database().transaction();
+                //connection->Database().transaction();
             }
             {
-                auto sink = make_unique<MySqlSink>(connection, inserterBatchSize);
+                auto sink = make_unique<MySqlSink>(connectionPool, inserterBatchSize);
                 
                 // Data reading loop
                 bool hasMore;
@@ -216,7 +171,7 @@ int main(int argc, char **argv)
             }
             if (wrapIntoTransaction)
             {
-                connection->Database().commit();
+                //connection->Database().commit();
                 sLogger.Info("Transaction has been committed.");
             }
             sLogger.Info(QString("Data from `%1` has been successfully imported into database.").arg(filename));
@@ -227,7 +182,7 @@ int main(int argc, char **argv)
     {
         if (wrapIntoTransaction)
         {
-            connection->Database().rollback();
+            ////connection->Database().rollback();
             sLogger.Info("Transaction has been rolled back.");
         }
         sLogger.Error(e.what());

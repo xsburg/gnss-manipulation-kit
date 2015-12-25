@@ -163,6 +163,7 @@ namespace jpslogd
             // Preparing the acquisition sink
             dataChunk = make_unique<DataChunk>();
             auto localConnection = Connection::FromSettings("LocalDatabase");
+            auto localConnectionPool = std::make_shared<ConnectionPool>(localConnection);
             if (localConnection->Driver == "" || localConnection->Hostname == "" || localConnection->Username == "")
             {
                 sLogger.Fatal("Cannot configure local database, check configuration.");
@@ -188,8 +189,9 @@ namespace jpslogd
             }
             else
             {
-                localConnection->Connect();
-                sink = make_unique<MySqlSink>(localConnection, inserterBatchSize);
+                sink = make_unique<MySqlSink>(localConnectionPool, inserterBatchSize);
+                // Testing connection
+                localConnectionPool->getConnectionForCurrentThread()->Connect();
             }
 
             sLogger.Info("Configuring provisioning via local database...");

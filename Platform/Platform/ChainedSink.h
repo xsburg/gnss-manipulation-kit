@@ -23,8 +23,6 @@ namespace Platform
 
         bool Connect();
 
-        bool IsValid() const;
-
         bool Handle(Greis::DataChunk::UniquePtr_t dataChunk);
 
         void Flush();

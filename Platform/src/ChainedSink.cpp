@@ -1,8 +1,8 @@
 #include "ChainedSink.h"
 
 Platform::ChainedSink::ChainedSink(
-    Connection::SharedPtr_t connection, int inserterBatchSize)
-    : _connection(connection), _inserterBatchSize(inserterBatchSize)
+    ConnectionPool::SharedPtr_t connectionPool, int inserterBatchSize)
+    : _connectionPool(connectionPool), _inserterBatchSize(inserterBatchSize)
 {
     Connect();
 }
@@ -11,10 +11,9 @@ bool Platform::ChainedSink::Connect()
 {
     try
     {
-        _connection->Connect();
         if (!_sink.get())
         {
-            _sink = make_unique<Greis::MySqlSink>(_connection, _inserterBatchSize);
+            _sink = make_unique<Greis::MySqlSink>(_connectionPool, _inserterBatchSize);
         }
         _isValid = true;
         return true;
@@ -29,11 +28,6 @@ bool Platform::ChainedSink::Connect()
         _isValid = false;
         throw;
     }
-}
-
-bool Platform::ChainedSink::IsValid() const
-{
-    return _isValid && _connection->Database().isOpen();
 }
 
 bool Platform::ChainedSink::Handle(Greis::DataChunk::UniquePtr_t dataChunk)

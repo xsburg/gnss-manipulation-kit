@@ -1,6 +1,7 @@
 #include "Utils/BaseTest.h"
 #include "Common/File.h"
 #include <Greis/MySqlSource.h>
+#include <Common/ConnectionPool.h>
 
 namespace Platform
 {
@@ -19,17 +20,16 @@ namespace Platform
         void BaseTest::SetUp()
         {
             sLogger.Info("Connecting to the test database...");
-            this->_connection = Common::Connection::FromSettings("Db");
-            this->_connection->Connect();
+            this->_connectionPool = std::make_shared<Common::ConnectionPool>(Common::Connection::FromSettings("Db"));
 
-            this->_connection->DbHelper()->ExecuteQuery("SET autocommit=0;");
+            this->Connection()->DbHelper()->ExecuteQuery("SET autocommit=0;");
 
             sLogger.Info("Starting a new transaction...");
-            ASSERT_TRUE(this->_connection->Database().driver()->hasFeature(QSqlDriver::Transactions));
-            bool transactionStarted = this->_connection->Database().transaction();
+            ASSERT_TRUE(this->Connection()->Database().driver()->hasFeature(QSqlDriver::Transactions));
+            bool transactionStarted = this->Connection()->Database().transaction();
             if (!transactionStarted)
             {
-                auto errText = this->_connection->Database().lastError().text();
+                auto errText = this->Connection()->Database().lastError().text();
                 throw Common::Exception("Failed to start a database transaction: " + errText);
             }
             sLogger.Info("Testing that database is empty...");
@@ -40,13 +40,18 @@ namespace Platform
 
         void BaseTest::TearDown()
         {
-            this->_connection->Database().rollback();
+            this->Connection()->Database().rollback();
             sLogger.Info("Transaction has been reverted.");
         }
 
         const std::shared_ptr<Common::Connection>& BaseTest::Connection() const
         {
-            return this->_connection;
+            return this->_connectionPool->getConnectionForCurrentThread();
+        }
+
+        const std::shared_ptr<Common::ConnectionPool>& BaseTest::ConnectionPool() const
+        {
+            return this->_connectionPool;
         }
 
         QString BaseTest::ResolvePath(const QString& fileName) const
