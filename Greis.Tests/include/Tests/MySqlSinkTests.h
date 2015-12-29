@@ -31,7 +31,7 @@ namespace Greis
             int inserterBatchSize = 10000;
 
             {
-                auto sink = make_unique<MySqlSink>(this->Connection(), inserterBatchSize);
+                auto sink = make_unique<MySqlSink>(this->ConnectionPool(), inserterBatchSize);
                 sink->AddDataChunk(file.get());
                 sink->Flush();
             }

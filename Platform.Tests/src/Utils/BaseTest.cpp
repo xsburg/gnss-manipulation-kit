@@ -2,6 +2,7 @@
 #include "Common/File.h"
 #include <Greis/MySqlSource.h>
 #include <Common/ConnectionPool.h>
+#include <Common/Path.h>
 
 namespace Platform
 {
@@ -19,29 +20,49 @@ namespace Platform
 
         void BaseTest::SetUp()
         {
+            // Connecting
             sLogger.Info("Connecting to the test database...");
             this->_connectionPool = std::make_shared<Common::ConnectionPool>(Common::Connection::FromSettings("Db"));
 
-            this->Connection()->DbHelper()->ExecuteQuery("SET autocommit=0;");
+            auto connection = this->Connection();
+            connection->DbHelper()->ExecuteQuery("SET autocommit=0;");
 
-            sLogger.Info("Starting a new transaction...");
-            ASSERT_TRUE(this->Connection()->Database().driver()->hasFeature(QSqlDriver::Transactions));
-            bool transactionStarted = this->Connection()->Database().transaction();
-            if (!transactionStarted)
+            // Resetting the test database
+            sLogger.Info("Database reset...");
+            QString baseDir = QCoreApplication::applicationDirPath();
+            QFile baselineFile(Path::Combine(Path::ApplicationDirPath(), "../../../Generator/Output/baseline.sql"));
+            if (!baselineFile.open(QIODevice::ReadOnly | QIODevice::Text))
             {
-                auto errText = this->Connection()->Database().lastError().text();
-                throw Common::Exception("Failed to start a database transaction: " + errText);
+                throw Common::Exception("Failed to open baseline.sql: " + baselineFile.errorString());
             }
+
+            QSqlQuery query(connection->Database());
+            QTextStream in(&baselineFile);
+            QString sql = in.readAll();
+            QStringList sqlStatements = sql.split(';', QString::SkipEmptyParts);
+
+            foreach(const QString& statement, sqlStatements)
+            {
+                if (!statement.trimmed().isEmpty())
+                {
+                    if (!query.exec(statement))
+                    {
+                        connection->DbHelper()->ThrowIfError(query);
+                    }
+                }
+            }
+
+            sLogger.Info("Asserting features...");
+            ASSERT_TRUE(connection->Database().driver()->hasFeature(QSqlDriver::Transactions));
+
             sLogger.Info("Testing that database is empty...");
-            auto source = std::make_shared<Greis::MySqlSource>(this->Connection());
+            auto source = std::make_shared<Greis::MySqlSource>(connection);
             ASSERT_EQ(source->ReadAll()->Body().size(), 0);
             sLogger.Info("SetUp Succeeded...");
         }
 
         void BaseTest::TearDown()
         {
-            this->Connection()->Database().rollback();
-            sLogger.Info("Transaction has been reverted.");
         }
 
         const std::shared_ptr<Common::Connection>& BaseTest::Connection() const
@@ -88,6 +109,5 @@ namespace Platform
             binaryData.remove(0, i);
             return binaryData;
         }
-
     }
 }

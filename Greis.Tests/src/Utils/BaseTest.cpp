@@ -1,6 +1,7 @@
 #include "Utils/BaseTest.h"
 #include "Common/File.h"
 #include <Greis/MySqlSource.h>
+#include <Common/Path.h>
 
 namespace Greis
 {
@@ -18,35 +19,62 @@ namespace Greis
 
         void BaseTest::SetUp()
         {
+            // Connecting
             sLogger.Info("Connecting to the test database...");
-            this->_connection = Common::Connection::FromSettings("Db");
-            this->_connection->Connect();
+            this->_connectionPool = std::make_shared<Common::ConnectionPool>(Common::Connection::FromSettings("Db"));
 
-            this->_connection->DbHelper()->ExecuteQuery("SET autocommit=0;");
+            auto connection = this->Connection();
+            auto connectionPool = this->ConnectionPool();
 
-            sLogger.Info("Starting a new transaction...");
-            ASSERT_TRUE(this->_connection->Database().driver()->hasFeature(QSqlDriver::Transactions));
-            bool transactionStarted = this->_connection->Database().transaction();
-            if (!transactionStarted)
+            connection->DbHelper()->ExecuteQuery("SET autocommit=0;");
+
+            // Resetting the test database
+            sLogger.Info("Database reset...");
+            QString baseDir = QCoreApplication::applicationDirPath();
+            QFile baselineFile(Path::Combine(Path::ApplicationDirPath(), "../../../Generator/Output/baseline.sql"));
+            if (!baselineFile.open(QIODevice::ReadOnly | QIODevice::Text))
             {
-                auto errText = this->_connection->Database().lastError().text();
-                throw Common::Exception("Failed to start a database transaction: " + errText);
+                throw Common::Exception("Failed to open baseline.sql: " + baselineFile.errorString());
             }
+
+            QSqlQuery query(connection->Database());
+            QTextStream in(&baselineFile);
+            QString sql = in.readAll();
+            QStringList sqlStatements = sql.split(';', QString::SkipEmptyParts);
+
+            foreach(const QString& statement, sqlStatements)
+            {
+                if (!statement.trimmed().isEmpty())
+                {
+                    if (!query.exec(statement))
+                    {
+                        connection->DbHelper()->ThrowIfError(query);
+                    }
+                }
+            }
+
+            sLogger.Info("Asserting features...");
+            ASSERT_TRUE(connection->Database().driver()->hasFeature(QSqlDriver::Transactions));
+
             sLogger.Info("Testing that database is empty...");
-            auto source = std::make_shared<Greis::MySqlSource>(this->Connection());
+            auto source = std::make_shared<Greis::MySqlSource>(connection);
             ASSERT_EQ(source->ReadAll()->Body().size(), 0);
             sLogger.Info("SetUp Succeeded...");
         }
 
         void BaseTest::TearDown()
         {
-            this->_connection->Database().rollback();
-            sLogger.Info("Transaction has been reverted.");
         }
 
-        const std::shared_ptr<Common::Connection>& BaseTest::Connection() const
+        std::shared_ptr<Common::Connection> BaseTest::Connection()
         {
-            return this->_connection;
+            auto connection = this->_connectionPool->getConnectionForCurrentThread();
+            return connection;
+        }
+
+        std::shared_ptr<Common::ConnectionPool>& BaseTest::ConnectionPool()
+        {
+            return this->_connectionPool;
         }
 
         QString BaseTest::ResolvePath(const QString& fileName) const
@@ -83,6 +111,5 @@ namespace Greis
             binaryData.remove(0, i);
             return binaryData;
         }
-
     }
 }

@@ -30,6 +30,9 @@ namespace Common
         Connection()
         {
         };
+        ~Connection()
+        {
+        }
 
         void Connect();
     

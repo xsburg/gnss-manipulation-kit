@@ -72,7 +72,7 @@ namespace Greis
             // Act
             {
                 // Saving to the database
-                auto sink = make_unique<MySqlSink>(this->Connection(), 1000);
+                auto sink = make_unique<MySqlSink>(this->ConnectionPool(), 1000);
                 sink->AddDataChunk(expectedChunk.get());
                 sink->Flush();
             }
@@ -96,7 +96,7 @@ namespace Greis
             // Act
             {
                 // Saving to the database
-                auto sink = make_unique<MySqlSink>(this->Connection(), 1000);
+                auto sink = make_unique<MySqlSink>(this->ConnectionPool(), 1000);
                 sink->AddDataChunk(expectedChunk.get());
                 sink->Flush();
             }
@@ -120,7 +120,7 @@ namespace Greis
             // Act
             {
                 // Saving to the database
-                auto sink = make_unique<MySqlSink>(this->Connection(), 1000);
+                auto sink = make_unique<MySqlSink>(this->ConnectionPool(), 1000);
                 sink->AddDataChunk(expectedChunk.get());
                 sink->Flush();
             }

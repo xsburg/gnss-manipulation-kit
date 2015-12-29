@@ -171,27 +171,3 @@ CREATE TABLE `rawBinaryMessages` (
 
 -- @{INITIAL-FILLUP-HERE}@
 
-/*CREATE TABLE `exampleMessage` (
-         id SERIAL,
-         idEpoch BIGINT UNSIGNED NOT NULL,
-         -- message data. 1000 - max length for dynamic-length array
-         _a1 CHAR,
-         _uint1 TINYINT UNSIGNED,
-         _int1 TINYINT,
-         _uint2 SMALLINT UNSIGNED,
-         _int2 SMALLINT,
-         _uint4 INT UNSIGNED,
-         _int4 INT,
-         _f4 FLOAT,
-         _f8 DOUBLE,
-         numericArray VARCHAR(1000),
-         fixedLengthStrArray VARCHAR(5),
-         unknownLengthStrArray VARCHAR(1000),
-         
-         PRIMARY KEY (`id`),
-         INDEX `idx_fk_epochs` (`idEpoch`),
-         CONSTRAINT `fk_epochs` FOREIGN KEY (`idEpoch`) 
-            REFERENCES `epochs` (`id`)
-       );
-
-SHOW ENGINE INNODB STATUS; */
