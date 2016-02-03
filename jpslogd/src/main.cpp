@@ -108,6 +108,7 @@ namespace jpslogd
             int dataChunkSize = sIniSettings.value("dataChunkSize", 250).toInt();
             QString rawDataLogFile = sIniSettings.value("rawDataLogFile", "").toString();
             bool skipDeviceConfig = sIniSettings.value("skipDeviceConfig", false).toBool();
+	    bool skipMessageParsing = sIniSettings.value("skipMessageParsing", false).toBool();
 
             sLogger.Info("Connecting Javad receiver on " + QString::fromStdString(portName) + " at " + QString::number(baudRate) + "bps...");
 
@@ -117,7 +118,9 @@ namespace jpslogd
             {
                 // Stop monitoring
                 deviceBinaryStream->write("\r\ndm\n\r");
+                qSleep(500);
                 deviceBinaryStream->purgeBuffers();
+
 
                 receiverInfo = logDeviceInfo(deviceBinaryStream);
 
@@ -148,50 +151,53 @@ namespace jpslogd
             // message stream creation based on raw data logger option
             GreisMessageStream::SharedPtr_t messageStream;
             if (rawDataLogFile.isEmpty())
-            {
-                messageStream = std::make_shared<GreisMessageStream>(deviceBinaryStream, true, false);
+            {   
+		if (!skipMessageParsing){
+                	messageStream = std::make_shared<GreisMessageStream>(deviceBinaryStream, true, false);
+		}
             }
             else
             {
                 auto now = QDateTime::currentDateTimeUtc();
-                QString fileName = QString("%1-%2Z.txt").arg(rawDataLogFile).arg(now.toString("yyyy-MM-dd_HH_mm_ss_zzz"));
+                QString fileName = QString("%1-%2Z.jps").arg(rawDataLogFile).arg(now.toString("yyyy-MM-dd_HH_mm_ss_zzz"));
                 auto proxyStream = std::make_shared<LoggingBinaryStream>(deviceBinaryStream, std::make_shared<FileBinaryStream>(fileName, Create));
-                messageStream = std::make_shared<GreisMessageStream>(proxyStream, true, false);
+		messageStream = std::make_shared<GreisMessageStream>(proxyStream, true, false);
             }
 
-            sLogger.Info("Configuring databases...");
-            // Preparing the acquisition sink
-            dataChunk = make_unique<DataChunk>();
-            auto localConnection = Connection::FromSettings("LocalDatabase");
-            if (localConnection->Driver == "" || localConnection->Hostname == "" || localConnection->Username == "")
-            {
-                sLogger.Fatal("Cannot configure local database, check configuration.");
-                throw new GreisException("Local database configuration missing.");
-            }
-            else
-            {
-                sLogger.Info("Using local database " + localConnection->DatabaseName + " on " + localConnection->Hostname);
-            }
+	    if(!skipMessageParsing){
+	            // Preparing the acquisition sink
+        	    dataChunk = make_unique<DataChunk>();
+	            auto localConnection = Connection::FromSettings("LocalDatabase");
+	            if (localConnection->Driver == "" || localConnection->Hostname == "" || localConnection->Username == "")
+	            {
+	                sLogger.Fatal("Cannot configure local database, check configuration.");
+        	        throw new GreisException("Local database configuration missing.");
+	            }
+        	    else
+	            {
+        	        sLogger.Info("Using local database " + localConnection->DatabaseName + " on " + localConnection->Hostname);
+	            }
 
-            auto remoteConnection = Connection::FromSettings("RemoteDatabase");
-            if (remoteConnection->Driver != "")
-            {
-                dataCenterSink = make_unique<ChainedSink>(remoteConnection, inserterBatchSize, nullptr, true);
-                localSink = make_unique<ChainedSink>(localConnection, inserterBatchSize, std::move(dataCenterSink), true);
-                if (!dataCenterSink->IsValid())
-                {
-                    return true;
-                }
-                sLogger.Info("Using remote database " + localConnection->DatabaseName + " on " + localConnection->Hostname);
-            }
-            else
-            {
-                localSink = make_unique<ChainedSink>(localConnection, inserterBatchSize, nullptr, true);
-            }
-            if (!localSink->IsValid())
-            {
-                return true;
-            }
+        	    auto remoteConnection = Connection::FromSettings("RemoteDatabase");
+	            if (remoteConnection->Driver != "")
+        	    {
+	                dataCenterSink = make_unique<ChainedSink>(remoteConnection, inserterBatchSize, nullptr, true);
+        	        localSink = make_unique<ChainedSink>(localConnection, inserterBatchSize, std::move(dataCenterSink), true);
+	                if (!dataCenterSink->IsValid())
+        	        {
+                	    return true;
+	                }
+        	        sLogger.Info("Using remote database " + localConnection->DatabaseName + " on " + localConnection->Hostname);
+	            }
+	            else
+	            {
+	                localSink = make_unique<ChainedSink>(localConnection, inserterBatchSize, nullptr, true);
+	            }
+	            if (!localSink->IsValid())
+	            {
+	                return true;
+	            }
+	    }
 
             sLogger.Info("Configuring provisioning via local database...");
 #ifdef STATISTICS_AND_COMMANDS
@@ -202,7 +208,7 @@ namespace jpslogd
             serviceManager->ServiceStatus["receivermodel"] = receiverInfo.receiverModel;
             serviceManager->ServiceStatus["receiverboard"] = receiverInfo.receiverBoard;
 #endif
-
+		
             int msgCounter = 0;
             Message::UniquePtr_t msg;
             while ((msg = messageStream->Next()).get())
@@ -210,71 +216,78 @@ namespace jpslogd
 #ifdef STATISTICS_AND_COMMANDS
                 serviceManager->HandleMessage(msg.get());
 #endif
-
-                dataChunk->AddMessage(std::move(msg));
-                if (msgCounter++ > dataChunkSize)
-                {
-                    auto dataChunk2 = make_unique<Greis::DataChunk>();
-                    for (auto& msg : dataChunk->UnfinishedEpoch()->Messages)
+                if(!skipMessageParsing){
+                    dataChunk->AddMessage(std::move(msg));
+                    if (msgCounter++ > dataChunkSize)
                     {
-                        dataChunk2->AddMessage(std::move(msg));
+                        auto dataChunk2 = make_unique<Greis::DataChunk>();
+                        for (auto& msg : dataChunk->UnfinishedEpoch()->Messages)
+                        {
+                            dataChunk2->AddMessage(std::move(msg));
+                        }
+                        localSink->Handle(std::move(dataChunk));
+                        dataChunk = std::move(dataChunk2);
+                        msgCounter = 0;
                     }
-                    localSink->Handle(std::move(dataChunk));
-                    dataChunk = std::move(dataChunk2);
-                    msgCounter = 0;
                 }
-
-                if (msgCounter % 100 == 0)
+                if (msgCounter % 1000 == 0)
                 {
-                    sLogger.Debug("Another 100 has been received.");
-
+                    sLogger.Debug("Another 1000 has been received.");
+                    if(!skipMessageParsing){
 #ifdef STATISTICS_AND_COMMANDS
                     // Checking for the control commands
-                    serviceManager->HandlePendingCommands();
-                    if (serviceManager->IsRestartRequiredFlag)
-                    {
-                        serviceManager->IsRestartRequiredFlag = false;
-                        localSink->Handle(std::move(dataChunk));
-                        localSink->Flush();
-                        return false;
-                    }
-                    if (serviceManager->IsShutdownRequiredFlag)
-                    {
-                        serviceManager->IsShutdownRequiredFlag = false;
-                        localSink->Handle(std::move(dataChunk));
-                        localSink->Flush();
-                        return true;
-                    }
-                    if (serviceManager->IsPausedFlag)
-                    {
-                        const int sleepIntervalInMilliseconds = 1000;
-                        localSink->Handle(std::move(dataChunk));
-                        localSink->Flush();
-                        dataChunk = make_unique<Greis::DataChunk>();
-                        while (serviceManager->IsPausedFlag)
+                        serviceManager->HandlePendingCommands();
+                        if (serviceManager->IsRestartRequiredFlag)
                         {
-                            qSleep(sleepIntervalInMilliseconds);
-                            serviceManager->HandlePendingCommands();
-                            if (serviceManager->IsRestartRequiredFlag)
+                            serviceManager->IsRestartRequiredFlag = false;
+                            localSink->Handle(std::move(dataChunk));
+                            localSink->Flush();
+                            return false;
+                        }
+                        if (serviceManager->IsShutdownRequiredFlag)
+                        {
+                            serviceManager->IsShutdownRequiredFlag = false;
+                            localSink->Handle(std::move(dataChunk));
+                            localSink->Flush();
+                            return true;
+                        }
+                        if (serviceManager->IsPausedFlag)
+                        {
+                            const int sleepIntervalInMilliseconds = 1000;
+                            localSink->Handle(std::move(dataChunk));
+                            localSink->Flush();
+                            dataChunk = make_unique<Greis::DataChunk>();
+                            while (serviceManager->IsPausedFlag)
                             {
-                                serviceManager->IsRestartRequiredFlag = false;
-                                return false;
-                            }
-                            if (serviceManager->IsShutdownRequiredFlag)
-                            {
-                                serviceManager->IsShutdownRequiredFlag = false;
-                                return true;
+                                qSleep(sleepIntervalInMilliseconds);
+                                serviceManager->HandlePendingCommands();
+                                if (serviceManager->IsRestartRequiredFlag)
+                                {
+                                    serviceManager->IsRestartRequiredFlag = false;
+                                    return false;
+                                }
+                                if (serviceManager->IsShutdownRequiredFlag)
+                                {
+                                    serviceManager->IsShutdownRequiredFlag = false;
+                                    return true;
+                                }
                             }
                         }
-                    }
 #endif
-                }
-            }
 
-            localSink->Handle(std::move(dataChunk));
-            localSink->Flush();
-            return true;
-        }
+
+
+
+                        localSink->Handle(std::move(dataChunk));
+                        localSink->Flush();
+                    } else
+                    {
+                        msgCounter = 0;
+                    }
+                }}
+                return true;
+            
+    }
         catch (GreisException& ex)
         {
             sLogger.Error("An error has occurred: " + ex.what());

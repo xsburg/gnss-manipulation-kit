@@ -197,7 +197,7 @@ int main(int argc, char **argv)
         QDateTime to;
         parseArguments(a, databaseName, outFilename, from, to);
 
-        auto connection = Connection::FromSettings("Db");
+        auto connection = Connection::FromSettings("LocalDatabase");
         connection->DatabaseName = databaseName;
         sLogger.Info(QString("Connecting to `%1`...").arg(connection->DatabaseName));
         connection->Connect();
