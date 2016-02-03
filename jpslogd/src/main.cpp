@@ -229,10 +229,12 @@ namespace jpslogd
                         dataChunk = std::move(dataChunk2);
                         msgCounter = 0;
                     }
+                } else {
+                    msgCounter++;
                 }
-                if (msgCounter % 1000 == 0)
+                if (msgCounter % 10000 == 0)
                 {
-                    sLogger.Debug("Another 1000 has been received.");
+                    sLogger.Debug("Another 10000 has been received.");
                     if(!skipMessageParsing){
 #ifdef STATISTICS_AND_COMMANDS
                     // Checking for the control commands
